@@ -537,7 +537,7 @@ function initMap(){
   if(typeof L==="undefined"){el.innerHTML=`<div class="empty" style="margin:16px">Карта не загрузилась: не удалось подключить картографическую библиотеку. Обновите страницу.</div>`;return}
   if(LM&&LM.el===el)return;
   if(LM){try{LM.map.remove()}catch(e){}LM=null}
-  const map=L.map(el,{preferCanvas:true,zoomControl:false,minZoom:7,maxZoom:16,zoomSnap:.1,zoomDelta:.5,wheelPxPerZoomLevel:40,wheelDebounceTime:20,fadeAnimation:false});
+  const map=L.map(el,{preferCanvas:true,zoomControl:false,minZoom:7,maxZoom:16,zoomSnap:.1,zoomDelta:.5,wheelPxPerZoomLevel:6,wheelDebounceTime:10,fadeAnimation:false});
   map.attributionControl.setPrefix(false).addAttribution("Данные © участники OpenStreetMap");
   L.control.zoom({position:"topright",zoomInTitle:"Приблизить",zoomOutTitle:"Отдалить"}).addTo(map);
   const cv=L.canvas({padding:.25,tolerance:3});

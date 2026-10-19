@@ -208,12 +208,15 @@ main{padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
 .ppc-h span{display:block;margin-top:2px;color:#5B6B7A;font-size:12px}
 .ppc-sum{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 2px}
 .ppc-l{padding:4px 8px 6px}
-.ppc-r{display:grid;grid-template-columns:4px 42px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 8px;border-radius:10px}
+.ppc-r{display:grid;grid-template-columns:4px 44px minmax(0,1fr);gap:10px;align-items:center;padding:7px 8px;border-radius:10px}
 .ppc-r:hover{background:#F3F6F8}
 .ppc-r i{width:4px;height:30px;border-radius:2px;background:var(--c)}
 .ppc-r time{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
 .ppc-r b{display:block;font-weight:600;overflow-wrap:anywhere}
-.ppc-r small{display:block;color:#6B7A88;font-size:11.5px}
+.ppc-r small{display:block;color:#6B7A88;font-size:12px;margin-top:1px}
+.ppc-r em{font-style:normal;font-weight:600;color:var(--c)}
+.ppc-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 13%,#fff)}
+.ppc-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
 .ppc-empty{padding:12px 16px;color:#6B7A88}
 .ppc-f{display:flex;gap:16px;padding:9px 16px 12px;border-top:1px solid #E8EDF0;font-size:12.5px}
 .ppc-f a{color:#0F6EA8;font-weight:600;text-decoration:none}
@@ -686,8 +689,8 @@ function updateMap(sh,pst){
     const cntSt={};sts.forEach(t=>cntSt[t]=(cntSt[t]||0)+1);
     const dist=distOf(p);
     mk.bindPopup(`<div class="ppc"><div class="ppc-h"><b>${esc(p.name)}</b><span>${esc([p.address,dist].filter(Boolean).join(" · "))||"&nbsp;"}</span></div>
-      ${n?`<div class="ppc-sum">${Object.entries(cntSt).map(([t,c])=>`<span class="chip st-${t}">${STL[t]}${c>1?" · "+c:""}</span>`).join("")}</div>
-      <div class="ppc-l">${shs.map((s,i)=>{const t=sts[i],ph=shiftPhotos(s);return `<div class="ppc-r" style="--c:${col[t]}"><i></i><time>${esc(s.start)}</time><div><b>${esc(prName(s.promoterId))}</b><small>${ph.length?"фото в "+hm(ph[0].takenAt):t==="upcoming"?"смена впереди":t==="waiting"?"ждём фото":"фото нет"}</small></div>${chip(t)}</div>`}).join("")}</div>`
+      ${n?`<div class="ppc-sum">${Object.entries(cntSt).map(([t,c])=>`<span class="ppc-pill" style="--c:${col[t]}">${STL[t]}${c>1?" · "+c:""}</span>`).join("")}</div>
+      <div class="ppc-l">${shs.map((s,i)=>{const t=sts[i],ph=shiftPhotos(s);return `<div class="ppc-r" style="--c:${col[t]}"><i></i><time>${esc(s.start)}</time><div><b>${esc(prName(s.promoterId))}</b><small><em>${STL[t]}</em> · ${ph.length?"фото в "+hm(ph[0].takenAt):t==="upcoming"?"смена впереди":t==="waiting"?"ждём фото":"фото нет"}</small></div></div>`}).join("")}</div>`
       :`<div class="ppc-empty">Смен на этот день нет</div>`}
       <div class="ppc-f"><a href="${y}" target="_blank" rel="noopener">Яндекс Карты ↗</a><a href="${gm}" target="_blank" rel="noopener">Google Карты ↗</a></div></div>`,{maxWidth:340,minWidth:300,className:"ppw",offset:[0,-10]});mk.on("popupopen",()=>{const t=mk.getTooltip();if(t)t.setOpacity(0)});mk.on("popupclose",()=>{const t=mk.getTooltip();if(t)t.setOpacity(.92)});
     mk.bindTooltip(esc(p.name),{direction:"top",offset:[0,-16],className:"mptt"});

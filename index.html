@@ -307,9 +307,11 @@ const OKR={CAO:"ЦАО",SAO:"САО",SVAO:"СВАО",VAO:"ВАО",UVAO:"ЮВАО
 const polys=g=>g.t==="Polygon"?[g.c]:g.c;
 function inRing(x,y,r){let ins=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const[xi,yi]=r[i],[xj,yj]=r[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)ins=!ins}return ins}
 function inPoly(x,y,g){return polys(g).some(pl=>inRing(x,y,pl[0])&&!pl.slice(1).some(h=>inRing(x,y,h)))}
-function geoRegion(lat,lng){if(!isFinite(lat)||!isFinite(lng)||!lat||!lng)return null;for(const k in GEO.okrugs)if(inPoly(lng,lat,GEO.okrugs[k]))return"msk";return inPoly(lng,lat,GEO.mo)?"mo":"other"}
+const SPB={"d":[{"n":"Адмиралтейский","full":"Адмиралтейский район","p":[["i}pc@kymQTkADaDq@kCXeCw@}Bf@gH^ArAj@EgNsFNG}@aDgL_ChCw@rBTz@aFpI_@q@{@tAfAdElBbL`A`BxBdAjAhA\\~AP_@t@AvAl@fBxAv@fB"]],"c":[59.9184,30.3028]},{"n":"Василеостровский","full":"Василеостровский район","p":[["gxqc@ellQX{@fEyDf@iAr@iEBeGSm@LcCGg@qAe@Cg@RMJb@`@LVsATIZ\\Gr@lBsKRO`@mCVa@]_BkAiAyBeAaAaBmBcLqAeFqAkCSjM_BdImBrGkBtQNVw@rKt@fKXnAtCpBn@cFhCrAa@`FPV"]],"c":[59.9393,30.2439]},{"n":"Выборгский","full":"Выборгский район","p":[["cwtc@gijQj@cAfAu@dB_JvAeDbDyDNmAd@}@s@yG|BaBd@h@rA?t@`EV@Y{DbAT|@~@n@w@oH_d@bAq@_@_C`@_DQmAfEmDyI__@zI}K|_@yPt@s@FXVoAHh@hDwA`@PLYtAzD~@}BhAiA~BsA|Ca@d@_@~@yBBqAo@MkBkAkGbCuA`A_@iI\\iC}BbBoBpEGbB[uBeB{EyEwBaNbB{@IoNwLIf@yJhDe@bAoCv@s@n@c@fCl@xPuBbNzApBw@`Fi@?CvAeCjFgBL?^_@DK^yBD_AbBiARo@tBnCrMFxE^pBRQFTe@nEGtL[pDnBvAgCpT~@Vf@AHQh@bBm@|Bd@zCe@pBPLFfAb@j@\\_@VLF[TND[HxDSnALl@YxBhAdA`D|G"]],"c":[60.0387,30.3355]},{"n":"Калининский","full":"Калининский район","p":[["ylrc@_toQpAcAhGcClBjAn@LNyGUuCoBiIFeBh@iCeAqCiGqBgPoQ}HtBcAUmLCa@v@wA~Jw@w@wC|Qa@MGZnNvLz@H`NcBxEvBdBzEZtBFcBnBqE|BcB]hCb@jI"]],"c":[60.0051,30.4043]},{"n":"Кировский","full":"Кировский район","p":[["mlpc@}alQfAoGnA}B@kAo@qHrAeHP_NhPdXhGnH@}Jm@gNcEyXcEeI_CwAc@s@cBQKl@aKaAi@i@_@mAWEBzBoAYk@s@mBc@E^]?A|@yAm@YBQj@U~Fv@xBYdCp@jCE`DUjAw@gBeCmBcBY]`@ZCZnDTzIKhEm@hEzCjCt@mDj@BrA`CtB`GtA`AZbFI|Fd@Tj@wAbA~BVk@hBbC"]],"c":[59.8699,30.2344]},{"n":"Колпинский","full":"Колпинский район","p":[["gooc@goqQ@sA`AWEwAzBcB?pAtCqFXhBfC_@`EiL\\cBUYHuA`AcDDkApAkCOM\\uC^LI{@VKPNIo@RBh@hB\\o@Nj@Q~@VIZ^@[JJX]\\fANq@\\RKZbATp@v@t@{@L@?b@\\OxAsHlBR_@}SpBa@`@\\NIXd@`AArBqGb@{L?]SLOuNyAJGiG`HkJgAwTeBx@qGwH_@sC\\u`@}AjCs@X]k@O_De@?SVNpDM|AeAdCmBs@oAnBa@xCgDkDk@nEAzM{@xGUdGmArGqAtQc@zAmCrE{DzI_AjAoCzK]vBh@f@GfBX}@ZvAa@vA\\r@p@{@pAzBwEtPj@Wp@XbCjFX@`AoABJkOvUrA|Rj@xA"]],"c":[59.7776,30.6248]},{"n":"Красногвардейский","full":"Красногвардейский район","p":[["snqc@mspQ~Ay@nDsFaBwIsE{HeAw@k@_AEgAb@kETgJFcLm@uAuTwCeAqGT[Q}AgAoEhDwDg@mGm@fC?z@Ig@cApAg@?HpBO@a@cALnCq@fDBbARXE`AW}@YF@m@YNWQF}@]]Uh@Ff@c@ENQSa@c@d@pCvIc@zD_@Mc@r@m@Uw@jAu@PUQSnA_AcAy@UQtASFHjAc@^ZhAg@j@CIsAt@oAqAwANx@vBSt@YLCjAo@LFbAf@x@?Xc@NYt@_@uAWzBu@m@SgAYAQdC{@~@cAfIb@tAnKBbAT|HuBfPnQhGpBdApCl@{@xAG~Dv@fEtB"]],"c":[59.9783,30.4866]},{"n":"Красносельский","full":"Красносельский район","p":[["ujmc@{riQt@wBi@sDrAmBiAmIVUC{C`BqAhFyH?uB[k@d@mAOOFm@d@n@BOd@B@^PAEeBRNCu@XADc@q@gFm@y@m@CYP?i@}B`BCtDg@RPf@kAlB}ApBQFKSK^@y@cBXQz@yADGd@UUKw@{AcAOz@WMCRgAoCwAgA_@GcEx@{ASGZRuNsE}Es@fCy@q@MTiC}CSEM\\[aB{A@iAmAKpDuAkBfByIp@_Af@l@Li@KyDqAuFg@iEk@zE_@FETi@Yh@{IMDEg@wB_AC]cAEUaADyFaEuCsFcLbExXl@fNA|JiGoHiPeXQ~MsAdHl@xJiAvBAt@P\\O^CMM`B@h@RDa@tCXHxA|BfAzDN|BMZOUFhHXPt@CsATT~@Cp@QGI\\L|@[fBLr@bD@d@k@IbBTdBpISXjBkAfInMoBQsEVeBo@qGbDkMzAtA^pJlBMT|BNHlBJjAKl@NH`@LMJnBdAtCx@M~DrPJzEXh@b@IQsFZEEuAfB[B}CPg@JA?lBr@c@JrBj@]BiCb@gBjC~GpBbCVSPN|@hBb@Ev@x@rB^UrCv@bA","asnc@}mkQoJwK`@mBnG`IG\\nAxAIjA"],["uklc@uejQPcDmD{DsAYJ~E`@vC`E@"]],"c":[59.7818,30.1212]},{"n":"Кронштадтский","full":"Кронштадтский район","p":[["}usc@u~_QPECUMZ"],["unsc@ixaQTMUy@R}Bt@qCGcBp@wB@qBx@_D|B}DpFeFnAk@^H|ApDKo@Ty@jAp@H`A[j@x@u@hAp@t@A`Dx@fUvGBq@_ZoIc@aA_BoAUiADxAyCiAj@wAd@Vi@iAOCOzA][QHIMLY@G[VgCeDb@_Gd@mACu@f@iAB}@t@EBtA^^j@aCp@`Aw@}ALcDf@aAf@HN\\JYtAGpAkIHkBdDcEw@aDiBvCUgCXa@OFw@c@I`@UAGj@KGYcAb@iDOUM~@_Ah@WM_@XkAfE[lCST[Uq@nANj@Sa@Pv@Yk@Hp@e@q@b@fAc@s@A^`@d@][EdAYDKl@g@b@EjBQX@h@JIBTQz@KYOzAQDWw@LGsAaBTKw@a@}@qCGiIy@wSZm@Ii@Na@c@aI]g@Q{Ak@cJsAe[HwDGQEi@^~AL]Ye@D{@IGIXUa@m@wOWF?RdDht@VxLYbCJvAn@|BfApSPl[iBk@m@eCEwBUv@bAhEpBz@N~Dd@fDWnBSPe@~IFz@YVK`Bm@xADdAY`Ca@^Ar@Xv@GtB_@jF]jAMrDYj@h@~A"],["sirc@c~bQJYYQE\\RL"],["g{qc@_ccQLI_@u@IVZf@"],["g`rc@occQB[WWAf@TJ"],["q~sc@qjcQk@qBYqDNbEt@~A"],["_krc@akcQJa@O]G^J^"],["otrc@_lcQH_@KEGPHR"],["{trc@iucQTSFeAIS?f@C]ILMKF`B"],["ymrc@e}cQJcAQcB]fABz@^F?Z"],["ulsc@uxdQXeASn@BkASb@Hz@K_AJ_@LEDJEMMDK`@A|@LB"],["aotc@a|eQ?[WAe@u@UmAKXRz@n@`AZH"],["ohsc@c|eQN{@Os@Kt@Jx@"],["ohsc@olfQBOOiBKbAVt@"],["{ksc@kzfQHs@[y@E`AVj@"]],"c":[59.9873,29.776]},{"n":"Курортный","full":"Курортный район","p":[["ervc@cv}P`@uLFe@t@_@RaA@yATS]mD^YB`@d@Q\\pKd@~Bp@vAJmAFLVUQITe@Is@VKBe@PXDUWkBL[I{A_@_Ci@iAe@eDk@iQk@aDSgD_CgAQmBm@}@@UZJDKqAg@Z}@S{AN{FeAgDFsPb@_LhAiHPiNTyBOy@BoDfA{OGt@SCXwK`Cu_@vAoLrDgQTV[e@?c@x@_Er@eHYmDBiCjBgKp@_Bf@mCd@sF`AyE|AmC~BcBfG{ChAYXH@a@xAc@xBSrBDjChCj@jBb@pFb@f@XuAAoDb@p@XDL]r@JtAu@xA_CZiDf@dFv@gFr@aBHwAj@cAfAq@qA`CkAdGBtA`Bd@fEUdBiBrAmBj@_BeAuDm@OG[ZkBK}AbCs@`@e@`EeN~@sAx@k@n@cE]_@XiB^^hByKlAnAtAiQCaBg@{@iFSuE\\_CoXUmOWAWhAYI}@|Ac@M[w@M@[xCe@?o@v@}@_AcAUXzDWAu@aEsA?e@i@}B`Br@xGe@|@OlAcDxDwAdDeB~IgAt@k@bAaD}GiAeAXyBMm@RoAIyDEZUOGZWM]^c@k@GgAQMd@qBe@{Cl@}Bi@cBIPg@@_AWfCqToBwAZgD@uDQJ?hBc@_@]iA}BZF`Eg@DJhF]]}@FWS?i@YOCLC^n@v@PAN|A\\NRzA}AxG_@zu@eD~X}C{@i@p@g@vBq@JiAxAc@YMZMvAlAZAj@LFWlAMAKhBe@bASSCn@]_@RvAYMD]WGMbAWUB^GKUPLfBSKO^P`@SFFz@S?Av@WJH^QAKj@FnAFUNXQh@JFEPAOSD?bAeBlHFr@a@lCZXoCrS}@]y@\\C~C\\`Ga@z@B~@[l@H~DUxA{BrFNnAiAhCIsA_HtPW`DF`Ds@n@[`CuAzBu@ImA`FqBb@LvFl@zEAbBe@~CBbD`@hAD}@z@YXcAFTPUX`Ab@Yp@cBn@JQ~C}ClIe@o@KkBs@iBqAb@QbC~A|AInFj@n@Z~@iB~S~@rA^mADl@bAvAkAjGDl@v@ZJzAv@vCcAfCfBr@@dB\\nAnBvAj@lBgBpPXvFx@h@aBtHo@UkBRzBhE^jBxAnD[vAq@r@nQ|b@~AdC"]],"c":[60.1236,30.0672]},{"n":"Московский","full":"Московский район","p":[["__oc@gylQDU^Gd@kENwEtDcf@xD|FRo@x@~ALi@z@`CdDrBrJc_@}JgKNu@}Bw@DaA]GQx@WFHj@kBnC{GLYc@g@I}@r@{BF}@eFyBmFc@oD?uBQGS_Ai@qHga@|OgCxBuBdAaBGuEfB{BxA_ARe@h@xAzGrFOFhL\\?D_@x@Pr@Pj@r@nAXC{BVD^lAh@h@`K`AJm@vALn@v@~BvAvLhV`EtCExFT`AbADB\\vB~@Df@LGi@|Ih@X"]],"c":[59.8278,30.3165]},{"n":"Невский","full":"Невский район","p":[["eeqc@a`pQdAu@bBoDbF_IBJLc@pAy@jIkL`KuRh[{f@CKaAnAYAcCkFq@Yk@VvEuPqA{Bq@z@]s@`@wA[wAY|@FgBi@g@_@pAi@b@wB]q@n@EdDv@`FI`Dy@bEyBhGy@tGq@`AaEU]aH]Mg@aFsPbMAf@wZiEl@tAHdBe@lSe@hGJp@jBfBhEhHl@rB|@tFgBnCvAfKl@`K"]],"c":[59.8708,30.466]},{"n":"Петроградский","full":"Петроградский район","p":[["uirc@i`mQh@UAc@X_@SiAHkBDUJNJSZsFVh@ZS^j@jBuQlBsG~AeIRkMaCyPq@fBs@p@cEt@cDhCkA|CeA|KCtD\\vIY|FZtMl@pETANp@FjE`@z@r@N"]],"c":[59.9642,30.2858]},{"n":"Петродворцовый","full":"Петродворцовый район","p":[["eoqc@u`bQ`@GVqFj@YbDbBXs@bBwTfAyF\\WGk@v@oEXi@nCaBbBpFf@JfGi@z@aDIeDNo@_@a@LgGx@?I}Gy@kC~BsHlCeGkEsMNaA^GRgAKuAi@?Fs@pBoLRXp@c@Nk@n@M\\cBA]q@{@o@HDu@b@E~AyBt@f@Th@DaAtA[NcB}E_CFm@WKReDdA^VoCm@Or@cHREx@qKzGfDCyAf@{@kB{SQM`@yGg@{@WyAHe@Sa@P_ET_@S{@FSLTBY^YuAqEBkG~@r@`@MFf@ZBDZfAGj@c@Ph@d@BzAaFG}Cd@qDFkDoMnBjAgIYkBqIRUeBHcBe@j@cDAFfBSf@`@rCEzEf@rDSjBJtAMrCRDFb@k@ACQEPR\\TbDOfATjBs@~BQEIHVHKRQMNj@g@`ANXRGAZSBLZ]bCc@v@KI@bAuBvEO|AgA~AQlDa@CLf@MOCl@O?H^OHAnAa@fAJp@aA@ELl@CHtB?~@OHJHUHT|ASjHYd@UbDc@y@KDb@zCWvEe@r@Fb@e@OLbD{@bDe@Na@tHUb@FRPOAh@MNSUOl@ZjAGbBWr@\\`Aa@d@k@lGW@Az@_ApDc@jFw@p@X\\V}@[lB?i@SOIh@MIc@pC]W~@hAGd@M\\o@Dc@h@S_@Cd@GMx@lCo@_BKViBoBi@SYt@r@nFi@pDXx@u@fB@b@k@h@Y`J?~FNh@Ip@RLKlB}@Y?rLd@?@vFk@OEn@r@ZfBpL"],["wepc@{xiQGK@c@Ef@M?XF"]],"c":[59.8762,29.8484]},{"n":"Приморский","full":"Приморский район","p":[["srsc@aahQt@]KkChCy@FTCWz@YPvBs@TIY?Z}An@OcB?rBlF}AB]B`@j@ILoB^rBXq@Zp@Xe@TFF_@\\|@]iADu@f@mBl@mG`A_EPyBd@y@ZZ@mB^m@`@BVv@^]]{AR_@Cq@Cd@aBdBc@Mb@B]KFe@Bb@THz@eAJQHS_@j@[kBDgEYo@JyBK}Fb@uCGyBj@eGH}ERcA^WMk@`@RQiA\\_B?qH\\kCGaCZoNRy@~@XLiB]YRVIpAm@STeAOIGuAFeEcASCfAKkBt@k@Rh@JcA^WLPV}AZ?CQUJAk@l@iDNFDMQKOgDa@oA?uASU@OVA@e@r@Y}@cKIkJVuD]wIBuDpA}LuA{DMXa@QiDvAIi@WnAGYu@r@}_@xP{I|KxI~^gElDPlAa@~C^~BcAp@nH~c@d@?^_Dd@z@^N`A_BXHViAV@TlO~BnXtE]~EPd@ZNx@uArSmAoAiBxK_@_@YhB\\^o@bEy@j@_ArAaEdNa@d@cCr@J|A[jBh@H|A~BB`A"]],"c":[60.0234,30.1948]},{"n":"Пушкинский","full":"Пушкинский район","p":[["unlc@kemQp@wAVaBoAi@HqBh@mCCoCdBlCpAlANyAx@JlA_@NYN{ClAeDhErJ~AaFuPu_@fBoKYyNt@AhBgHFsFj@cCoAaELaDf@iByCeGyAq@[BIwFvMoRKaBl@mD]a@Cm@e@MKw@[Ay@mIwFz@iEFMrCM?@hBmAY?d@m@Oa@NDdEERw@NqAmDkAk@m@iSu@w@m@RKt@{@q@Qm@mAACqBw@Kl@_TsNmF[rDiBjFaA@Ye@OHa@]qB`@^|SmBSyArH]N?c@MAu@z@q@w@cAUJ[]SOp@]gAY\\KKAZ[_@WHP_AOk@]n@i@iBSCHn@QOWJHz@_@M]tCNLqAjCEjAaAbDItATX]bBaEhLgC^YiBuCpF?qA{BbBDvAaAVArAc@m@tArDtBdOr@tMi@Rh@pHR~@PFH|Dh@tC|@tALbA\\d@f@lB@~APA@XzBG|@s@f@HXb@zGMjBoCIk@VGPy@\\FE`A|Bv@Ot@|JfKaAxD`CfC~Ab@_AzFhEoAtBzEt@`@f@mDbAfA]~Br@XbCbDrBvAl@|CdCpFP]n@jBbA_Bd@tCzEvE"]],"c":[59.7318,30.4245]},{"n":"Фрунзенский","full":"Фрунзенский район","p":[["udqc@{loQd@i@~@SzByAtEgB`BFtBeAfCyBpb@qPs@uMuBeOoAuCy@aIg@eK}JbPaKtRkIjLqAx@Mb@CKcF~HcBnDeAt@k@~Kz@dE"]],"c":[59.8662,30.3922]},{"n":"Центральный","full":"Центральный район","p":[["evqc@u}nQz@uA^p@`FqIU{@v@sB~BiCZr@GeBh@}GAgEmAaMs@kEgAbB_Bx@gEuB_Ew@_AAg@PaAtCGdEhAfDr@~FSjJ`CxPzAjD"]],"c":[59.9358,30.3546]}],"b":[[59.634,29.426],[60.245,30.759]]}; // районы Санкт-Петербурга (OpenStreetMap)
+function geoRegion(lat,lng){if(!isFinite(lat)||!isFinite(lng)||!lat||!lng)return null;for(const k in GEO.okrugs)if(inPoly(lng,lat,GEO.okrugs[k]))return"msk";if(inPoly(lng,lat,GEO.mo))return"mo";return inSpb(lat,lng)?"spb":"other"}
+function inSpb(lat,lng){if(typeof SPB==="undefined")return false;const b=SPB.b;if(lat<b[0][0]||lat>b[1][0]||lng<b[0][1]||lng>b[1][1])return false;return SPB.d.some(d=>d.p.some(pl=>{const r=pl.map(e=>decPoly(e).map(([a,c])=>[c,a]));return inRing(lng,lat,r[0])&&!r.slice(1).some(h=>inRing(lng,lat,h))}))}
 function geoOkrug(lat,lng){for(const k in GEO.okrugs)if(inPoly(lng,lat,GEO.okrugs[k]))return OKR[k];return""}
-const REG={msk:"Москва",mo:"Московская область",other:"За пределами области"};
+const REG={msk:"Москва",mo:"Московская область",spb:"Санкт-Петербург",other:"За пределами области"};
 const blobUrl=id=>(typeof window.blobUrl==="function"?window.blobUrl(id):"/_blob/"+id);
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
@@ -325,7 +327,7 @@ const plural=(n,f)=>{const a=Math.abs(n)%100,b=a%10;return n+" "+(a>10&&a<20?f[2
 const SM=["смена","смены","смен"];
 
 let ui={region:"msk",mapZoom:"core",tab:"day",date:today(),project:"all",photoFilter:"pending",period:"7",editShift:null,armed:null};
-try{const r=localStorage.getItem("ps-reg");if(r==="msk"||r==="mo")ui.region=r;}catch(e){}
+try{const r=localStorage.getItem("ps-reg");if(r==="msk"||r==="mo"||r==="spb")ui.region=r;}catch(e){}
 try{const t=localStorage.getItem("ps-tab");if(t&&TABS.some(x=>x[0]===t))ui.tab=t;}catch(e){}
 if(location.hash&&TABS.some(x=>"#"+x[0]===location.hash))ui.tab=location.hash.slice(1);
 
@@ -407,7 +409,7 @@ function buildTab(){
   const b=`<div id="bn"></div>`;
   const T={
   day:()=>`${b}<div class="head"><div><div class="eyebrow" id="dayEb"></div><h2>План дня</h2></div>
-      <div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская область<span id="regN-mo"></span></button></div></div>
+      <div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская область<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div></div>
     <div class="kpis" id="dayKpi"></div>
     <section class="panel"><div class="panel-h"><h3 id="mapTitle">Карта</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="mapback" id="mapBack" hidden data-act="map-back"></button><span id="schemaNote"></span></div></div>
       <div id="lmap" class="lmap" role="region" aria-label="Интерактивная карта"></div><div class="legend" id="dayLeg"></div><p class="hint">Колёсико или щипок — приблизить, перетаскивание — сдвинуть. В Москве сначала выберите округ, затем район; цифра — смен на этот день. Нажмите на точку — откроется карточка со ссылкой на Яндекс Карты.</p></section>
@@ -439,7 +441,7 @@ function buildTab(){
       <div class="fld"><label for="pt-dist">Район</label><input id="pt-dist" placeholder="Даниловский"></div>
       <div class="fld"><label for="pt-proj">Проект</label><select id="pt-proj"></select></div>
       <div class="fld"><label for="pt-geo">Координаты</label><input id="pt-geo" placeholder="55.7096, 37.6226"></div>
-      <div class="fld"><label for="pt-reg">Регион</label><select id="pt-reg"><option value="">Определить по координатам</option><option value="msk">Москва</option><option value="mo">Московская область</option></select></div>
+      <div class="fld"><label for="pt-reg">Регион</label><select id="pt-reg"><option value="">Определить по координатам</option><option value="msk">Москва</option><option value="mo">Московская область</option><option value="spb">Санкт-Петербург</option></select></div>
       <div class="fld"><button class="btn primary" type="submit">Добавить</button></div>
       <p class="hint" id="ptMsg" style="grid-column:1/-1">Координаты можно скопировать из любой карты: широта, затем долгота через запятую.</p>
     </form></section>
@@ -518,7 +520,7 @@ const emptyBox=t=>`<div class="empty">${t}</div>`;
 function kpiHtml(items){return items.map(k=>`<div class="kpi ${k.c||""}"><div class="v">${k.v}</div><div class="l">${k.l}</div>${k.s?`<div class="s">${k.s}</div>`:""}</div>`).join("")}
 
 /* ---------- День ---------- */
-function ptRegion(p){if(!p)return null;if(p.region==="msk"||p.region==="mo")return p.region;const g=geoRegion(p.lat,p.lng);return g==="other"?"mo":(g||"msk")}
+function ptRegion(p){if(!p)return null;if(p.region==="msk"||p.region==="mo"||p.region==="spb")return p.region;const g=geoRegion(p.lat,p.lng);return g==="other"?"mo":(g||"msk")}
 function shiftRegion(s){return ptRegion(byId("points",s.pointId))}
 function dayShifts(all){return S.shifts.filter(s=>s.date===ui.date&&inProject(s)&&(all||shiftRegion(s)===ui.region)).sort((a,b)=>a.start.localeCompare(b.start))}
 /* ---------- Интерактивная карта (Leaflet; слои OpenStreetMap встроены, подложки нет) ---------- */
@@ -535,7 +537,7 @@ function initMap(){
   if(typeof L==="undefined"){el.innerHTML=`<div class="empty" style="margin:16px">Карта не загрузилась: не удалось подключить картографическую библиотеку. Обновите страницу.</div>`;return}
   if(LM&&LM.el===el)return;
   if(LM){try{LM.map.remove()}catch(e){}LM=null}
-  const map=L.map(el,{preferCanvas:true,zoomControl:false,minZoom:7,maxZoom:16,zoomSnap:.25,zoomDelta:.5,wheelPxPerZoomLevel:110,fadeAnimation:false});
+  const map=L.map(el,{preferCanvas:true,zoomControl:false,minZoom:7,maxZoom:16,zoomSnap:.1,zoomDelta:.5,wheelPxPerZoomLevel:40,wheelDebounceTime:20,fadeAnimation:false});
   map.attributionControl.setPrefix(false).addAttribution("Данные © участники OpenStreetMap");
   L.control.zoom({position:"topright",zoomInTitle:"Приблизить",zoomOutTitle:"Отдалить"}).addTo(map);
   const cv=L.canvas({padding:.25,tolerance:3});
@@ -561,7 +563,10 @@ function buildRegion(){
   const P=(polys,o)=>L.polygon(polyLL(polys),Object.assign({renderer:cv,interactive:false,smoothFactor:1.2},o));
   const Ln=(e,o)=>L.polyline(dp(e),Object.assign({renderer:cv,interactive:false,smoothFactor:1.6,lineCap:"round",lineJoin:"round"},o));
   const msk=LM.region==="msk"; const moOuter=MD.mo[0][0], mskRings=MD.mo[0].slice(1);
-  if(msk){
+  if(LM.region==="spb"){
+    SPB.d.forEach(d=>base.addLayer(P(d.p,{stroke:false,fillColor:MS.land,fillOpacity:1})));
+    top.addLayer(L.polygon([WORLD,...SPB.d.flatMap(d=>d.p.flatMap(pl=>pl.map(dp)))],{renderer:cv,interactive:false,stroke:false,fillColor:MS.white,fillOpacity:1}));
+  }else if(msk){
     MD.okrugs.forEach(o=>base.addLayer(P(o.p,{stroke:false,fillColor:MS.land,fillOpacity:1})));
     MD.parks.forEach(p=>base.addLayer(P([p],{stroke:false,fillColor:MS.park,fillOpacity:1})));
     MD.rivMsk.forEach(r=>base.addLayer(Ln(r.e,{color:MS.water,weight:r.w>=5?5:2})));
@@ -585,21 +590,22 @@ function buildRegion(){
 function setRegionView(force){
   if(!LM)return;
   if(!force&&LM.region===ui.region)return;
-  LM.region=ui.region; LM.okrug=null; LM.el.dataset.reg=ui.region;
+  LM.region=ui.region; LM.okrug=null; LM.cityOpen=null; LM.el.dataset.reg=ui.region;
   setDetail(false); buildRegion();
-  LM.map.fitBounds(ui.region==="msk"?MD.bounds.msk:MD.bounds.mo,{padding:[10,10],animate:false});
+  LM.map.fitBounds(RB(),{padding:[10,10],animate:false});
   LM.el.dataset.z=Math.floor(LM.map.getZoom());
 }
 const MOC={"Сергиево-Посадский":["Сергиев Посад",56.3153,38.136],"Талдомский":["Талдом",56.731,37.5278],"Мытищи":["Мытищи",55.9095,37.7339],"Дмитровский":["Дмитров",56.3451,37.5201],"Волоколамский":["Волоколамск",56.036,35.9583],"Рузский":["Руза",55.6999,36.1947],"Пушкинский":["Пушкино",56.0104,37.8462],"Щёлково":["Щёлково",55.9206,37.9916],"Богородский":["Ногинск",55.8554,38.4412],"Павлово-Посадский":["Павловский Посад",55.7813,38.6508],"Орехово-Зуевский":["Орехово-Зуево",55.8062,38.981],"Шатура":["Шатура",55.5784,39.5438],"Раменский":["Раменское",55.5709,38.2282],"Солнечногорск":["Солнечногорск",56.1854,36.9782],"Чехов":["Чехов",55.1427,37.4545],"Подольск":["Подольск",55.4309,37.5453],"Ленинский":["Видное",55.5571,37.7087],"Красногорск":["Красногорск",55.8205,37.3197],"Одинцовский":["Одинцово",55.6782,37.2668],"Краснознаменск":["Краснознаменск",55.5972,37.0395],"Коломна":["Коломна",55.0939,38.767],"Домодедово":["Домодедово",55.4368,37.7681],"Люберцы":["Люберцы",55.6783,37.8938],"Клин":["Клин",56.3353,36.7346],"Истра":["Истра",55.9146,36.8595],"Лотошино":["Лотошино",56.227,35.6413],"Шаховская":["Шаховская",56.0315,35.5102],"Можайский":["Можайск",55.5065,36.0213],"Реутов":["Реутов",55.7622,37.8566],"Балашиха":["Балашиха",55.7998,37.9374],"Серпухов":["Серпухов",54.9155,37.4196],"Кашира":["Кашира",54.8374,38.1505],"Зарайск":["Зарайск",54.7586,38.8818],"Луховицы":["Луховицы",54.9656,39.0277],"Егорьевск":["Егорьевск",55.383,39.0356],"Наро-Фоминский":["Наро-Фоминск",55.3843,36.7235],"Дубна":["Дубна",56.7363,37.1624],"Лосино-Петровский":["Лосино-Петровский",55.8706,38.2033],"Молодёжный":["Молодёжный",55.3259,36.7848],"Черноголовка":["Черноголовка",56.0061,38.3835],"Ступино":["Ступино",54.8866,38.0773],"Жуковский":["Жуковский",55.5973,38.12],"Фрязино":["Фрязино",55.9546,38.0568],"Воскресенск":["Воскресенск",55.3225,38.6817],"Серебряные Пруды":["Серебряные Пруды",54.468,38.7224],"Котельники":["Котельники",55.6617,37.8673],"Восход":["Восход",55.9738,36.459],"Власиха":["Власиха",55.6839,37.192],"Долгопрудный":["Долгопрудный",55.9341,37.5142],"Звёздный городок":["Звёздный городок",55.8774,38.1131],"Бронницы":["Бронницы",55.422,38.2591],"Королёв":["Королёв",55.919,37.815],"Лобня":["Лобня",56.0117,37.4743],"Лыткарино":["Лыткарино",55.5822,37.908],"Химки":["Химки",55.8917,37.4397],"Электросталь":["Электросталь",55.7845,38.4449]}; // главный город каждого района области (OpenStreetMap)
-const selArea=()=>ui.region==="msk"?MD.okrugs.find(o=>o.n===LM.okrug):MD.distMo.find(d=>d.full===LM.okrug);
-function pickOkrug(key){if(!LM)return;LM.okrug=key;const a=selArea();setDetail(true);LM.map.flyToBounds(L.polygon(polyLL(a.p)).getBounds(),{padding:[16,16],duration:.6});updateTab()}
-function backToOkrugs(){if(!LM)return;LM.okrug=null;setDetail(false);LM.map.flyToBounds(ui.region==="msk"?MD.bounds.msk:MD.bounds.mo,{padding:[10,10],duration:.6});updateTab()}
+const RB=()=>ui.region==="spb"?SPB.b:MD.bounds[ui.region];
+const selArea=()=>ui.region==="msk"?MD.okrugs.find(o=>o.n===LM.okrug):ui.region==="spb"?SPB.d.find(d=>d.n===LM.okrug):MD.distMo.find(d=>d.full===LM.okrug);
+function pickOkrug(key){if(!LM)return;LM.okrug=key;LM.cityOpen=null;const a=selArea();setDetail(true);LM.map.flyToBounds(L.polygon(polyLL(a.p)).getBounds(),{padding:[16,16],duration:.6});updateTab()}
+function backToOkrugs(){if(!LM)return;LM.okrug=null;LM.cityOpen=null;setDetail(false);LM.map.flyToBounds(RB(),{padding:[10,10],duration:.6});updateTab()}
 function updateMap(sh,pst){
   if(!LM)return; setRegionView(false);
   const {map,hl,badges,pts,cv}=LM; hl.clearLayers();badges.clearLayers();pts.clearLayers();
   const sel=LM.okrug?selArea():null;
   const back=document.getElementById("mapBack");
-  if(back){back.hidden=!sel;back.textContent=sel?`← ${ui.region==="msk"?"Все округа":"Вся область"} · ${sel.full}`:""}
+  if(back){back.hidden=!sel;back.textContent=sel?`← ${ui.region==="msk"?"Все округа":ui.region==="spb"?"Все районы":"Вся область"} · ${sel.full}`:""}
   const cntD=new Map(),cntO=new Map();
   for(const s of sh){const p=byId("points",s.pointId);if(!p||!p.lat)continue;const d=distOf(p);if(d)cntD.set(d,(cntD.get(d)||0)+1);const o=geoOkrug(p.lat,p.lng);if(o)cntO.set(o,(cntO.get(o)||0)+1)}
   const tag=(c,html,cls,title,onClick)=>{const m=L.marker(c,{icon:L.divIcon({className:"mb "+cls,html,iconSize:null}),title,keyboard:false,riseOnHover:true,zIndexOffset:/\bon\b/.test(cls)?1000:0});if(onClick)m.on("click",onClick);badges.addLayer(m)};
@@ -607,7 +613,15 @@ function updateMap(sh,pst){
   const area=(a,stroke,w,onClick)=>{const pg=L.polygon(polyLL(a.p),{renderer:cv,color:stroke,weight:w,fillColor:MS.sel,fillOpacity:0,interactive:true,smoothFactor:1.2});
     pg.on("mouseover",()=>pg.setStyle({fillOpacity:.07}));pg.on("mouseout",()=>pg.setStyle({fillOpacity:0}));if(onClick)pg.on("click",onClick);hl.addLayer(pg);return pg};
   const veil=a=>hl.addLayer(L.polygon([WORLD,...a.p.map(pl=>dp(pl[0]))],{renderer:cv,interactive:false,stroke:false,fillColor:"#FFFFFF",fillOpacity:LM.detail?.55:.72}));
-  if(ui.region==="msk"){
+  if(ui.region==="spb"){
+    if(!sel){
+      for(const d of SPB.d){area(d,LM.detail?"#3F4C59":MS.okr,LM.detail?1.8:1.2,()=>pickOkrug(d.n));const n=cntD.get(d.full)||0;
+        tag(d.c,`<span>${esc(d.n)}${cnt(n)}</span>`,"mob"+(n?" on":""),`${d.full}: ${n?plural(n,SM):"смен нет"} — нажмите, чтобы открыть район`,()=>pickOkrug(d.n))}
+    }else{
+      veil(sel);
+      hl.addLayer(L.polygon(polyLL(sel.p),{renderer:cv,interactive:false,fill:false,color:"#0E2A47",weight:2.4}));
+    }
+  }else if(ui.region==="msk"){
     if(!sel){
       for(const o of MD.okrugs){area(o,LM.detail?"#3F4C59":MS.okr,LM.detail?1.8:1.2,()=>pickOkrug(o.n));const n=cntO.get(o.n)||0;
         tag(o.c,`<span><b>${o.n}</b>${cnt(n)}</span>`,"okb"+(n?" on":""),`${o.full}: ${n?plural(n,SM):"смен нет"} — нажмите, чтобы открыть округ`,()=>pickOkrug(o.n))}
@@ -628,7 +642,7 @@ function updateMap(sh,pst){
       veil(sel);
       hl.addLayer(L.polygon(polyLL(sel.p),{renderer:cv,interactive:false,fill:false,color:"#0E2A47",weight:2.4}));
       const cc=MOC[sel.n];
-      if(cc)tag([cc[1],cc[2]],`<span><b>${esc(cc[0])}</b></span>`,"okb ctb",`${cc[0]} — нажмите, чтобы приблизить город`,()=>map.flyTo([cc[1],cc[2]],13.5,{duration:.6}));
+      if(cc&&LM.cityOpen!==sel.n)tag([cc[1],cc[2]],`<span><b>${esc(cc[0])}</b></span>`,"okb ctb",`${cc[0]} — нажмите, чтобы приблизить город`,()=>{LM.cityOpen=sel.n;map.flyTo([cc[1],cc[2]],13.5,{duration:.6});updateTab()});
     }
   }
   // точки
@@ -644,7 +658,7 @@ function updateMap(sh,pst){
     mk.bindTooltip(esc(p.name),{direction:"right",offset:[8,0]});
     pts.addLayer(mk)}
 }
-function distOf(p){const list=ui.region==="msk"?MD.distMsk:MD.distMo;for(const d of list){if(!d._b){d._r=d.p.map(pl=>pl.map(r=>dp(r).map(([a,b])=>[b,a])));let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const pl of d._r)for(const[x,y]of pl[0]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}d._b=[x0,y0,x1,y1]}
+function distOf(p){const list=ui.region==="msk"?MD.distMsk:ui.region==="spb"?SPB.d:MD.distMo;for(const d of list){if(!d._b){d._r=d.p.map(pl=>pl.map(r=>dp(r).map(([a,b])=>[b,a])));let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const pl of d._r)for(const[x,y]of pl[0]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}d._b=[x0,y0,x1,y1]}
   const[x0,y0,x1,y1]=d._b;if(p.lng<x0||p.lng>x1||p.lat<y0||p.lat>y1)continue;if(d._r.some(pl=>inRing(p.lng,p.lat,pl[0])&&!pl.slice(1).some(h=>inRing(p.lng,p.lat,h))))return d.full}return null}
 
 function upDay(){
@@ -662,8 +676,8 @@ function upDay(){
   document.getElementById("dayLeg").innerHTML=["ontime","late","nophoto","waiting","upcoming"].map(chip).join("");
   // регион
   document.querySelectorAll("#regSw button").forEach(b=>b.setAttribute("aria-selected",b.dataset.reg===ui.region));
-  for(const rg of ["msk","mo"]){const n=S.shifts.filter(x=>x.date===ui.date&&inProject(x)&&shiftRegion(x)===rg).length;document.getElementById("regN-"+rg).textContent=n?" · "+n:""}
-  document.getElementById("mapTitle").textContent=ui.region==="msk"?"Карта Москвы":"Карта Московской области";
+  for(const rg of ["msk","mo","spb"]){const n=S.shifts.filter(x=>x.date===ui.date&&inProject(x)&&shiftRegion(x)===rg).length;document.getElementById("regN-"+rg).textContent=n?" · "+n:""}
+  document.getElementById("mapTitle").textContent=ui.region==="msk"?"Карта Москвы":ui.region==="spb"?"Карта Санкт-Петербурга":"Карта Московской области";
   const pts=S.points.filter(p=>p.active!==false&&inProject(p)&&isFinite(p.lat)&&isFinite(p.lng)&&p.lat&&p.lng&&ptRegion(p)===ui.region);
   const worst={missed:6,nophoto:5,late:4,waiting:3,upcoming:2,ontime:1};
   const pst={}; for(const s of sh){const st=shiftState(s);if(!pst[s.pointId]||worst[st]>worst[pst[s.pointId]])pst[s.pointId]=st;}

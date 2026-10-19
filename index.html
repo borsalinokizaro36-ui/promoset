@@ -185,6 +185,7 @@ main{padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
 .lmap[data-reg="mo"][data-z="9"] .mob.small,.lmap[data-reg="mo"][data-z="10"] .mob.small,.lmap[data-reg="mo"][data-z="11"] .mob.small,.lmap[data-reg="mo"][data-z="12"] .mob.small,.lmap[data-reg="mo"][data-z="13"] .mob.small{display:block}
 .lmap[data-reg="mo"] .ml-place{display:none!important}
 .lmap.detail{background:#F2EFE9}
+.lmap.detail .ml-place{display:none!important}
 .mapback{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)}
 .pp{display:flex;flex-direction:column;gap:6px;min-width:200px}.pp b{font-size:14px}.pp-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pp-links{display:flex;flex-direction:column;gap:4px;margin-top:4px}.pp-links a{color:#0F6EA8;font-weight:600}
@@ -542,11 +543,17 @@ function initMap(){
   map.on("zoomend",()=>{const z=map.getZoom();el.dataset.z=Math.floor(z);if(LM.region==="msk"&&!LM.detail){if(z>=12.5)LM.streets.addTo(map);else LM.streets.remove()}});
   setTimeout(()=>map.invalidateSize(),60);
 }
-function setDetail(on){ // подложка OSM вместо схемы при выбранном округе
-  if(!LM)return; on=!!(on&&LM.tiles); if(on===LM.detail)return; LM.detail=on;
-  const {map}=LM;
-  if(on){LM.base.remove();LM.streets.remove();LM.top.remove();LM.tiles.addTo(map);LM.tiles.bringToBack();map.setMaxZoom(19);LM.el.classList.add("detail")}
-  else{LM.tiles.remove();[LM.hl,LM.badges,LM.pts].forEach(g=>g.remove());LM.base.addTo(map);LM.top.addTo(map);[LM.hl,LM.badges,LM.pts].forEach(g=>g.addTo(map));if(map.getZoom()>16)map.setZoom(16);map.setMaxZoom(16);LM.el.classList.remove("detail")}
+function setDetail(on){ // подложка: OSM везде, где разрешены тайлы; иначе схема, а OSM — только при выбранном округе
+  if(!LM)return; const full=!!LM.tiles; on=full||!!(on&&LM.tiles);
+  const {map}=LM, grp=[LM.hl,LM.badges,LM.pts];
+  if(on){
+    if(!LM.detail){LM.base.remove();LM.streets.remove();LM.tiles.addTo(map);LM.tiles.bringToBack();map.setMaxZoom(19);LM.el.classList.add("detail")}
+    LM.detail=true;
+    if(LM.okrug)LM.top.remove();else{grp.forEach(g=>g.remove());LM.top.addTo(map);grp.forEach(g=>g.addTo(map))}
+  }else{
+    if(!LM.detail)return; LM.detail=false;
+    LM.tiles.remove();grp.forEach(g=>g.remove());LM.base.addTo(map);LM.top.addTo(map);grp.forEach(g=>g.addTo(map));if(map.getZoom()>16)map.setZoom(16);map.setMaxZoom(16);LM.el.classList.remove("detail")
+  }
 }
 function buildRegion(){
   const {cv,base,streets,top}=LM; base.clearLayers();streets.clearLayers();top.clearLayers();
@@ -600,7 +607,7 @@ function updateMap(sh,pst){
   const veil=a=>hl.addLayer(L.polygon([WORLD,...a.p.map(pl=>dp(pl[0]))],{renderer:cv,interactive:false,stroke:false,fillColor:"#FFFFFF",fillOpacity:LM.detail?.55:.72}));
   if(ui.region==="msk"){
     if(!sel){
-      for(const o of MD.okrugs){area(o,MS.okr,1.2,()=>pickOkrug(o.n));const n=cntO.get(o.n)||0;
+      for(const o of MD.okrugs){area(o,LM.detail?"#3F4C59":MS.okr,LM.detail?1.8:1.2,()=>pickOkrug(o.n));const n=cntO.get(o.n)||0;
         tag(o.c,`<span><b>${o.n}</b>${cnt(n)}</span>`,"okb"+(n?" on":""),`${o.full}: ${n?plural(n,SM):"смен нет"} — нажмите, чтобы открыть округ`,()=>pickOkrug(o.n))}
     }else{
       veil(sel);
@@ -612,7 +619,7 @@ function updateMap(sh,pst){
     }
   }else{
     if(!sel){
-      for(const d of MD.distMo){area(d,MS.dist,1,()=>pickOkrug(d.full));const n=cntD.get(d.full)||0;
+      for(const d of MD.distMo){area(d,LM.detail?"#6B7A88":MS.dist,LM.detail?1.2:1,()=>pickOkrug(d.full));const n=cntD.get(d.full)||0;
         if(!d._sz){const b=L.polygon(polyLL(d.p)).getBounds();d._sz=Math.max(b.getEast()-b.getWest(),(b.getNorth()-b.getSouth())*1.75)}
         tag(d.c,`<span>${esc(d.n)}${cnt(n)}</span>`,"mob"+(n?" on":"")+(d._sz<0.22?" small":""),`${d.full}: ${n?plural(n,SM):"смен нет"} — нажмите, чтобы открыть округ`,()=>pickOkrug(d.full))}
     }else{

@@ -445,6 +445,17 @@ details.mp[open] summary::before{transform:rotate(90deg)}
 details.mp summary .h{font-size:13px;color:var(--ink-3)}
 details.mp summary .x{margin-left:auto;font-family:var(--f-mono);font-weight:600}
 details.mp .tbl-wrap{margin:0 0 12px}
+.paybtn{font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:6px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.paybtn.yes{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.paybtn.no{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.paybtn.part{background:var(--info-soft);border-color:transparent;color:var(--info)}
+.paybtn.arm{background:var(--bad);border-color:var(--bad);color:#fff}
+.paybtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pay-yes{color:var(--good);font-weight:600;white-space:nowrap}.pay-no{color:var(--ink-3)}
+.mt-split{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;font-size:14px}
+.mt-split .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.mt-split .dot.ok{background:var(--lime)}.mt-split .dot.due{background:#fff;opacity:.5}
+.mcard .s.due{color:var(--warn);font-weight:600}.mcard .s.ok{color:var(--good);font-weight:600}
 details.mp td:first-child,details.mp td:nth-child(3){white-space:nowrap}
 @media (max-width:1100px){details.mp .mh{display:none}}
 input.rate-in{width:90px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--surface-2);font:inherit}
@@ -1061,29 +1072,39 @@ function upProjects(){
 }
 
 /* ---------- Деньги ---------- */
+const earned=(now=Date.now())=>S.shifts.filter(s=>worked(shiftState(s,now))&&now>=shiftStart(s)+SHIFT_MS);
+const inPj=(s,id)=>id==="_none"?(!s.projectId||!byId("projects",s.projectId)):s.projectId===id;
 function upMoney(){
-  const now=Date.now(), paid=S.shifts.filter(s=>worked(shiftState(s,now))&&now>=shiftStart(s)+SHIFT_MS);
-  const sum=l=>l.reduce((a,s)=>a+SHIFT_H*shiftRate(s),0), ppl=l=>new Set(l.map(s=>s.promoterId)).size;
-  document.getElementById("mnTotal").innerHTML=`<div class="l">Выплачено за все проекты</div><div class="v">${fmtRub(sum(paid))}</div>
-    <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>`;
+  const now=Date.now(), paid=earned(now);
+  const sum=l=>l.reduce((a,s)=>a+SHIFT_H*shiftRate(s),0), ppl=l=>new Set(l.map(s=>s.promoterId)).size, done=l=>l.filter(s=>s.paid);
+  const tot=sum(paid), out=sum(done(paid));
+  document.getElementById("mnTotal").innerHTML=`<div class="l">Всего за все проекты</div><div class="v">${fmtRub(tot)}</div>
+    <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>
+    <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span><span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out)}</span></div>`;
   const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru")).map(p=>({id:p.id,name:p.name,client:p.client||"",rate:rateOf(p)}));
-  if(paid.some(s=>!s.projectId||!byId("projects",s.projectId)))pj.push({id:"_none",name:"Без проекта",client:"проект удалён или не указан",rate:RATE_DEF});
-  const of=id=>paid.filter(s=>id==="_none"?(!s.projectId||!byId("projects",s.projectId)):s.projectId===id);
+  if(paid.some(s=>inPj(s,"_none")))pj.push({id:"_none",name:"Без проекта",client:"проект удалён или не указан",rate:RATE_DEF});
+  const of=id=>paid.filter(s=>inPj(s,id));
   let sel=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null); if(sel&&!pj.some(p=>p.id===sel))sel=null;
-  document.getElementById("mnCards").innerHTML=pj.length?pj.map(p=>{const l=of(p.id);return `<button class="mcard ${sel===p.id?"on":""}" type="button" data-act="money-pj" data-id="${esc(p.id)}" aria-pressed="${sel===p.id}">
-    <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||"\u00a0")}</span><span class="v">${fmtRub(sum(l))}</span>
-    <span class="s">смен: ${l.length} · ${l.length*SHIFT_H} ч · ставка ${fmtRub(p.rate)}/ч</span></button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите ставку за час.");
+  document.getElementById("mnCards").innerHTML=pj.length?pj.map(p=>{const l=of(p.id),due=sum(l)-sum(done(l));return `<button class="mcard ${sel===p.id?"on":""}" type="button" data-act="money-pj" data-id="${esc(p.id)}" aria-pressed="${sel===p.id}">
+    <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||" ")}</span><span class="v">${fmtRub(sum(l))}</span>
+    <span class="s">смен: ${l.length} · ${l.length*SHIFT_H} ч · ставка ${fmtRub(p.rate)}/ч</span>
+    ${l.length?`<span class="s ${due?"due":"ok"}">${due?"ждут выплаты "+fmtRub(due):"всё выплачено"}</span>`:""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите ставку за час.");
   const det=document.getElementById("mnDet");
-  if(!sel){det.innerHTML=`<h3>Кому и за что</h3><p class="hint">${pj.length?"Нажмите на проект, чтобы увидеть, кому сколько выплачено, за какие смены и по какой ставке.":"Здесь появится расшифровка выплат по проекту."}</p>`;return}
-  const p=pj.find(x=>x.id===sel), l=of(sel), by={};
+  if(!sel){det.innerHTML=`<h3>Кому и за что</h3><p class="hint">${pj.length?"Нажмите на проект, чтобы увидеть, кому сколько положено, за какие смены, по какой ставке и выплачено ли.":"Здесь появится расшифровка выплат по проекту."}</p>`;return}
+  const p=pj.find(x=>x.id===sel), l=of(sel), by={}; ui.mpOpen=ui.mpOpen||new Set();
   for(const s of l)(by[s.promoterId]=by[s.promoterId]||[]).push(s);
   const rows=Object.entries(by).map(([id,ss])=>({id,name:prName(id),ss:ss.sort((a,b)=>shiftStart(b)-shiftStart(a)),total:sum(ss)})).sort((a,b)=>b.total-a.total);
   const hm=t=>new Date(t).toTimeString().slice(0,5);
+  const payBtn=r=>{const n=r.ss.length,k=done(r.ss).length,st=k===0?"no":k===n?"yes":"part",key="pay:"+sel+":"+r.id,armed=ui.armed===key;
+    const lab=armed?"Снять отметку?":st==="yes"?"✓ Выплачено":st==="part"?`Выплачено ${k} из ${n}`:"Не выплачено";
+    const tip=st==="yes"?"Нажмите дважды, чтобы снять отметку о выплате":"Нажмите, чтобы отметить, что деньги выплачены";
+    return `<button class="paybtn ${st} ${armed?"arm":""}" type="button" data-act="pay" data-pj="${esc(sel)}" data-pr="${esc(r.id)}" title="${tip}" aria-label="${esc(r.name)}: ${lab}. ${tip}">${lab}</button>`};
   det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}</span></div>
-    ${rows.length?rows.map(r=>`<details class="mp"><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span></summary>
-      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num">Ставка</th><th class="num">Сумма</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
+    ${rows.length?rows.map(r=>`<details class="mp" data-pr="${esc(r.id)}"${ui.mpOpen.has(r.id)?" open":""}><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span>${payBtn(r)}</summary>
+      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
-        <td class="num mh">${SHIFT_H}</td><td class="num">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td></tr>`).join("")}</tbody></table></div></details>`).join("")
+        <td class="num mh">${SHIFT_H}</td><td class="num">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td>
+        <td class="paycell">${s.paid?`<span class="pay-yes">✓ да</span>`:`<span class="pay-no">нет</span>`}</td></tr>`).join("")}</tbody></table></div></details>`).join("")
       :`<p class="hint">По этому проекту ещё нет отработанных смен.</p>`}`;
 }
 
@@ -1218,6 +1239,10 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="pay"){e.preventDefault();const pj=b.dataset.pj,prm=b.dataset.pr,list=earned().filter(s=>inPj(s,pj)&&s.promoterId===prm);if(!list.length)return;
+    if(list.every(s=>s.paid)){if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null})},"Отметка о выплате снята")}
+    else await guard(async()=>{const t=Date.now();for(const s of list.filter(s=>!s.paid))await db.doc("shifts/"+s.id).update({paid:true,paidAt:t})},"Отмечена выплата: "+prName(prm));
+    updateTab();return}
   if(act==="money-pj"){const cur=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null);ui.moneyPj=cur===id?null:id;updateTab();return}
   if(act==="mem-pass"){if(!arm("pw:"+id))return;try{await window.psMembers.tempPassword(id,b.dataset.email||"")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
   if(act==="mem-del"){if(!arm("mem:"+id))return;try{await window.psMembers.remove(id);toast("Доступ закрыт")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
@@ -1237,6 +1262,7 @@ main.addEventListener("click",async e=>{
   if(act==="del-examples"){if(!arm("ex"))return;await guard(async()=>{for(const c of COLS)for(const x of S[c].filter(x=>x.example))await db.doc(c+"/"+x.id).delete()},"Примеры удалены");return}
   if(act==="copy-report"){const t=reportText();try{await navigator.clipboard.writeText(t);toast("Отчёт скопирован")}catch(err){lb.innerHTML=`<pre style="background:var(--surface);color:var(--ink);padding:16px;border-radius:12px;white-space:pre-wrap;max-width:560px;cursor:text" onclick="event.stopPropagation()">${esc(t)}</pre>`;lb.hidden=false}return}
 });
+main.addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.mp"))return;ui.mpOpen=ui.mpOpen||new Set();d.open?ui.mpOpen.add(d.dataset.pr):ui.mpOpen.delete(d.dataset.pr)},true);
 main.addEventListener("change",async e=>{const r=e.target.closest&&e.target.closest("input[data-prate]");if(!r)return;const v=num(r.value);if(!(v>0)){toast("Ставка должна быть больше нуля");updateTab();return}await guard(()=>db.doc("projects/"+r.dataset.prate).update({rate:v}),"Ставка сохранена: "+fmtRub(v)+" в час. Уже назначенные смены считаются по прежней ставке.")});
 main.addEventListener("change",async e=>{const s=e.target.closest&&e.target.closest("select[data-mrole]");if(!s)return;try{await window.psMembers.setRole(s.dataset.mrole,s.value);toast("Роль изменена: "+window.psMembers.roleLabel(s.value))}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab()});
 document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;ui.selShift=null;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab()}});

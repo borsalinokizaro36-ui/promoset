@@ -423,6 +423,7 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .tg.good{background:var(--good-soft);color:var(--good);border-color:transparent}
 .scard .a3{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
+td.macts{white-space:nowrap}
 td select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface-2);font-weight:500}
 @media (max-width:1180px){.kstrip{grid-template-columns:repeat(3,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(2),.kstrip .kpi:nth-child(5){border-left:0}.kstrip .kpi:nth-child(n+2){border-top:1px solid var(--line)}.daygrid{grid-template-columns:290px minmax(0,1fr)}.sgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px) and (min-width:601px){body{grid-template-columns:188px minmax(0,1fr)}.top{padding:14px 8px 12px}.tab{padding:9px 10px;font-size:14px}.bar0{padding:16px 18px 4px}.bar0 h1{font-size:24px;flex-basis:100%}.ctl{width:100%}.ctl .barx{flex-basis:100%;border-left:0;border-bottom:1px solid var(--line)}.ctl .regsw{flex-wrap:nowrap;overflow-x:auto}.ctl .regsw button{white-space:nowrap}main.wrap{padding:10px 18px 32px}.daygrid{grid-template-columns:minmax(0,1fr)}.daygrid .mapcol{order:-1}.mapcol{min-height:max(640px,82vh)}.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(n){border-left:1px solid var(--line);border-top:1px solid var(--line)}.kstrip .kpi:nth-child(2n){border-left:0}.kstrip .kpi.hero{border:0}}
@@ -631,7 +632,7 @@ function buildTab(){
     <section class="panel"><div class="panel-h"><h3>Все проекты</h3><span id="pjN"></span></div><div class="tbl-wrap" id="pjTbl"></div></section>
     <section class="panel" id="exPanel"></section>`,
   access:()=>`${b}<section class="panel"><div class="panel-h"><h3>Кто имеет доступ</h3><span id="acN"></span></div>
-    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Владелец видит всё и управляет доступом. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит.</p>
+    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Владелец видит всё и управляет доступом. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит. Если человек забыл пароль, нажмите «Временный пароль»: приложение придумает новый, вы отправите его человеку, а при первом входе он задаст свой. Временные пароли может ставить только владелец.</p>
     <div class="tbl-wrap" id="acTbl"></div></section>`,
   summary:()=>`${b}<div class="head"><div><div class="eyebrow" id="smEb"></div><h2>Статистика</h2></div>
     <div class="seg" id="smSeg">${[["1","День"],["7","7 дней"],["30","30 дней"],["all","Весь проект"]].map(([k,l])=>`<button data-per="${k}">${l}</button>`).join("")}</div></div>
@@ -927,7 +928,7 @@ function upAccess(){
       return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}</td><td>${esc(m.email)}</td>
       <td>${own&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
       <td>${m.created_at?esc(new Date(m.created_at).toLocaleDateString("ru-RU")):"—"}</td>
-      <td>${own&&!self?`<button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно закрыть доступ?":"Закрыть доступ"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
+      <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно закрыть доступ?":"Закрыть доступ"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
   }).catch(e=>{el.innerHTML=emptyBox("Не удалось загрузить список: "+esc(e&&e.message||e))});
 }
 function upShifts(){
@@ -1109,6 +1110,7 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="mem-pass"){if(!arm("pw:"+id))return;try{await window.psMembers.tempPassword(id,b.dataset.email||"")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
   if(act==="mem-del"){if(!arm("mem:"+id))return;try{await window.psMembers.remove(id);toast("Доступ закрыт")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
   if(act==="pick-prom"){const s=document.getElementById("sh-prom");if(s){s.value=id;s.focus()}return}
   if(act==="sel-shift"){ui.selShift=id||null;if(id&&LM){const s=byId("shifts",id),pt=s&&byId("points",s.pointId);if(pt&&pt.lat&&pt.lng&&ptRegion(pt)===ui.region)LM.map.flyTo([pt.lat,pt.lng],Math.max(LM.map.getZoom(),14.5),{duration:.6})}updateTab();return}

@@ -1101,9 +1101,9 @@ function upMoney(){
     return `<button class="paybtn ${st} ${armed?"arm":""}" type="button" data-act="pay" data-pj="${esc(sel)}" data-pr="${esc(r.id)}" title="${tip}" aria-label="${esc(r.name)}: ${lab}. ${tip}">${lab}</button>`};
   det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}</span></div>
     ${rows.length?rows.map(r=>`<details class="mp" data-pr="${esc(r.id)}"${ui.mpOpen.has(r.id)?" open":""}><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span>${payBtn(r)}</summary>
-      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
+      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num mh">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
-        <td class="num mh">${SHIFT_H}</td><td class="num">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td>
+        <td class="num mh">${SHIFT_H}</td><td class="num mh">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td>
         <td class="paycell">${s.paid?`<span class="pay-yes">✓ да</span>`:`<span class="pay-no">нет</span>`}</td></tr>`).join("")}</tbody></table></div></details>`).join("")
       :`<p class="hint">По этому проекту ещё нет отработанных смен.</p>`}`;
 }

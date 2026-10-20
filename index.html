@@ -445,6 +445,7 @@ details.mp[open] summary::before{transform:rotate(90deg)}
 details.mp summary .h{font-size:13px;color:var(--ink-3)}
 details.mp summary .x{margin-left:auto;font-family:var(--f-mono);font-weight:600}
 details.mp .tbl-wrap{margin:0 0 12px}
+@media (max-width:1100px){details.mp .mh{display:none}}
 input.rate-in{width:90px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--surface-2);font:inherit}
 .pair{display:flex;gap:6px}.pair input{flex:1;min-width:0}
 .rg-wide{grid-column:span 2}
@@ -1079,9 +1080,9 @@ function upMoney(){
   const hm=t=>new Date(t).toTimeString().slice(0,5);
   det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}</span></div>
     ${rows.length?rows.map(r=>`<details class="mp"><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span></summary>
-      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th>Работа</th><th class="num">Часы</th><th class="num">Ставка</th><th class="num">Сумма</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
-        <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td>${esc(s.type||"—")}</td>
-        <td class="num">${SHIFT_H}</td><td class="num">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td></tr>`).join("")}</tbody></table></div></details>`).join("")
+      <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num">Ставка</th><th class="num">Сумма</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
+        <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
+        <td class="num mh">${SHIFT_H}</td><td class="num">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td></tr>`).join("")}</tbody></table></div></details>`).join("")
       :`<p class="hint">По этому проекту ещё нет отработанных смен.</p>`}`;
 }
 

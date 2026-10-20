@@ -1,50 +1,166 @@
-/* Промосеть: связь интерфейса с Supabase (данные, фото, вход).
+/* Промосеть: связь интерфейса с Supabase (данные, фото, вход, регистрация, роли).
    Реализует тот же интерфейс claude.use("db") / claude.use("assets"), что и версия в Claude,
-   поэтому код самого приложения не меняется. */
+   поэтому код самого приложения почти не меняется. */
 (function () {
   "use strict";
   const CFG = window.PROMOSET_CONFIG || {};
   const COLS = ["projects", "points", "promoters", "shifts", "photos"];
   const configured = typeof supabase !== "undefined" && CFG.supabaseUrl && /^https:\/\//.test(CFG.supabaseUrl) && CFG.supabaseKey && !/ВАШ/.test(CFG.supabaseUrl + CFG.supabaseKey);
-  const sb = configured ? supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true } }) : null;
+  const sb = configured ? supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+  const SITE = location.origin + location.pathname;
+  const ROLE_L = { owner: "владелец", admin: "администратор", staff: "сотрудник", pending: "ждёт одобрения" };
+  const escH = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   window.blobUrl = id => sb ? `${CFG.supabaseUrl}/storage/v1/object/public/photos/${encodeURIComponent(id)}` : "";
 
-  // ---------- вход ----------
-  const css = `#ps-login{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#0E2A47;padding:16px;font:15px/1.4 system-ui,'Segoe UI',Arial,sans-serif}
-#ps-login form{background:#fff;color:#0E2A47;border-radius:16px;padding:28px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-#ps-login h1{margin:0 0 4px;font-size:22px}#ps-login label{font-size:13px;color:#4A5F73}
-#ps-login input{font:inherit;padding:10px 12px;border:1px solid #D5E1DE;border-radius:10px}
-#ps-login button{font:inherit;font-weight:600;padding:11px;border:0;border-radius:10px;background:#0F8C80;color:#fff;cursor:pointer}
-#ps-login .e{color:#C2352B;font-size:13px;min-height:1em}#ps-login p{margin:0;font-size:13px;color:#4A5F73}`;
-  function showLogin(msg) {
-    return new Promise(resolve => {
-      const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
-      const box = document.createElement("div"); box.id = "ps-login";
-      box.innerHTML = configured
-        ? `<form><h1>Промосеть</h1><label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
-           <label for="ps-pass">Пароль</label><input id="ps-pass" type="password" autocomplete="current-password" required><div class="e">${msg || ""}</div><button type="submit">Войти</button></form>`
-        : `<form><h1>Промосеть</h1><p>Сайт ещё не подключён к базе. Откройте файл <b>config.js</b> и впишите адрес и ключ проекта Supabase (см. инструкцию).</p></form>`;
-      const mount = () => document.body.appendChild(box);
-      document.body ? mount() : document.addEventListener("DOMContentLoaded", mount);
-      if (!configured) return;
-      box.querySelector("form").addEventListener("submit", async e => {
-        e.preventDefault();
-        const err = box.querySelector(".e"); err.textContent = "";
-        const btn = box.querySelector("button"); btn.disabled = true; btn.textContent = "Входим…";
-        const { error } = await sb.auth.signInWithPassword({ email: box.querySelector("#ps-email").value.trim(), password: box.querySelector("#ps-pass").value });
-        btn.disabled = false; btn.textContent = "Войти";
-        if (error) { err.textContent = /invalid/i.test(error.message) ? "Неверная почта или пароль." : "Не получилось войти: " + error.message; return; }
-        box.remove(); resolve();
-      });
-    });
+  // ---------- экраны входа ----------
+  const css = `#ps-login{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:#17181C;padding:16px;font:15px/1.45 'Onest',system-ui,'Segoe UI',Arial,sans-serif;overflow:auto}
+#ps-login form,#ps-login .card{background:#fff;color:#17181C;border-radius:18px;padding:28px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
+#ps-login .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;margin-bottom:4px}
+#ps-login .brand i{width:32px;height:32px;border-radius:9px;background:#D4F04C}
+#ps-login h1{margin:0;font-size:18px}
+#ps-login label{font-size:13px;color:#55575E;margin-bottom:-6px}
+#ps-login input{font:inherit;padding:11px 12px;border:1px solid #E3E1DB;border-radius:10px;background:#F6F5F1;color:#17181C}
+#ps-login input:focus{outline:2px solid #17181C;outline-offset:1px}
+#ps-login button.main{font:inherit;font-weight:600;padding:12px;border:0;border-radius:10px;background:#17181C;color:#fff;cursor:pointer}
+#ps-login button.main:disabled{opacity:.6}
+#ps-login .links{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#ps-login .links button{border:0;background:none;padding:0;font:inherit;font-size:13.5px;color:#55575E;text-decoration:underline;cursor:pointer}
+#ps-login .e{color:#E0442F;font-size:13.5px;min-height:1em}
+#ps-login .ok{color:#23945A;font-size:13.5px}
+#ps-login p{margin:0;font-size:14px;color:#55575E}
+#ps-modal{position:fixed;inset:0;z-index:2100;display:grid;place-items:center;background:rgba(23,24,28,.55);padding:16px;font:15px/1.45 'Onest',system-ui,sans-serif}
+#ps-modal form{background:#fff;color:#17181C;border-radius:18px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+#ps-modal h2{margin:0 0 4px;font-size:18px}
+#ps-modal label{font-size:13px;color:#55575E}
+#ps-modal input{font:inherit;padding:10px 12px;border:1px solid #E3E1DB;border-radius:10px;background:#F6F5F1}
+#ps-modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+#ps-modal button{font:inherit;font-weight:600;padding:10px 14px;border-radius:10px;border:1px solid #E3E1DB;background:#fff;cursor:pointer}
+#ps-modal button.main{background:#17181C;color:#fff;border-color:#17181C}
+#ps-modal .e{color:#E0442F;font-size:13.5px;min-height:1em}
+.ps-me{font-size:12.5px;color:#9FA1A8;padding:0 6px 6px;overflow-wrap:anywhere}
+.ps-me b{display:block;color:#F2F1EC;font-weight:600;font-size:13px}
+.ps-act{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;opacity:.65;padding:7px 6px;font:inherit;font-size:14px;cursor:pointer;border-radius:8px}
+.ps-act:hover{opacity:1;background:rgba(255,255,255,.07)}`;
+  let box = null;
+  const addCss = () => { if (!document.getElementById("ps-css")) { const st = document.createElement("style"); st.id = "ps-css"; st.textContent = css; document.head.appendChild(st); } };
+  addCss();
+  function ensureBox() {
+    addCss();
+    if (!box) { box = document.createElement("div"); box.id = "ps-login"; }
+    if (!box.isConnected) { const mount = () => document.body.appendChild(box); document.body ? mount() : document.addEventListener("DOMContentLoaded", mount); }
+    return box;
   }
-  const ready = (async () => {
-    if (!sb) { await showLogin(); return false; }
+  const brand = `<div class="brand"><i aria-hidden="true"></i>Промосеть</div>`;
+  const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите владельца добавить вас." : m;
+
+  let resolveAuth;
+  const authed = new Promise(r => { resolveAuth = r; });
+
+  function screen(mode, msg) {
+    const b = ensureBox();
+    if (!configured) { b.innerHTML = `<div class="card">${brand}<p>Сайт ещё не подключён к базе. Откройте файл <b>config.js</b> и впишите адрес и ключ проекта Supabase (см. инструкцию).</p></div>`; return; }
+    const V = {
+      login: `<form data-m="login">${brand}<h1>Вход</h1>
+        <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
+        <label for="ps-pass">Пароль</label><input id="ps-pass" type="password" autocomplete="current-password" required>
+        <div class="e">${msg || ""}</div><button class="main" type="submit">Войти</button>
+        <div class="links"><button type="button" data-go="signup">Регистрация</button><button type="button" data-go="reset">Забыли пароль?</button></div></form>`,
+      signup: `<form data-m="signup">${brand}<h1>Регистрация</h1>
+        <label for="ps-name">Имя и фамилия</label><input id="ps-name" autocomplete="name" required>
+        <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
+        <label for="ps-pass">Пароль, не меньше 6 символов</label><input id="ps-pass" type="password" autocomplete="new-password" minlength="6" required>
+        <div class="e">${msg || ""}</div><button class="main" type="submit">Зарегистрироваться</button>
+        <p>После регистрации владелец агентства откроет вам доступ.</p>
+        <div class="links"><button type="button" data-go="login">У меня уже есть вход</button></div></form>`,
+      reset: `<form data-m="reset">${brand}<h1>Восстановление пароля</h1>
+        <p>Пришлём на почту ссылку, по ней вы зададите новый пароль.</p>
+        <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
+        <div class="e">${msg || ""}</div><button class="main" type="submit">Отправить ссылку</button>
+        <div class="links"><button type="button" data-go="login">Вернуться ко входу</button></div></form>`,
+      newpass: `<form data-m="newpass">${brand}<h1>Новый пароль</h1>
+        <label for="ps-pass">Новый пароль, не меньше 6 символов</label><input id="ps-pass" type="password" autocomplete="new-password" minlength="6" required>
+        <label for="ps-pass2">Повторите пароль</label><input id="ps-pass2" type="password" autocomplete="new-password" minlength="6" required>
+        <div class="e">${msg || ""}</div><button class="main" type="submit">Сохранить пароль</button></form>`,
+      sent: `<div class="card">${brand}<h1>Проверьте почту</h1><p>${msg || ""}</p><div class="links"><button type="button" data-go="login">Ко входу</button></div></div>`,
+      pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Владелец агентства ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
+    };
+    b.innerHTML = V[mode];
+    const f = b.querySelector("input"); if (f) setTimeout(() => f.focus(), 30);
+  }
+
+  document.addEventListener("click", async e => {
+    const g = e.target.closest && e.target.closest("#ps-login [data-go]"); if (!g) return;
+    const go = g.dataset.go;
+    if (go === "reload") return location.reload();
+    if (go === "logout") { await sb.auth.signOut(); return screen("login"); }
+    screen(go);
+  });
+  document.addEventListener("submit", async e => {
+    const fm = e.target.closest && e.target.closest("#ps-login form[data-m]"); if (!fm) return;
+    e.preventDefault();
+    const m = fm.dataset.m, v = id => (fm.querySelector("#" + id) || {}).value || "";
+    const err = fm.querySelector(".e"), btn = fm.querySelector("button.main");
+    err.textContent = ""; btn.disabled = true;
+    try {
+      if (m === "login") {
+        const { error } = await sb.auth.signInWithPassword({ email: v("ps-email").trim(), password: v("ps-pass") });
+        if (error) throw error; await afterSignIn();
+      } else if (m === "signup") {
+        const email = v("ps-email").trim();
+        const { data, error } = await sb.auth.signUp({ email, password: v("ps-pass"), options: { data: { name: v("ps-name").trim() }, emailRedirectTo: SITE } });
+        if (error) throw error;
+        if (data && data.session) await afterSignIn();
+        else screen("sent", `Мы отправили письмо на ${escH(email)}. Нажмите в нём ссылку, чтобы подтвердить почту, затем войдите. Доступ откроет владелец агентства.`);
+      } else if (m === "reset") {
+        const email = v("ps-email").trim();
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: SITE });
+        if (error) throw error;
+        screen("sent", `Если почта ${escH(email)} зарегистрирована, на неё придёт письмо со ссылкой. Откройте ссылку на этом устройстве и задайте новый пароль.`);
+      } else if (m === "newpass") {
+        if (v("ps-pass") !== v("ps-pass2")) throw { message: "Пароли не совпадают." };
+        const { error } = await sb.auth.updateUser({ password: v("ps-pass") });
+        if (error) throw error;
+        try { history.replaceState(null, "", SITE); } catch (_) {}
+        await afterSignIn("Пароль сохранён.");
+      }
+    } catch (x) { if (err.isConnected) err.textContent = ruErr((x && x.message) || "Не получилось. Попробуйте ещё раз."); }
+    finally { if (btn.isConnected) btn.disabled = false; }
+  });
+
+  // ---------- роль ----------
+  const me = { user: null, role: null, name: "" };
+  async function loadRole() {
+    const { data: u } = await sb.auth.getUser(); me.user = u && u.user;
+    if (!me.user) return null;
+    const { data, error } = await sb.from("members").select("role,name,email").eq("user_id", me.user.id).maybeSingle();
+    if (error) { console.error(error); return "error"; }
+    me.role = data ? data.role : "pending"; me.name = (data && data.name) || (me.user.user_metadata && me.user.user_metadata.name) || "";
+    window.PS_ROLE = me.role; window.PS_ME = { email: me.user.email, name: me.name, role: me.role, id: me.user.id };
+    return me.role;
+  }
+  let toastMsg = "";
+  async function afterSignIn(note) {
+    const role = await loadRole();
+    if (role === "error") return screen("pending", "Не удалось проверить доступ. Обновите страницу через минуту.");
+    if (!role || role === "pending") return screen("pending");
+    toastMsg = note || "";
+    if (box) box.remove();
+    resolveAuth(true);
+  }
+
+  let recovering = false;
+  if (sb) sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") { recovering = true; screen("newpass"); } });
+
+  (async () => {
+    if (!sb) { screen("login"); return; }
+    const isRecovery = /type=recovery/.test(location.hash + location.search);
     const { data } = await sb.auth.getSession();
-    if (!data.session) await showLogin();
-    return true;
+    if (isRecovery || recovering) { recovering = true; screen("newpass"); return; }
+    if (!data.session) { screen("login"); return; }
+    await afterSignIn();
   })();
+  const ready = authed;
 
   // ---------- данные ----------
   const listeners = {}, cache = {}, pending = {};
@@ -109,23 +225,51 @@
     async delete() { return { deleted: false }; },
   });
 
-  // ---------- живые обновления ----------
-  ready.then(ok => {
-    if (!ok) return;
+  // ---------- участники (для вкладки «Доступ») ----------
+  window.psMembers = Object.freeze({
+    async list() { const { data, error } = await sb.from("members").select("user_id,email,name,role,created_at").order("created_at"); if (error) throw error; return data; },
+    async setRole(id, role) { const { error } = await sb.from("members").update({ role }).eq("user_id", id); if (error) throw error; },
+    async remove(id) { const { error } = await sb.from("members").delete().eq("user_id", id); if (error) throw error; },
+    roleLabel: r => ROLE_L[r] || r,
+  });
+
+  // ---------- смена пароля изнутри ----------
+  function changePassword() {
+    const m = document.createElement("div"); m.id = "ps-modal";
+    m.innerHTML = `<form><h2>Сменить пароль</h2><label for="pm-1">Новый пароль, не меньше 6 символов</label><input id="pm-1" type="password" autocomplete="new-password" minlength="6" required>
+      <label for="pm-2">Повторите пароль</label><input id="pm-2" type="password" autocomplete="new-password" minlength="6" required><div class="e"></div>
+      <div class="row"><button type="button" data-x>Отмена</button><button class="main" type="submit">Сохранить</button></div></form>`;
+    document.body.appendChild(m); m.querySelector("#pm-1").focus();
+    m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-x]")) m.remove(); });
+    m.querySelector("form").addEventListener("submit", async e => {
+      e.preventDefault(); const a = m.querySelector("#pm-1").value, b = m.querySelector("#pm-2").value, er = m.querySelector(".e");
+      if (a !== b) { er.textContent = "Пароли не совпадают."; return; }
+      const { error } = await sb.auth.updateUser({ password: a });
+      if (error) { er.textContent = ruErr(error.message); return; }
+      m.remove(); showToast("Пароль изменён");
+    });
+  }
+  function showToast(t) { const el = document.getElementById("toast"); if (!el) return; el.textContent = t; el.hidden = false; setTimeout(() => { el.hidden = true; }, 3500); }
+
+  // ---------- живые обновления и блок пользователя ----------
+  ready.then(() => {
     sb.channel("docs-changes").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, p => {
       const col = (p.new && p.new.col) || (p.old && p.old.col);
       (col ? [col] : COLS).forEach(c => { if (listeners[c] && listeners[c].size) refresh(c); });
     }).subscribe();
     setInterval(() => { for (const c in listeners) if (listeners[c].size) refresh(c); }, 60000);
-    // кнопка «Выйти»
-    const add = () => { const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
-      const b = document.createElement("button"); b.className = "ps-out"; b.textContent = "Выйти";
-      b.style.cssText = "color:inherit;background:none;opacity:.8;border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer";
-      b.onclick = async () => { await sb.auth.signOut(); location.reload(); }; c.appendChild(b); };
+    const add = () => {
+      const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
+      c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || me.user.email)}</b>${escH(ROLE_L[me.role] || "")}</div>
+        <button class="ps-act ps-pass" type="button">Сменить пароль</button><button class="ps-act ps-out" type="button">Выйти</button>`);
+      c.querySelector(".ps-pass").onclick = changePassword;
+      c.querySelector(".ps-out").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+      if (toastMsg) setTimeout(() => showToast(toastMsg), 600);
+    };
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", add) : add();
   });
 
   window.claude = Object.freeze({
-    use: async name => { const ok = await ready; if (!ok) return null; return name === "db" ? DB : name === "assets" ? ASSETS : null; },
+    use: async name => { await ready; return name === "db" ? DB : name === "assets" ? ASSETS : null; },
   });
 })();

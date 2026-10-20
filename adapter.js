@@ -77,6 +77,22 @@
   const brand = `<div class="brand"><i aria-hidden="true"></i>Промосеть</div>`;
   const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите владельца добавить вас." : m;
 
+  const LOGIN_DOMAIN = "@promoset.local";
+  const toEmail = s => { s = String(s || "").trim().toLowerCase(); return s.includes("@") ? s : s + LOGIN_DOMAIN; };
+  const loginOf = e => String(e || "").endsWith(LOGIN_DOMAIN) ? String(e).slice(0, -LOGIN_DOMAIN.length) : String(e || "");
+  const genPassword = () => {
+    const A = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let pw;
+    do { pw = Array.from(crypto.getRandomValues(new Uint32Array(10)), n => A[n % A.length]).join(""); } while (!/\d/.test(pw) || !/[a-z]/.test(pw) || !/[A-Z]/.test(pw));
+    return pw;
+  };
+  const TR = { а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"kh",ц:"ts",ч:"ch",ш:"sh",щ:"shch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya" };
+  const tr = s => Array.from(String(s || "").toLowerCase(), c => TR[c] !== undefined ? TR[c] : c).join("").replace(/[^a-z0-9]+/g, "");
+  const makeLogin = (first, last, rnd) => {
+    const p = [tr(first), tr(last)].filter(Boolean); if (!p.length) return "";
+    let l = p.join(".").slice(0, 34);
+    if (rnd) l += String(10 + (crypto.getRandomValues(new Uint32Array(1))[0] % 90));
+    return l;
+  };
   let resolveAuth;
   const authed = new Promise(r => { resolveAuth = r; });
 
@@ -85,7 +101,7 @@
     if (!configured) { b.innerHTML = `<div class="card">${brand}<p>Сайт ещё не подключён к базе. Откройте файл <b>config.js</b> и впишите адрес и ключ проекта Supabase (см. инструкцию).</p></div>`; return; }
     const V = {
       login: `<form data-m="login">${brand}<h1>Вход</h1>
-        <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
+        <label for="ps-email">Почта или логин</label><input id="ps-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
         <label for="ps-pass">Пароль</label><input id="ps-pass" type="password" autocomplete="current-password" required>
         <div class="e">${msg || ""}</div><button class="main" type="submit">Войти</button>
         <div class="links"><button type="button" data-go="signup">Регистрация</button><button type="button" data-go="reset">Забыли пароль?</button></div></form>`,
@@ -127,7 +143,7 @@
     err.textContent = ""; btn.disabled = true;
     try {
       if (m === "login") {
-        const { error } = await sb.auth.signInWithPassword({ email: v("ps-email").trim(), password: v("ps-pass") });
+        const { error } = await sb.auth.signInWithPassword({ email: toEmail(v("ps-email")), password: v("ps-pass") });
         if (error) throw error; await afterSignIn();
       } else if (m === "signup") {
         const email = v("ps-email").trim();
@@ -252,13 +268,17 @@
 
   // ---------- участники (для вкладки «Доступ») ----------
   window.psMembers = Object.freeze({
-    async list() { const { data, error } = await sb.from("members").select("user_id,email,name,role,created_at").order("created_at"); if (error) throw error; return data; },
+    async list() { const { data, error } = await sb.from("members").select("user_id,email,name,role,created_at,phone,telegram,contact_email").order("created_at"); if (error) throw error; return data; },
     async setRole(id, role) { const { error } = await sb.from("members").update({ role }).eq("user_id", id); if (error) throw error; },
     async remove(id) { const { error } = await sb.from("members").delete().eq("user_id", id); if (error) throw error; },
     roleLabel: r => ROLE_L[r] || r,
+    genPassword, makeLogin, login: loginOf,
+    async create(d) {
+      const { error } = await sb.rpc("create_member", { p_login: d.login, p_password: d.password, p_first: d.first, p_last: d.last, p_phone: d.phone, p_telegram: d.telegram, p_email: d.email, p_role: d.role });
+      if (error) throw error;
+    },
     async tempPassword(id, email) {
-      const A = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let pw;
-      do { pw = Array.from(crypto.getRandomValues(new Uint32Array(10)), n => A[n % A.length]).join(""); } while (!/\d/.test(pw) || !/[a-z]/.test(pw) || !/[A-Z]/.test(pw));
+      const pw = genPassword();
       const { error } = await sb.rpc("set_temp_password", { p_user: id, p_password: pw });
       if (error) throw error;
       showTemp(email, pw);
@@ -284,7 +304,7 @@
   }
   function showTemp(email, pw) {
     const m = document.createElement("div"); m.id = "ps-modal";
-    m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(email)}</p><div class="pm-pw">${escH(pw)}</div>
+    m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
       <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. При первом входе сайт попросит придумать свой.</p>
       <div class="row"><button type="button" data-copy>Скопировать</button><button class="main" type="submit">Готово</button></div></form>`;
     document.body.appendChild(m);
@@ -307,7 +327,7 @@
     setInterval(() => { for (const c in listeners) if (listeners[c].size) refresh(c); }, 60000);
     const add = () => {
       const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
-      c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || me.user.email)}</b>${escH(ROLE_L[me.role] || "")}</div>
+      c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || loginOf(me.user.email))}</b>${escH(ROLE_L[me.role] || "")}</div>
         <button class="ps-act ps-pass" type="button">Сменить пароль</button><button class="ps-act ps-out" type="button">Выйти</button>`);
       c.querySelector(".ps-pass").onclick = changePassword;
       c.querySelector(".ps-out").onclick = async () => { await sb.auth.signOut(); location.reload(); };

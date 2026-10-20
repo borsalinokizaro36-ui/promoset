@@ -224,14 +224,32 @@
     })().finally(() => { delete pending[col]; });
     return pending[col];
   }
+  // Точечное обновление кэша: одна изменённая запись вместо перезагрузки всей коллекции
+  const timers = {};
+  function emit(col, now) {
+    clearTimeout(timers[col]);
+    const go = () => { const all = cache[col] || []; (listeners[col] || new Set()).forEach(l => l.next(snap(all))); };
+    if (now) go(); else timers[col] = setTimeout(go, 25);
+  }
+  function applyLocal(col, id, data, op, now) {
+    const arr = cache[col];
+    if (!arr) { if (listeners[col] && listeners[col].size) refresh(col); return; }
+    const i = arr.findIndex(x => x.id === id);
+    if (op === "delete") { if (i < 0) return; arr.splice(i, 1); }
+    else if (op === "merge") { if (i < 0) { refresh(col); return; } arr[i] = Object.assign({}, arr[i], data, { id }); }
+    else { const o = Object.assign({}, data, { id }); if (i >= 0) arr[i] = o; else arr.push(o); }
+    emit(col, now);
+  }
+  let lastFull = Date.now();
+  const refreshAll = () => { lastFull = Date.now(); for (const c in listeners) if (listeners[c].size) refresh(c); };
   function doc(pathStr) {
     const [col, id] = pathStr.split("/");
     return {
       id, path: pathStr,
       async get() { const { data } = await sb.from("docs").select("data").eq("col", col).eq("id", id).maybeSingle(); return data ? { id, exists: true, data: () => data.data } : { id, exists: false, data: () => undefined }; },
-      async set(d) { const { error } = await sb.from("docs").upsert({ col, id, data: d, updated_at: new Date().toISOString() }); if (error) throw fail(error); await refresh(col); },
-      async update(d) { const { error } = await sb.rpc("merge_doc", { p_col: col, p_id: id, p_patch: d }); if (error) throw fail(error); await refresh(col); },
-      async delete() { const { error } = await sb.from("docs").delete().eq("col", col).eq("id", id); if (error) throw fail(error); await refresh(col); },
+      async set(d) { const { error } = await sb.from("docs").upsert({ col, id, data: d, updated_at: new Date().toISOString() }); if (error) throw fail(error); applyLocal(col, id, d, "upsert", true); },
+      async update(d) { const { error } = await sb.rpc("merge_doc", { p_col: col, p_id: id, p_patch: d }); if (error) throw fail(error); applyLocal(col, id, d, "merge", true); },
+      async delete() { const { error } = await sb.from("docs").delete().eq("col", col).eq("id", id); if (error) throw fail(error); applyLocal(col, id, null, "delete", true); },
       onSnapshot: () => () => {},
     };
   }
@@ -243,7 +261,7 @@
         if (cache[col]) setTimeout(() => next(snap(cache[col]))); refresh(col);
         return () => listeners[col].delete(l);
       },
-      async add(data) { const id = rid(); const { error } = await sb.from("docs").insert({ col, id, data }); if (error) throw fail(error); await refresh(col); return doc(col + "/" + id); },
+      async add(data) { const id = rid(); const { error } = await sb.from("docs").insert({ col, id, data }); if (error) throw fail(error); applyLocal(col, id, data, "upsert", true); return doc(col + "/" + id); },
       doc: id => doc(col + "/" + (id || rid())),
       async get() { await refresh(col); return snap(cache[col] || []); },
     };
@@ -320,11 +338,20 @@
 
   // ---------- живые обновления и блок пользователя ----------
   ready.then(() => {
+    let subscribedOnce = false;
     sb.channel("docs-changes").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, p => {
-      const col = (p.new && p.new.col) || (p.old && p.old.col);
-      (col ? [col] : COLS).forEach(c => { if (listeners[c] && listeners[c].size) refresh(c); });
-    }).subscribe();
-    setInterval(() => { for (const c in listeners) if (listeners[c].size) refresh(c); }, 60000);
+      const n = p.new || {}, o = p.old || {};
+      if (p.eventType === "DELETE") {
+        if (o.col && o.id) applyLocal(o.col, o.id, null, "delete");
+        else COLS.forEach(c => { if (listeners[c] && listeners[c].size) refresh(c); });
+        return;
+      }
+      if (n.col && n.id && n.data && typeof n.data === "object") applyLocal(n.col, n.id, n.data, "upsert");
+      else (n.col ? [n.col] : COLS).forEach(c => { if (listeners[c] && listeners[c].size) refresh(c); });
+    }).subscribe(st => { if (st === "SUBSCRIBED") { if (subscribedOnce) refreshAll(); subscribedOnce = true; } });
+    // страховка: полная сверка раз в 5 минут, только пока вкладка открыта, и при возвращении на вкладку
+    setInterval(() => { if (document.visibilityState === "visible") refreshAll(); }, 300000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - lastFull > 120000) refreshAll(); });
     const add = () => {
       const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
       c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || loginOf(me.user.email))}</b>${escH(ROLE_L[me.role] || "")}</div>

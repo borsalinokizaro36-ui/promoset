@@ -538,14 +538,26 @@ try{const r=localStorage.getItem("ps-reg");if(r==="msk"||r==="mo"||r==="spb")ui.
 try{const t=localStorage.getItem("ps-tab");if(t&&TABS.some(x=>x[0]===t))ui.tab=t;}catch(e){}
 if(location.hash&&TABS.some(x=>"#"+x[0]===location.hash))ui.tab=location.hash.slice(1);
 
-const byId=(col,id)=>S[col].find(x=>x.id===id);
+/* индексы: пересобираются один раз после каждого изменения данных, а не на каждый поиск */
+let IDXV=0,IDX=null;
+function idx(){
+  if(IDX&&IDX.v===IDXV)return IDX;
+  const m={};for(const c of COLS){const mm=new Map();for(const x of S[c]||[])mm.set(x.id,x);m[c]=mm}
+  const ph=new Map(),rej=new Map(),bp=new Map();
+  for(const p of S.photos||[]){if(p.status==="rejected"){rej.set(p.shiftId,(rej.get(p.shiftId)||0)+1);continue}let a=ph.get(p.shiftId);if(!a)ph.set(p.shiftId,a=[]);a.push(p)}
+  for(const a of ph.values())a.sort((x,y)=>x.takenAt-y.takenAt);
+  for(const s of S.shifts||[]){let a=bp.get(s.promoterId);if(!a)bp.set(s.promoterId,a=[]);a.push(s)}
+  return IDX={v:IDXV,m,ph,rej,bp};
+}
+const NOPH=Object.freeze([]);
+const byId=(col,id)=>{const m=idx().m[col];return m?m.get(id):S[col].find(x=>x.id===id)};
 const ptName=id=>{const p=byId("points",id);return p?p.name:"Точка удалена"};
 const prName=id=>{const p=byId("promoters",id);return p?p.name:"Сотрудник удалён"};
 const pjName=id=>{const p=byId("projects",id);return p?p.name:"—"};
 const inProject=x=>ui.project==="all"||x.projectId===ui.project;
 
 function shiftStart(s){return new Date(s.date+"T"+(s.start||"09:00")+":00").getTime()}
-function shiftPhotos(s){return S.photos.filter(p=>p.shiftId===s.id&&p.status!=="rejected").sort((a,b)=>a.takenAt-b.takenAt)}
+function shiftPhotos(s){return idx().ph.get(s.id)||NOPH}
 function shiftState(s,now=Date.now()){
   if(s.missed)return"missed";
   const st=shiftStart(s), ph=shiftPhotos(s);
@@ -1043,8 +1055,8 @@ function upPoints(){
 
 /* ---------- Промоутеры ---------- */
 function promStats(id){
-  const sh=S.shifts.filter(s=>s.promoterId===id&&inProject(s)); const r=stats(sh);
-  const rej=S.photos.filter(p=>p.status==="rejected"&&sh.some(s=>s.id===p.shiftId)).length;
+  const I=idx(), sh=(I.bp.get(id)||[]).filter(inProject); const r=stats(sh);
+  const rej=sh.reduce((n,s)=>n+(I.rej.get(s.id)||0),0);
   const ot=pct(r.ontime,r.due); const risk=(r.due>=3&&ot!=null&&ot<70)||r.missed+r.nophoto>=2||rej>=2;
   return {...r,rej,ot,risk};
 }
@@ -1123,7 +1135,7 @@ function upSummary(){
   const [a,b]=periodRange();
   document.getElementById("smEb").textContent=(ui.project==="all"?"Все проекты":pjName(ui.project))+" · "+(a?(a===b?fmtDate(a):fmtShort(a)+" — "+fmtShort(b)):"за всё время");
   const sh=S.shifts.filter(s=>inProject(s)&&inPeriod(s)), r=stats(sh), ot=pct(r.ontime,r.due);
-  const ph=S.photos.filter(p=>sh.some(s=>s.id===p.shiftId)); const acc=ph.filter(p=>p.status==="accepted").length;
+  const shIds=new Set(sh.map(s=>s.id)), ph=S.photos.filter(p=>shIds.has(p.shiftId)); const acc=ph.filter(p=>p.status==="accepted").length;
   document.getElementById("smKpi").innerHTML=kpiHtml([
     {v:`${pct(r.worked,r.due)??"—"}${r.due?"%":""}`,l:"Смен отработано",s:`${r.worked} из ${r.due} наступивших`,c:"good"},
     {v:ot==null?"—":ot+"%",l:"Фото вовремя",s:`${r.ontime} из ${r.due}`,c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},
@@ -1282,7 +1294,7 @@ setInterval(()=>{if(ui.tab==="day"&&!ui.editShift)updateTab()},60000);
   dbState="on";
   try{assets=await window.claude.use("assets")}catch(e){assets=null}
   for(const c of COLS){
-    db.collection(c).onSnapshot(snap=>{S[c]=snap.docs.map(d=>Object.assign({id:d.id},d.data()));loaded[c]=true;renderAll()},
+    db.collection(c).onSnapshot(snap=>{S[c]=snap.docs.map(d=>Object.assign({id:d.id},d.data()));IDXV++;loaded[c]=true;renderAll()},
       err=>{console.error(c,err);if(err&&err.code==="revoked"){dbState="off";renderAll()}});
   }
 })();

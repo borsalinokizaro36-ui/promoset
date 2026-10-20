@@ -13,7 +13,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: рабочий пульт — шапка с датой и проектом, вкладки модулей, сводка сверху, детали ниже */
 :root{
@@ -296,23 +296,146 @@ tr:last-child td{border-bottom:0}
 .chart text{font-family:var(--f-body);fill:var(--ink-3);font-size:11px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:30;box-shadow:var(--shadow);font-weight:500;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.btn,.tab{transition:background .15s,border-color .15s,opacity .15s}}
+/* ===== Дизайн G3: тёмное меню, лаймовый акцент, плотная раскладка ===== */
+:root:root:root{--bg:#EFEEEA;--surface:#FFFFFF;--surface-2:#F6F5F1;--line:#E3E1DB;--ink:#17181C;--ink-2:#55575E;--ink-3:#8C8E95;--brand:#17181C;--brand-ink:#F2F1EC;--teal:#17181C;--teal-soft:#F1F7D2;--lime:#D4F04C;--accent:#E0442F;--accent-soft:#FCE4DF;--good:#23945A;--good-soft:#DDF2E5;--warn:#C98204;--warn-soft:#FBEFD3;--bad:#E0442F;--bad-soft:#FCE4DF;--info:#2F6FB0;--info-soft:#E1ECF8;--muted-soft:#EEEDE8;--map-land:#F6F5F1;--shadow:none;--f-display:'Onest',system-ui,sans-serif;--f-body:'Onest',system-ui,sans-serif;--f-mono:'JetBrains Mono',ui-monospace,monospace;color-scheme:light}
+body{display:grid;grid-template-columns:228px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh;font-size:14.5px}
+body::before{display:none}
+.top{grid-column:1;grid-row:1/span 2;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:18px 12px 16px;background:var(--brand);color:var(--brand-ink)}
+.top .wrap{display:block;max-width:none;padding:0 6px}
+.logo{font-size:17px;font-weight:700;letter-spacing:-.01em;gap:10px;padding:0 0 16px}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--lime) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317181C' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='6' cy='6' r='2.2'/%3E%3Ccircle cx='18' cy='6' r='2.2'/%3E%3Ccircle cx='12' cy='18' r='2.2'/%3E%3Cpath d='M7.4 7.8 10.8 16M16.6 7.8 13.2 16'/%3E%3C/svg%3E") center/19px no-repeat}
+.logo small{display:none}
+.tabs{border:0;flex:1}
+.tabs .wrap{display:flex;flex-direction:column;gap:2px;padding:0;overflow:visible}
+.tab{width:100%;justify-content:space-between;border-radius:10px;padding:10px 12px;opacity:1;color:#C9CAD0;font-weight:500;font-size:14.5px}
+.tab:hover{background:rgba(255,255,255,.07);color:#fff;opacity:1}
+.tab[aria-selected="true"]{background:var(--lime);color:var(--ink);font-weight:600}
+.tab .n{background:var(--bad);color:#fff;font-size:11px;min-width:19px;height:19px;padding:0 6px;display:inline-grid;place-items:center}
+.tab[aria-selected="true"] .n{background:var(--ink);color:var(--lime)}
+.sidefoot{margin:auto 0 0;padding:8px 6px 0;display:block}
+.scol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sidefoot .ps-out{width:100%;text-align:left!important;border:0!important;padding:8px 6px!important;opacity:.6!important}
+.bar0{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:22px 28px 4px}
+.bar0 h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-right:auto;line-height:1.1}
+.ctl{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ctl>*{border-left:1px solid var(--line)}.ctl>*:first-child{border-left:0}
+.barx:empty{display:none}
+.ctl select,.ctl input[type=date]{border:0;background:transparent;padding:8px 12px;min-height:40px;font-weight:600;font-size:13.5px;color:var(--ink)}
+.ctl .daynav{display:flex;align-items:center;gap:0}
+.ctl .daynav button{border:0;background:none;width:34px;height:40px;cursor:pointer;color:var(--ink-2);border-radius:0}
+.ctl .daynav button:hover{background:var(--surface-2)}
+.ctl .daynav input{font-family:var(--f-mono);font-weight:500}
+.ctl .regsw{box-shadow:none;border-radius:0;padding:4px;background:none;gap:2px}
+.ctl .regsw button{padding:6px 10px;font-size:13px;border-radius:8px;color:var(--ink-2)}
+.ctl .regsw button[aria-selected="true"]{background:var(--ink);color:#fff}
+main.wrap{grid-column:2;grid-row:2;max-width:none;margin:0;padding:14px 28px 40px;gap:16px;align-self:start}
+.head .eyebrow,.head h2{display:none}
+.head p{font-size:13.5px}
+h3{font-size:15.5px}
+.panel{box-shadow:none;border:1px solid var(--line);border-radius:18px;padding:18px}
+.kpi{box-shadow:none;border:1px solid var(--line);border-radius:14px}
+.kpi .v{font-family:var(--f-mono);font-weight:500;letter-spacing:-.03em}
+.btn{border-radius:10px}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.acc{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff;justify-content:center;font-weight:600}
+.btn.dash{border:1.5px dashed #B9BAC0;background:var(--surface);font-weight:600;justify-content:center}
+.btn[aria-disabled="true"]{opacity:.4;pointer-events:none}
+a.btn{text-decoration:none;color:inherit}a.btn.dark{color:#fff}
+.fld input,.fld select,.fld textarea{background:var(--surface-2)}
+.fld input:focus,.fld select:focus{border-color:var(--ink)}
+:focus-visible{outline-color:var(--ink)}
+th{text-transform:none;letter-spacing:0;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
+.bar i{background:var(--ink)}
+.empty{border-color:#D6D4CD}
+.tag.ex{background:var(--lime);color:var(--ink)}
+.banner{border-radius:14px}
+.banner[style*="teal-soft"]{background:#F3F9DA!important}
+/* полоса показателей */
+.kstrip{display:grid;grid-template-columns:minmax(250px,1.35fr) repeat(5,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.kstrip .kpi{border:0;border-left:1px solid var(--line);border-radius:0;padding:14px 16px;background:none;gap:4px}
+.kstrip .kpi .l{font-size:12.5px;color:var(--ink-2);font-weight:500}
+.kstrip .kpi .v{font-size:27px;line-height:1.05}
+.kstrip .kpi .s{font-size:11.5px}
+.kstrip .kpi.hero{background:var(--ink);color:#fff;border:0;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:16px 22px}
+.kstrip .kpi.hero .l{font-size:15px;color:#fff;font-weight:600}
+.kstrip .kpi.hero .s{color:#9FA1A8;margin-top:3px}
+.kstrip .kpi.hero .v{font-size:48px;color:#fff}
+.kstrip .kpi.hero .v span{font-size:22px;color:#9FA1A8}
+/* две колонки */
+.daygrid{display:grid;grid-template-columns:minmax(340px,410px) minmax(0,1fr);gap:16px;align-items:stretch}
+.sgrid{grid-template-columns:minmax(0,1.15fr) minmax(320px,1fr);align-items:start}
+.dlist{background:var(--surface);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.sgrid .dlist{min-height:0}
+.fchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:14px 16px 10px}
+.fchips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
+.fchips button:hover{border-color:var(--ink)}
+.fchips button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fchips button.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent;font-weight:600}
+.fchips button.bad[aria-pressed="true"]{background:var(--bad);color:#fff}
+.fchips h3{margin-right:auto}
+.axis{display:flex;justify-content:space-between;padding:6px 16px 7px 64px;font-family:var(--f-mono);font-size:11px;color:var(--ink-3);border-bottom:1px solid var(--line)}
+.tl{display:grid;grid-template-columns:34px minmax(0,1fr);gap:5px 14px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:center}
+.tl[data-act]{cursor:pointer}
+.tl[data-act]:hover{background:var(--surface-2)}
+.tl.sel{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--ink)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.02em;grid-row:span 3;align-self:start}
+.tl-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;min-width:0}
+.tl-h b{font-weight:600;overflow-wrap:anywhere}
+.tl-h em{font-style:normal;font-size:12px;font-weight:600;color:var(--c);white-space:nowrap}
+.track{position:relative;height:8px;border-radius:4px;background:var(--muted-soft)}
+.track i{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--c)}
+.track i.prob{background:repeating-linear-gradient(135deg,var(--c) 0 5px,color-mix(in srgb,var(--c) 40%,#fff) 5px 10px)}
+.track i.next{background:color-mix(in srgb,var(--c) 40%,#fff)}
+.tl small{font-size:12px;color:var(--ink-3);overflow-wrap:anywhere}
+.mono{font-family:var(--f-mono);font-size:11.5px}
+.tl .acts{grid-column:2;padding-top:4px}
+.tl .inline{grid-column:2}
+.dfoot .legend .btn{background:var(--surface)}
+.dfoot{margin-top:auto;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);background:var(--surface-2)}
+.dfoot .frow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dfoot h3{display:flex;gap:8px;align-items:baseline}
+/* карта */
+.mapcol{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:560px}
+.mapcol .lmap{position:absolute;inset:0;height:auto;min-height:0;border:0;border-radius:0}
+.mapov{position:absolute;z-index:600}
+.maphead{top:12px;left:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;max-width:calc(100% - 80px)}
+.maphead b{font-size:14px}
+.mapfoot{bottom:12px;left:12px;right:60px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:none}
+.mapfoot>*{pointer-events:auto}
+.mapfoot .legend{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;padding:6px}
+.mapfoot .chip{font-size:11.5px;padding:2px 8px}
+.mapback{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+.mapback:hover{border-color:var(--ink)}
+.scard{top:12px;left:12px;width:min(380px,calc(100% - 80px));background:var(--surface);border-radius:16px;box-shadow:0 10px 30px rgba(23,24,28,.16);padding:16px;display:flex;flex-direction:column;gap:12px}
+.scard .hd{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:12px;align-items:center}
+.scard .av{width:42px;height:42px;grid-row:auto;align-self:center;font-size:13px}
+.scard .hd b{font-size:17px;display:block;overflow-wrap:anywhere}
+.scard .hd small{font-size:12px;color:var(--ink-3)}
+.scard .x{border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--ink-3);padding:4px;align-self:start}
+.tgs{display:flex;flex-wrap:wrap;gap:6px}
+.tg{font-size:12px;font-weight:600;padding:4px 8px;border-radius:7px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.tg.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.tg.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.scard .a3{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
+.scard .a3 .btn{justify-content:center;min-height:40px}
+@media (max-width:1180px){.kstrip{grid-template-columns:repeat(3,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(2),.kstrip .kpi:nth-child(5){border-left:0}.kstrip .kpi:nth-child(n+2){border-top:1px solid var(--line)}.daygrid{grid-template-columns:330px minmax(0,1fr)}.sgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){body{display:block}.top{position:relative;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;gap:6px;z-index:900}.logo{padding:0}.tabs{flex-basis:100%;order:3}.tabs .wrap{flex-direction:row;overflow-x:auto;scrollbar-width:none}.tab{width:auto;padding:8px 12px}.sidefoot{margin:0 0 0 auto;padding:0}.sidefoot .ps-out{width:auto}.bar0{padding:14px 16px 2px}.bar0 h1{font-size:24px;flex-basis:100%}.ctl{width:100%}.ctl .barx{flex-basis:100%;border-left:0;border-bottom:1px solid var(--line)}.ctl .regsw{flex-wrap:nowrap;overflow-x:auto}.ctl .regsw button{white-space:nowrap}main.wrap{padding:10px 16px 32px}.daygrid{grid-template-columns:minmax(0,1fr)}.dlist{min-height:0}.mapcol{min-height:460px}.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(n){border-left:1px solid var(--line);border-top:1px solid var(--line)}.kstrip .kpi:nth-child(2n){border-left:0}.kstrip .kpi.hero{border:0}}
 </style>
 
 <header class="top">
-  <div class="wrap">
-    <div class="logo"><i aria-hidden="true"></i>Промосеть <small>пульт агентства</small></div>
-    <div class="ctrls">
-      <label class="hint" for="projSel" style="color:inherit;opacity:.7">Проект</label>
-      <select id="projSel"><option value="all">Все проекты</option></select>
-      <div class="daynav">
-        <button id="dPrev" aria-label="Предыдущий день">‹</button>
-        <input type="date" id="dateSel" aria-label="Дата">
-        <button id="dNext" aria-label="Следующий день">›</button>
-      </div>
-    </div>
-  </div>
+  <div class="wrap"><div class="logo"><i aria-hidden="true"></i>Промосеть <small>пульт агентства</small></div></div>
   <nav class="tabs" aria-label="Разделы"><div class="wrap" role="tablist" id="tabs"></div></nav>
+  <div class="ctrls sidefoot"></div>
 </header>
+<div class="bar0"><h1 id="pgTitle">План дня</h1>
+  <div class="ctl"><div class="barx" id="barX"></div>
+    <select id="projSel" aria-label="Проект"><option value="all">Все проекты</option></select>
+    <div class="daynav"><button id="dPrev" aria-label="Предыдущий день">‹</button><input type="date" id="dateSel" aria-label="Дата"><button id="dNext" aria-label="Следующий день">›</button></div>
+  </div>
+</div>
 
 <main class="wrap" id="main"></main>
 <div id="lb" class="lb" hidden></div>
@@ -400,6 +523,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!lb.hidden){lb.hidd
 const tabsEl=document.getElementById("tabs");
 function renderTabs(){
   const pend=S.photos.filter(p=>p.status==="pending").length;
+  {const pt=document.getElementById("pgTitle"),tt=TABS.find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
   tabsEl.innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.editShift=null;ui.armed=null;
@@ -439,15 +563,18 @@ function banner(){
 function buildTab(){
   const b=`<div id="bn"></div>`;
   const T={
-  day:()=>`${b}<div class="head"><div><div class="eyebrow" id="dayEb"></div><h2>План дня</h2></div>
-      <div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская область<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div></div>
-    <div class="kpis" id="dayKpi"></div>
-    <section class="panel"><div class="panel-h"><h3 id="mapTitle">Карта</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="mapback" id="mapBack" hidden data-act="map-back"></button><span id="schemaNote"></span></div></div>
-      <div id="lmap" class="lmap" role="region" aria-label="Интерактивная карта"></div><div class="legend" id="dayLeg"></div><p class="hint">Колёсико или щипок — приблизить, перетаскивание — сдвинуть. В Москве сначала выберите округ, затем район; цифра — смен на этот день. Нажмите на точку — откроется карточка со ссылкой на Яндекс Карты.</p></section>
-    <section class="panel"><div class="panel-h"><h3>Требуют внимания</h3><span id="attnN"></span></div><div id="attn" class="list"></div></section>
-    <section class="panel"><div class="panel-h"><h3>Смены дня</h3><span id="dayN"></span></div><div id="dayList" class="list"></div></section>`,
-  shifts:()=>`${b}<div class="head"><div><div class="eyebrow">График</div><h2>Назначение смен</h2></div><p>Смена длится 3 часа, на точке до четырёх смен в день.</p></div>
-    <section class="panel"><h3>Поставить смену</h3>
+  day:()=>`${b}<div class="kstrip" id="dayKpi"></div>
+    <div class="daygrid">
+      <section class="dlist" aria-label="Смены дня"><div class="fchips" id="dayF"></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="dayList"></div><div class="dfoot" id="dayFoot"></div></section>
+      <section class="mapcol"><div id="lmap" class="lmap" role="region" aria-label="Интерактивная карта"></div>
+        <div class="mapov maphead" id="mapHead"><b id="mapTitle">Карта</b><span class="hint" id="schemaNote"></span></div>
+        <div class="mapov scard" id="sCard" hidden></div>
+        <div class="mapov mapfoot"><button class="mapback" id="mapBack" hidden data-act="map-back"></button><div class="legend" id="dayLeg"></div></div>
+      </section>
+    </div>`,
+  shifts:()=>`${b}<div class="daygrid sgrid">
+      <section class="dlist"><div class="fchips"><h3 id="shTitle"></h3><span class="hint" id="shN"></span></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="shList"></div></section>
+      <div class="scol"><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 3 часа, на точке до четырёх смен в день.</p>
     <form class="f" id="fShift" autocomplete="off">
       <div class="fld"><label for="sh-point">Точка</label><select id="sh-point" required></select></div>
       <div class="fld"><label for="sh-prom">Сотрудник</label><select id="sh-prom" required></select></div>
@@ -459,8 +586,9 @@ function buildTab(){
       <div class="fld"><button class="btn primary" type="submit">Назначить</button></div>
       <p class="hint" id="shMsg" style="grid-column:1/-1">Проект смены берётся из точки. Материалы нужны, чтобы потом сверить остаток.</p>
     </form></section>
-    <section class="panel"><div class="panel-h"><h3 id="shTitle"></h3><span id="shN"></span></div><div id="shList" class="list"></div></section>
-    <section class="panel"><div class="panel-h"><h3>Свободные точки на этот день</h3><span id="freeN"></span></div><div id="free" class="legend"></div></section>`,
+      <section class="panel"><div class="panel-h"><h3>Свободные точки на этот день</h3><span id="freeN"></span></div><div id="free" class="legend"></div>
+        <div class="panel-h" style="margin-top:6px"><h3>Сотрудники без смены</h3><span id="idleN"></span></div><div id="idleS" class="legend"></div></section></div>
+    </div>`,
   photos:()=>`${b}<div class="head"><div><div class="eyebrow">Контроль</div><h2>Фотоотчёты</h2></div>
     <div class="seg" id="phSeg">${[["pending","На проверке"],["accepted","Принятые"],["rejected","Отклонённые"],["all","Все"]].map(([k,l])=>`<button data-pf="${k}">${l}</button>`).join("")}</div></div>
     <p class="hint">Фото загружают во вкладке «Назначение смен» кнопкой «Добавить фото». Первое фото не позже 20 минут после начала — смена вовремя.</p>
@@ -506,6 +634,7 @@ function buildTab(){
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
   main.innerHTML=T[ui.tab]();
+  const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
   bindForms();
 }
 
@@ -699,37 +828,84 @@ function updateMap(sh,pst){
 function distOf(p){const list=ui.region==="msk"?MD.distMsk:ui.region==="spb"?SPB.d:MD.distMo;for(const d of list){if(!d._b){d._r=d.p.map(pl=>pl.map(r=>dp(r).map(([a,b])=>[b,a])));let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const pl of d._r)for(const[x,y]of pl[0]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}d._b=[x0,y0,x1,y1]}
   const[x0,y0,x1,y1]=d._b;if(p.lng<x0||p.lng>x1||p.lat<y0||p.lat>y1)continue;if(d._r.some(pl=>inRing(p.lng,p.lat,pl[0])&&!pl.slice(1).some(h=>inRing(p.lng,p.lat,h))))return d.full}return null}
 
+const COL={ontime:"#23945A",late:"#C98204",missed:"#E0442F",nophoto:"#E0442F",waiting:"#2F6FB0",upcoming:"#8C8E95"};
+const TLS={ontime:"отметился вовремя",late:"с опозданием",missed:"срыв",nophoto:"не отметился",waiting:"на точке, ждём фото",upcoming:"впереди"};
+const isProb=t=>t==="missed"||t==="nophoto"||t==="late";
+const toMin=t=>{const[h,m]=String(t||"09:00").split(":").map(Number);return h*60+(m||0)};
+const endT=s=>{const m=toMin(s.start)+SHIFT_MS/60000;return pad(Math.floor(m/60)%24)+":"+pad(m%60)};
+const ini=n=>String(n||"?").replace(/\(.*?\)/g,"").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
+function shiftActs(s){
+  const canUp=!!assets;
+  let a=`<div class="acts">
+      <label class="btn sm" ${canUp?"":'aria-disabled="true" title="Загрузка фото доступна редакторам страницы"'}>📷 Добавить фото<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" hidden ${canUp?"":"disabled"}></label>
+      <button class="btn sm" data-act="edit-result" data-id="${esc(s.id)}">Итог смены</button>
+      <button class="btn sm" data-act="toggle-miss" data-id="${esc(s.id)}">${s.missed?"Снять срыв":"Отметить срыв"}</button>
+      <button class="btn sm danger ${ui.armed==="sh:"+s.id?"arm":""}" data-act="del-shift" data-id="${esc(s.id)}">${ui.armed==="sh:"+s.id?"Точно удалить?":"Удалить"}</button>
+    </div>`;
+  if(ui.editShift===s.id) a+=`<form class="inline" data-res="${esc(s.id)}">
+      <div class="fld"><label for="r-left-${esc(s.id)}">Остаток, шт.</label><input type="number" min="0" id="r-left-${esc(s.id)}" value="${s.matLeft==null?"":esc(s.matLeft)}"></div>
+      <div class="fld"><label for="r-con-${esc(s.id)}">Контактов</label><input type="number" min="0" id="r-con-${esc(s.id)}" value="${s.contacts==null?"":esc(s.contacts)}"></div>
+      <button class="btn primary sm" type="submit">Сохранить</button><button class="btn sm" type="button" data-act="cancel-result">Отмена</button></form>`;
+  return a;
+}
+function tlRow(s,t,withActs){
+  const L0=480,L1=1320,m=toMin(s.start),left=Math.max(0,Math.min(97,(m-L0)/(L1-L0)*100)),w=Math.max(3,Math.min(100-left,(SHIFT_MS/60000)/(L1-L0)*100));
+  const pt=byId("points",s.pointId)||{}, ph=shiftPhotos(s);
+  const sub=[esc(ptName(s.pointId))+(pt.district?" · "+esc(pt.district):""),`<span class="mono">${esc(s.start)}–${esc(endT(s))}</span>`,ph.length?"фото "+fmtTime(ph[0].takenAt):"",ui.project==="all"&&s.projectId?esc(pjName(s.projectId)):""].filter(Boolean).join(" · ");
+  return `<div class="tl${ui.selShift===s.id?" sel":""}"${withActs?"":` data-act="sel-shift" data-id="${esc(s.id)}"`} style="--c:${COL[t]}"><div class="av" aria-hidden="true">${esc(ini(prName(s.promoterId)))}</div>
+    <div class="tl-h"><b>${esc(prName(s.promoterId))}</b><em>${s.example?'<span class="tag ex">пример</span> ':""}${TLS[t]}</em></div>
+    <div class="track" title="${esc(s.start)}–${esc(endT(s))}"><i class="${isProb(t)?"prob":t==="upcoming"?"next":""}" style="left:${left.toFixed(1)}%;width:${w.toFixed(1)}%"></i></div>
+    <small>${sub}</small>${withActs?shiftActs(s):""}</div>`;
+}
+function sCard(sh,sts){
+  const el=document.getElementById("sCard"), hd=document.getElementById("mapHead"); if(!el)return;
+  const s=sh.find(x=>x.id===ui.selShift);
+  if(!s){el.hidden=true;hd.hidden=false;el.innerHTML="";return}
+  const t=sts.get(s.id), p=byId("promoters",s.promoterId)||{}, ph=shiftPhotos(s), g=given(s);
+  const tgv=p.telegram||p.tg||"";const tg=tgv?"https://t.me/"+String(tgv).replace(/^@/,"").replace(/^https?:\/\/t\.me\//,""):"", tel=p.phone?String(p.phone).replace(/[^\d+]/g,""):"";
+  el.innerHTML=`<div class="hd"><div class="av" aria-hidden="true">${esc(ini(p.name))}</div><div><b>${esc(prName(s.promoterId))}</b><small>${esc(ptName(s.pointId))} · <span class="mono">${esc(s.start)}–${esc(endT(s))}</span></small></div><button class="x" data-act="sel-shift" data-id="" aria-label="Закрыть карточку">×</button></div>
+    <div class="tgs"><span class="tg ${isProb(t)?"bad":t==="ontime"?"good":""}">${STL[t]}</span><span class="tg ${ph.length?"good":(t==="nophoto"||t==="missed")?"bad":""}">${ph.length?"фото в "+fmtTime(ph[0].takenAt):"нет фото"}</span><span class="tg">материалы ${g!=null?g:num(s.matIssued)}</span><span class="tg">контакты ${num(s.contacts)}</span>${s.type?`<span class="tg">${esc(s.type)}</span>`:""}</div>
+    <div class="a3"><a class="btn dark" ${tg?`href="${esc(tg)}" target="_blank" rel="noopener"`:'aria-disabled="true" title="Telegram не указан"'}>Написать</a><a class="btn" ${tel?`href="tel:${esc(tel)}"`:'aria-disabled="true" title="Телефон не указан"'}>Позвонить</a><button class="btn" data-act="goto" data-tab="shifts" aria-label="Открыть в назначении смен" title="Открыть в назначении смен">⋯</button></div>`;
+  el.hidden=false; hd.hidden=true;
+}
 function upDay(){
   const sh=dayShifts(), r=stats(sh), now=Date.now();
-  document.getElementById("dayEb").textContent=fmtDate(ui.date)+(ui.date===today()?" · сегодня":"");
   const onNow=sh.filter(s=>{const st=shiftStart(s);return now>=st&&now<st+SHIFT_MS&&worked(shiftState(s))}).length;
   const ot=pct(r.ontime,r.due);
-  document.getElementById("dayKpi").innerHTML=kpiHtml([
-    {v:onNow,l:"На смене сейчас",s:ui.date===today()?"по фото с точки":"только для сегодня"},
-    {v:`${r.worked}<span style="font-size:18px;color:var(--ink-3)">/${r.total}</span>`,l:"Вышли на смены",s:`назначено ${r.total}`},
-    {v:ot==null?"—":ot+"%",l:"Фото вовремя",s:`${r.ontime} из ${r.due} наступивших`,c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},
-    {v:r.missed+r.nophoto,l:"Срывы и нет фото",s:`срывов ${r.missed}, без фото ${r.nophoto}`,c:r.missed+r.nophoto?"bad":"good"},
-    {v:r.given,l:"Материалов роздано",s:r.noLeft?`без остатка: ${plural(r.noLeft,SM)}`:`выдано ${r.issued}`},
-    {v:r.contacts,l:"Контактов собрано",s:"анкеты, лиды, подписки",c:"acc"}]);
+  const K=(v,l,s,c)=>`<div class="kpi ${c||""}"><div class="l">${l}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:""}</div>`;
+  document.getElementById("dayKpi").innerHTML=`<div class="kpi hero"><div><div class="l">Вышли на смены</div><div class="s">${fmtDate(ui.date)}${ui.date===today()?" · сегодня":""} · назначено ${r.total}</div></div><div class="v">${r.worked}<span>/${r.total}</span></div></div>`
+    +K(r.missed+r.nophoto,"Срывы и нет фото",`срывов ${r.missed}, без фото ${r.nophoto}`,r.missed+r.nophoto?"bad":"")
+    +K(ot==null?"—":ot+"%","Фото вовремя",`${r.ontime} из ${r.due} наступивших`,ot==null?"":ot>=85?"good":ot>=60?"warn":"bad")
+    +K(onNow,"На смене сейчас",ui.date===today()?"по фото с точки":"только для сегодня")
+    +K(r.given,"Материалов роздано",r.noLeft?`без остатка: ${plural(r.noLeft,SM)}`:`выдано ${r.issued}`)
+    +K(r.contacts,"Контактов собрано","анкеты, лиды, подписки");
   document.getElementById("dayLeg").innerHTML=["ontime","late","nophoto","waiting","upcoming"].map(chip).join("");
-  // регион
   document.querySelectorAll("#regSw button").forEach(b=>b.setAttribute("aria-selected",b.dataset.reg===ui.region));
-  for(const rg of ["msk","mo","spb"]){const n=S.shifts.filter(x=>x.date===ui.date&&inProject(x)&&shiftRegion(x)===rg).length;document.getElementById("regN-"+rg).textContent=n?" · "+n:""}
+  for(const rg of ["msk","mo","spb"]){const n=S.shifts.filter(x=>x.date===ui.date&&inProject(x)&&shiftRegion(x)===rg).length;const e=document.getElementById("regN-"+rg);if(e)e.textContent=n?" · "+n:""}
   document.getElementById("mapTitle").textContent=ui.region==="msk"?"Карта Москвы":ui.region==="spb"?"Карта Санкт-Петербурга":"Карта Московской области";
   const pts=S.points.filter(p=>p.active!==false&&inProject(p)&&isFinite(p.lat)&&isFinite(p.lng)&&p.lat&&p.lng&&ptRegion(p)===ui.region);
   const worst={missed:6,nophoto:5,late:4,waiting:3,upcoming:2,ontime:1};
-  const pst={}; for(const s of sh){const st=shiftState(s);if(!pst[s.pointId]||worst[st]>worst[pst[s.pointId]])pst[s.pointId]=st;}
+  const sts=new Map(sh.map(s=>[s.id,shiftState(s)]));
+  const pst={}; for(const s of sh){const st=sts.get(s.id);if(!pst[s.pointId]||worst[st]>worst[pst[s.pointId]])pst[s.pointId]=st;}
   initMap(); updateMap(sh,pst);
   const noGeo=S.points.filter(p=>p.active!==false&&inProject(p)&&!(p.lat&&p.lng)).length;
   document.getElementById("schemaNote").textContent=`точек ${pts.length}, со сменой ${Object.keys(pst).filter(id=>pts.some(p=>p.id===id)).length}`+(noGeo?` · без координат: ${noGeo}`:"");
-  // внимание
-  const attn=sh.filter(s=>["missed","nophoto","late"].includes(shiftState(s)));
+  const onPt=s=>{const st=shiftStart(s);return now>=st&&now<st+SHIFT_MS&&["waiting","ontime","late"].includes(sts.get(s.id))};
+  const F={all:["Все",()=>true],prob:["Проблемы",s=>isProb(sts.get(s.id))],on:["На точке",onPt],done:["Завершены",s=>worked(sts.get(s.id))&&now>=shiftStart(s)+SHIFT_MS],next:["Впереди",s=>sts.get(s.id)==="upcoming"]};
+  const f=F[ui.dayF]?ui.dayF:"all";
+  document.getElementById("dayF").innerHTML=Object.entries(F).map(([k,[l,fn]])=>{const n=sh.filter(fn).length;return `<button data-act="day-f" data-id="${k}" aria-pressed="${f===k}" class="${k==="prob"&&n?"bad":""}">${l} ${n}</button>`}).join("");
+  const list=sh.filter(F[f][1]);
+  document.getElementById("dayList").innerHTML=list.length?list.map(s=>tlRow(s,sts.get(s.id),false)).join(""):`<div class="empty" style="margin:16px">${sh.length?"В этом фильтре смен нет.":`На ${fmtDate(ui.date)} в этом регионе смен нет.`}</div>`;
   const pend=S.photos.filter(p=>p.status==="pending"&&inProject(byId("shifts",p.shiftId)||{})).length;
-  document.getElementById("attnN").textContent=attn.length?plural(attn.length,SM):"";
-  document.getElementById("attn").innerHTML=(attn.length?attn.map(s=>shiftRow(s,false,true)).join(""):emptyBox(sh.length?"Все наступившие смены идут по плану.":"На этот день смен нет."))+
-    (pend?`<div class="row" style="grid-template-columns:minmax(0,1fr) auto"><div class="who"><b>Фото ждут проверки: ${pend}</b><span>Примите или отклоните снимки</span></div><button class="btn sm" data-act="goto" data-tab="photos">Открыть</button></div>`:"");
-  document.getElementById("dayN").textContent=sh.length?plural(sh.length,SM):"";
-  document.getElementById("dayList").innerHTML=sh.length?sh.map(s=>shiftRow(s,false)).join(""):emptyBox(`На ${fmtDate(ui.date)} смен нет. Назначьте их во вкладке «Назначение смен».`);
+  const busy=new Set(sh.map(s=>s.pointId)), freeP=pts.filter(p=>!busy.has(p.id)), free=freeP.length;
+  const probN=sh.filter(s=>isProb(sts.get(s.id))).length;
+  const dayAll=new Set(S.shifts.filter(x=>x.date===ui.date).map(x=>x.promoterId)), idle=S.promoters.filter(p=>p.active!==false&&!dayAll.has(p.id));
+  document.getElementById("dayFoot").innerHTML=(pend?`<div class="frow"><span><b>Фото ждут проверки: ${pend}</b></span><button class="btn sm" data-act="goto" data-tab="photos">Открыть</button></div>`:"")
+    +`<p class="hint">${sh.length?(probN?`Требуют внимания: ${plural(probN,SM)}. `:"Все наступившие смены идут по плану. "):""}Свободных точек в регионе: ${free}${free?", они серые на карте":""}.</p>`
+    +(freeP.length?`<div class="legend">${freeP.slice(0,10).map(p=>`<span class="tag">${esc(p.name)}</span>`).join("")}</div>`:"")
+    +(idle.length?`<div><h3 style="font-size:13.5px;margin-bottom:6px">Без смены в этот день · ${idle.length}</h3><div class="legend">${idle.slice(0,12).map(p=>`<span class="tag">${esc(p.name)}</span>`).join("")}${idle.length>12?`<span class="tag">ещё ${idle.length-12}</span>`:""}</div></div>`:"")
+    +`<button class="btn dash" data-act="goto" data-tab="shifts">+ Назначить смену</button>`;
+  sCard(sh,sts);
 }
 
 /* ---------- Смены ---------- */
@@ -737,11 +913,14 @@ function upShifts(){
   const sh=dayShifts(true);
   document.getElementById("shTitle").textContent="Смены на "+fmtDate(ui.date);
   document.getElementById("shN").textContent=sh.length?plural(sh.length,SM):"";
-  document.getElementById("shList").innerHTML=sh.length?sh.map(s=>shiftRow(s,true)).join(""):emptyBox("На этот день смен нет. Поставьте первую формой выше.");
+  document.getElementById("shList").innerHTML=sh.length?sh.map(s=>tlRow(s,shiftState(s),true)).join(""):`<div class="empty" style="margin:16px">На этот день смен нет. Поставьте первую формой справа.</div>`;
   const busy=new Set(sh.map(s=>s.pointId));
   const free=S.points.filter(p=>p.active!==false&&inProject(p)&&!busy.has(p.id));
   document.getElementById("freeN").textContent=`${free.length}`;
   document.getElementById("free").innerHTML=free.length?free.map(p=>`<button class="btn sm" data-act="pick-point" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join(""):'<span class="hint">Все точки закрыты сменами.</span>';
+  const dayAll=new Set(S.shifts.filter(x=>x.date===ui.date).map(x=>x.promoterId)), idle=S.promoters.filter(p=>p.active!==false&&!dayAll.has(p.id));
+  document.getElementById("idleN").textContent=`${idle.length}`;
+  document.getElementById("idleS").innerHTML=idle.length?idle.map(p=>`<button class="btn sm" data-act="pick-prom" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join(""):'<span class="hint">У всех сотрудников есть смена.</span>';
 }
 
 /* ---------- Фото ---------- */
@@ -908,6 +1087,9 @@ main.addEventListener("click",async e=>{
   const b=e.target.closest("[data-act]"); if(!b)return; const id=b.dataset.id, act=b.dataset.act;
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
+  if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="pick-prom"){const s=document.getElementById("sh-prom");if(s){s.value=id;s.focus()}return}
+  if(act==="sel-shift"){ui.selShift=id||null;if(id&&LM){const s=byId("shifts",id),pt=s&&byId("points",s.pointId);if(pt&&pt.lat&&pt.lng&&ptRegion(pt)===ui.region)LM.map.flyTo([pt.lat,pt.lng],Math.max(LM.map.getZoom(),14.5),{duration:.6})}updateTab();return}
   if(act==="goto"){ui.tab=b.dataset.tab;renderAll(true);return}
   if(act==="zoom"){lb.innerHTML=`<img src="${esc(b.dataset.src)}" alt="Фото со смены крупно">`;lb.hidden=false;return}
   if(act==="edit-result"){ui.editShift=ui.editShift===id?null:id;updateTab();return}
@@ -922,6 +1104,7 @@ main.addEventListener("click",async e=>{
   if(act==="del-examples"){if(!arm("ex"))return;await guard(async()=>{for(const c of COLS)for(const x of S[c].filter(x=>x.example))await db.doc(c+"/"+x.id).delete()},"Примеры удалены");return}
   if(act==="copy-report"){const t=reportText();try{await navigator.clipboard.writeText(t);toast("Отчёт скопирован")}catch(err){lb.innerHTML=`<pre style="background:var(--surface);color:var(--ink);padding:16px;border-radius:12px;white-space:pre-wrap;max-width:560px;cursor:text" onclick="event.stopPropagation()">${esc(t)}</pre>`;lb.hidden=false}return}
 });
+document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;ui.selShift=null;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab()}});
 main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab();return}const z=e.target.closest("[data-zoom]");if(z){ui.mapZoom=z.dataset.zoom;updateTab();return}const b=e.target.closest("[data-pf]");if(b){ui.photoFilter=b.dataset.pf;updateTab()}const p=e.target.closest("[data-per]");if(p){ui.period=p.dataset.per;updateTab()}});
 
 /* ---------- старт ---------- */

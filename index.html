@@ -451,7 +451,11 @@ details.mp .tbl-wrap{margin:0 0 12px}
 .paybtn.part{background:var(--info-soft);border-color:transparent;color:var(--info)}
 .paybtn.arm{background:var(--bad);border-color:var(--bad);color:#fff}
 .paybtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.pay-yes{color:var(--good);font-weight:600;white-space:nowrap}.pay-no{color:var(--ink-3)}
+.paytog{font:inherit;font-size:13px;font-weight:600;min-width:58px;padding:5px 10px;border-radius:999px;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.paytog.yes{background:var(--good-soft);color:var(--good)}
+.paytog.no{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
+.paytog:hover{filter:brightness(.96)}
+.paytog:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .mt-split{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;font-size:14px}
 .mt-split .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
 .mt-split .dot.ok{background:var(--lime)}.mt-split .dot.due{background:#fff;opacity:.5}
@@ -1104,7 +1108,7 @@ function upMoney(){
       <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num mh">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
         <td class="num mh">${SHIFT_H}</td><td class="num mh">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td>
-        <td class="paycell">${s.paid?`<span class="pay-yes">✓ да</span>`:`<span class="pay-no">нет</span>`}</td></tr>`).join("")}</tbody></table></div></details>`).join("")
+        <td class="paycell"><button class="paytog ${s.paid?"yes":"no"}" type="button" data-act="pay-shift" data-id="${esc(s.id)}" aria-pressed="${!!s.paid}" title="${s.paid?"Нажмите, чтобы отметить как невыплаченную":"Нажмите, чтобы отметить как выплаченную"}" aria-label="Смена ${esc(fmtShort(s.date))}, ${fmtRub(SHIFT_H*shiftRate(s))}: ${s.paid?"выплачено":"не выплачено"}">${s.paid?"✓ да":"нет"}</button></td></tr>`).join("")}</tbody></table></div></details>`).join("")
       :`<p class="hint">По этому проекту ещё нет отработанных смен.</p>`}`;
 }
 
@@ -1239,6 +1243,7 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="pay-shift"){const s=byId("shifts",id);if(!s)return;const v=!s.paid;await guard(()=>db.doc("shifts/"+id).update({paid:v,paidAt:v?Date.now():null}),v?"Смена отмечена как выплаченная":"Отметка о выплате снята");updateTab();return}
   if(act==="pay"){e.preventDefault();const pj=b.dataset.pj,prm=b.dataset.pr,list=earned().filter(s=>inPj(s,pj)&&s.promoterId===prm);if(!list.length)return;
     if(list.every(s=>s.paid)){if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null})},"Отметка о выплате снята")}
     else await guard(async()=>{const t=Date.now();for(const s of list.filter(s=>!s.paid))await db.doc("shifts/"+s.id).update({paid:true,paidAt:t})},"Отмечена выплата: "+prName(prm));

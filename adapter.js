@@ -46,7 +46,9 @@
 .pw input{width:100%;box-sizing:border-box;padding-right:46px!important}
 #ps-login .pw button.eye,#ps-modal .pw button.eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;padding:0;border:0;border-radius:8px;background:none;color:#55575E;cursor:pointer;display:grid;place-items:center}
 #ps-login .pw button.eye:hover,#ps-modal .pw button.eye:hover{background:rgba(23,24,28,.07);color:#17181C}
-#ps-login .pw button.eye:focus-visible,#ps-modal .pw button.eye:focus-visible{outline:2px solid #17181C}`;
+#ps-login .pw button.eye:focus-visible,#ps-modal .pw button.eye:focus-visible{outline:2px solid #17181C}
+#ps-modal .pm-pw{font:600 24px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;padding:14px;border-radius:10px;background:#F6F5F1;border:1px solid #E3E1DB;text-align:center;user-select:all;overflow-wrap:anywhere}
+#ps-modal .pm-t{margin:0;font-size:14px;color:#55575E}`;
   let box = null;
   const addCss = () => { if (!document.getElementById("ps-css")) { const st = document.createElement("style"); st.id = "ps-css"; st.textContent = css; document.head.appendChild(st); } };
   addCss();
@@ -99,10 +101,10 @@
         <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
         <div class="e">${msg || ""}</div><button class="main" type="submit">Отправить ссылку</button>
         <div class="links"><button type="button" data-go="login">Вернуться ко входу</button></div></form>`,
-      newpass: `<form data-m="newpass">${brand}<h1>Новый пароль</h1>
+      newpass: `<form data-m="newpass">${brand}<h1>Новый пароль</h1>${msg ? `<p>${msg}</p>` : ""}
         <label for="ps-pass">Новый пароль, не меньше 6 символов</label><input id="ps-pass" type="password" autocomplete="new-password" minlength="6" required>
         <label for="ps-pass2">Повторите пароль</label><input id="ps-pass2" type="password" autocomplete="new-password" minlength="6" required>
-        <div class="e">${msg || ""}</div><button class="main" type="submit">Сохранить пароль</button></form>`,
+        <div class="e"></div><button class="main" type="submit">Сохранить пароль</button></form>`,
       sent: `<div class="card">${brand}<h1>Проверьте почту</h1><p>${msg || ""}</p><div class="links"><button type="button" data-go="login">Ко входу</button></div></div>`,
       pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Владелец агентства ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
     };
@@ -142,6 +144,7 @@
         if (v("ps-pass") !== v("ps-pass2")) throw { message: "Пароли не совпадают." };
         const { error } = await sb.auth.updateUser({ password: v("ps-pass") });
         if (error) throw error;
+        try { await sb.rpc("clear_must_change"); } catch (_) {}
         try { history.replaceState(null, "", SITE); } catch (_) {}
         await afterSignIn("Пароль сохранён.");
       }
@@ -154,9 +157,9 @@
   async function loadRole() {
     const { data: u } = await sb.auth.getUser(); me.user = u && u.user;
     if (!me.user) return null;
-    const { data, error } = await sb.from("members").select("role,name,email").eq("user_id", me.user.id).maybeSingle();
+    const { data, error } = await sb.from("members").select("role,name,email,must_change").eq("user_id", me.user.id).maybeSingle();
     if (error) { console.error(error); return "error"; }
-    me.role = data ? data.role : "pending"; me.name = (data && data.name) || (me.user.user_metadata && me.user.user_metadata.name) || "";
+    me.role = data ? data.role : "pending"; me.must = !!(data && data.must_change); me.name = (data && data.name) || (me.user.user_metadata && me.user.user_metadata.name) || "";
     window.PS_ROLE = me.role; window.PS_ME = { email: me.user.email, name: me.name, role: me.role, id: me.user.id };
     return me.role;
   }
@@ -165,6 +168,7 @@
     const role = await loadRole();
     if (role === "error") return screen("pending", "Не удалось проверить доступ. Обновите страницу через минуту.");
     if (!role || role === "pending") return screen("pending");
+    if (me.must && !note) return screen("newpass", "Вы вошли по временному паролю. Придумайте свой: его будете знать только вы.");
     toastMsg = note || "";
     if (box) box.remove();
     resolveAuth(true);
@@ -252,6 +256,13 @@
     async setRole(id, role) { const { error } = await sb.from("members").update({ role }).eq("user_id", id); if (error) throw error; },
     async remove(id) { const { error } = await sb.from("members").delete().eq("user_id", id); if (error) throw error; },
     roleLabel: r => ROLE_L[r] || r,
+    async tempPassword(id, email) {
+      const A = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let pw;
+      do { pw = Array.from(crypto.getRandomValues(new Uint32Array(10)), n => A[n % A.length]).join(""); } while (!/\d/.test(pw) || !/[a-z]/.test(pw) || !/[A-Z]/.test(pw));
+      const { error } = await sb.rpc("set_temp_password", { p_user: id, p_password: pw });
+      if (error) throw error;
+      showTemp(email, pw);
+    },
   });
 
   // ---------- смена пароля изнутри ----------
@@ -267,8 +278,23 @@
       if (a !== b) { er.textContent = "Пароли не совпадают."; return; }
       const { error } = await sb.auth.updateUser({ password: a });
       if (error) { er.textContent = ruErr(error.message); return; }
+      try { await sb.rpc("clear_must_change"); } catch (_) {}
       m.remove(); showToast("Пароль изменён");
     });
+  }
+  function showTemp(email, pw) {
+    const m = document.createElement("div"); m.id = "ps-modal";
+    m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(email)}</p><div class="pm-pw">${escH(pw)}</div>
+      <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. При первом входе сайт попросит придумать свой.</p>
+      <div class="row"><button type="button" data-copy>Скопировать</button><button class="main" type="submit">Готово</button></div></form>`;
+    document.body.appendChild(m);
+    const cp = m.querySelector("[data-copy]");
+    cp.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(pw); cp.textContent = "Скопировано"; }
+      catch (_) { const r = document.createRange(); r.selectNodeContents(m.querySelector(".pm-pw")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = "Выделено, нажмите Ctrl+C"; }
+    });
+    m.querySelector("form").addEventListener("submit", e => { e.preventDefault(); m.remove(); });
+    cp.focus();
   }
   function showToast(t) { const el = document.getElementById("toast"); if (!el) return; el.textContent = t; el.hidden = false; setTimeout(() => { el.hidden = true; }, 3500); }
 

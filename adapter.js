@@ -41,7 +41,12 @@
 .ps-me{font-size:12.5px;color:#9FA1A8;padding:0 6px 6px;overflow-wrap:anywhere}
 .ps-me b{display:block;color:#F2F1EC;font-weight:600;font-size:13px}
 .ps-act{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;opacity:.65;padding:7px 6px;font:inherit;font-size:14px;cursor:pointer;border-radius:8px}
-.ps-act:hover{opacity:1;background:rgba(255,255,255,.07)}`;
+.ps-act:hover{opacity:1;background:rgba(255,255,255,.07)}
+.pw{position:relative;display:block}
+.pw input{width:100%;box-sizing:border-box;padding-right:46px!important}
+#ps-login .pw button.eye,#ps-modal .pw button.eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;padding:0;border:0;border-radius:8px;background:none;color:#55575E;cursor:pointer;display:grid;place-items:center}
+#ps-login .pw button.eye:hover,#ps-modal .pw button.eye:hover{background:rgba(23,24,28,.07);color:#17181C}
+#ps-login .pw button.eye:focus-visible,#ps-modal .pw button.eye:focus-visible{outline:2px solid #17181C}`;
   let box = null;
   const addCss = () => { if (!document.getElementById("ps-css")) { const st = document.createElement("style"); st.id = "ps-css"; st.textContent = css; document.head.appendChild(st); } };
   addCss();
@@ -50,6 +55,22 @@
     if (!box) { box = document.createElement("div"); box.id = "ps-login"; }
     if (!box.isConnected) { const mount = () => document.body.appendChild(box); document.body ? mount() : document.addEventListener("DOMContentLoaded", mount); }
     return box;
+  }
+  const EYE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const EYE_OFF = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.8M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>`;
+  function addEyes(root) {
+    root.querySelectorAll("input[type=password]").forEach(i => {
+      if (i.parentNode.classList.contains("pw")) return;
+      const w = document.createElement("span"); w.className = "pw"; i.parentNode.insertBefore(w, i); w.appendChild(i);
+      const t = document.createElement("button"); t.type = "button"; t.className = "eye"; t.innerHTML = EYE;
+      t.setAttribute("aria-label", "Показать пароль"); t.setAttribute("aria-pressed", "false"); t.title = "Показать пароль";
+      t.addEventListener("click", () => {
+        const show = i.type === "password"; i.type = show ? "text" : "password"; t.innerHTML = show ? EYE_OFF : EYE;
+        const l = show ? "Скрыть пароль" : "Показать пароль"; t.setAttribute("aria-label", l); t.title = l; t.setAttribute("aria-pressed", String(show));
+        i.focus(); const n = i.value.length; try { i.setSelectionRange(n, n); } catch (_) {}
+      });
+      w.appendChild(t);
+    });
   }
   const brand = `<div class="brand"><i aria-hidden="true"></i>Промосеть</div>`;
   const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите владельца добавить вас." : m;
@@ -85,7 +106,7 @@
       sent: `<div class="card">${brand}<h1>Проверьте почту</h1><p>${msg || ""}</p><div class="links"><button type="button" data-go="login">Ко входу</button></div></div>`,
       pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Владелец агентства ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
     };
-    b.innerHTML = V[mode];
+    b.innerHTML = V[mode]; addEyes(b);
     const f = b.querySelector("input"); if (f) setTimeout(() => f.focus(), 30);
   }
 
@@ -239,7 +260,7 @@
     m.innerHTML = `<form><h2>Сменить пароль</h2><label for="pm-1">Новый пароль, не меньше 6 символов</label><input id="pm-1" type="password" autocomplete="new-password" minlength="6" required>
       <label for="pm-2">Повторите пароль</label><input id="pm-2" type="password" autocomplete="new-password" minlength="6" required><div class="e"></div>
       <div class="row"><button type="button" data-x>Отмена</button><button class="main" type="submit">Сохранить</button></div></form>`;
-    document.body.appendChild(m); m.querySelector("#pm-1").focus();
+    document.body.appendChild(m); addEyes(m); m.querySelector("#pm-1").focus();
     m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-x]")) m.remove(); });
     m.querySelector("form").addEventListener("submit", async e => {
       e.preventDefault(); const a = m.querySelector("#pm-1").value, b = m.querySelector("#pm-2").value, er = m.querySelector(".e");

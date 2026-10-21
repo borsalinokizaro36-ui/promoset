@@ -425,7 +425,7 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
 .slotf{grid-column:1/-1}
-.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .slot{font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:62px;padding:8px 4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);cursor:pointer}
 .slot b{font-size:14px;font-weight:600}
 .slot span{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
@@ -433,7 +433,7 @@ td.macts{white-space:nowrap}
 .slot:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .slot[aria-checked="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .slot[aria-checked="true"] span{color:var(--lime)}
-@media (max-width:420px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:360px){.slots{grid-template-columns:minmax(0,1fr)}}
 #pj-kind-f[hidden]{display:none}
 .pj-wide{grid-column:span 2}
 @media (max-width:600px){.pj-wide{grid-column:1/-1}}
@@ -516,10 +516,10 @@ const COLS=["projects","points","promoters","shifts","photos"];
 const S={projects:[],points:[],promoters:[],shifts:[],photos:[]};
 const loaded={};
 let db=null, assets=null, dbState="loading";
-const SLOTS={morning:{l:"Утро",t:"09:00"},day1:{l:"День 1",t:"12:00"},day2:{l:"День 2",t:"15:00"},evening:{l:"Вечер",t:"18:00"}};
+const SLOTS={morning:{l:"Утро",t:"09:00"},day1:{l:"День",t:"13:00"},evening:{l:"Вечер",t:"17:00"}};
 const TYPES=["Раздача листовок","Дегустация","Промо-стойка","Хелпер на мероприятии","Креативная акция"];
 const STL={ontime:"Вовремя",late:"С опозданием",missed:"Срыв",nophoto:"Фото не пришло",waiting:"Идёт, ждём фото",upcoming:"Впереди"};
-const SHIFT_MS=3*3600e3, GRACE_MS=20*60e3;
+const SHIFT_MS=4*3600e3, GRACE_MS=20*60e3;
 const TABS=[["day","План дня"],["shifts","Назначение смен"],["promoters","Сотрудники"],["points","Установка точек"],["projects","Проекты"],["photos","Фотоотчёты"],["money","Финансы"],["summary","Статистика"],["reg","Регистрация"],["access","Доступ"]];
 
 /* Границы: OpenStreetMap (Nominatim), упрощены. Москва — 12 административных округов; область — внешний контур с вырезом Москвы. */
@@ -664,12 +664,12 @@ function buildTab(){
     </div>`,
   shifts:()=>`${b}<div class="daygrid sgrid">
       <section class="dlist"><div class="fchips"><h3 id="shTitle"></h3><span class="hint" id="shN"></span></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="shList"></div></section>
-      <div class="scol"><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 3 часа, на точке до четырёх смен в день.</p>
+      <div class="scol"><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 4 часа, на точке до трёх смен в день.</p>
     <form class="f" id="fShift" autocomplete="off">
       <div class="fld"><label for="sh-point">Точка</label><select id="sh-point" required></select></div>
       <div class="fld"><label for="sh-prom">Сотрудник</label><select id="sh-prom" required></select></div>
       <div class="fld"><label for="sh-date">Дата</label><input type="date" id="sh-date" required></div>
-      <div class="fld slotf"><label id="sh-slot-l">Слот</label><input type="hidden" id="sh-slot" value="morning"><div class="slots" role="radiogroup" aria-labelledby="sh-slot-l">${Object.entries(SLOTS).map(([k,v],i)=>`<button type="button" class="slot" role="radio" data-slot="${k}" aria-checked="${i===0}"><b>${v.l}</b><span>${v.t}–${String(+v.t.slice(0,2)+3).padStart(2,"0")}:${v.t.slice(3)}</span></button>`).join("")}</div></div>
+      <div class="fld slotf"><label id="sh-slot-l">Слот</label><input type="hidden" id="sh-slot" value="morning"><div class="slots" role="radiogroup" aria-labelledby="sh-slot-l">${Object.entries(SLOTS).map(([k,v],i)=>`<button type="button" class="slot" role="radio" data-slot="${k}" aria-checked="${i===0}"><b>${v.l}</b><span>${v.t}–${String(+v.t.slice(0,2)+4).padStart(2,"0")}:${v.t.slice(3)}</span></button>`).join("")}</div></div>
       <div class="fld"><label for="sh-start">Начало</label><input type="time" id="sh-start" value="09:00" required></div>
       <div class="fld"><label for="sh-type">Формат</label><select id="sh-type">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
       <div class="fld"><label for="sh-mat">Выдано материалов, шт.</label><input type="number" min="0" step="1" id="sh-mat" placeholder="например, 300"></div>
@@ -1215,9 +1215,9 @@ function bindForms(){
     fs.addEventListener("submit",async e=>{e.preventDefault();const pointId=f("sh-point").value,promoterId=f("sh-prom").value,date=f("sh-date").value,start=f("sh-start").value;
       const msg=f("shMsg"); msg.className="hint";
       if(!pointId||!promoterId){msg.className="err";msg.textContent="Выберите точку и сотрудника.";return}
-      if(start>"21:00"){msg.className="err";msg.textContent="Смена должна начинаться не позже 21:00.";return}
+      if(start>"20:00"){msg.className="err";msg.textContent="Смена должна начинаться не позже 20:00, чтобы закончиться до полуночи.";return}
       const same=S.shifts.filter(s=>s.pointId===pointId&&s.date===date);
-      if(same.length>=4){msg.className="err";msg.textContent="На этой точке уже четыре смены в этот день.";return}
+      if(same.length>=3){msg.className="err";msg.textContent="На этой точке уже три смены в этот день.";return}
       const st=new Date(date+"T"+start).getTime(); const clash=S.shifts.find(s=>s.promoterId===promoterId&&s.date===date&&Math.abs(shiftStart(s)-st)<SHIFT_MS);
       if(clash){msg.className="err";msg.textContent=`${prName(promoterId)} уже стоит на смене в ${clash.start} (${ptName(clash.pointId)}).`;return}
       const pt=byId("points",pointId);

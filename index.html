@@ -424,6 +424,10 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
+#pj-kind-f[hidden]{display:none}
+.pj-wide{grid-column:span 2}
+@media (max-width:600px){.pj-wide{grid-column:1/-1}}
+.pj-cat{font-weight:600}
 .mtotal{background:var(--ink);color:#fff;border-radius:18px;padding:24px 28px;margin-bottom:14px}
 .mtotal .l{font-size:14px;font-weight:500;opacity:.75}
 .mtotal .v{font-family:var(--f-mono);font-size:clamp(34px,6vw,52px);font-weight:500;letter-spacing:-.03em;line-height:1.1;margin:6px 0 4px;color:var(--lime)}
@@ -566,6 +570,13 @@ function shiftState(s,now=Date.now()){
   if(now<st+GRACE_MS)return"waiting";
   return"nophoto";
 }
+const PJ_CATS=[
+  ["Внутренняя коммуникация",["Корпоратив","Форум","Тимбилдинг","Стратегическая сессия"]],
+  ["Сервис для мероприятий",["Техническое оснащение","Администраторы","Координация","Хелперы","Хостес","Оформление","Логистика"]],
+  ["Деловые мероприятия",["Конференция","Презентация","Форум","Встреча партнёров","Стратегическая сессия"]],
+  ["Мероприятия с нуля",["Концепция","Сценарий","Оформление","Техническая режиссура","Координация"]],
+  ["Event-маркетинг с работающими метриками",["Продажи","Посещаемость","Вовлечённость","Командное взаимодействие"]],
+  ["Промо-акции и BTL под ключ",["Промо-активация","Бренд-коммуникация","Вовлекающий сценарий"]]];
 const RATE_DEF=550, SHIFT_H=SHIFT_MS/3600e3;
 const rateOf=p=>num(p&&p.rate)>0?num(p.rate):RATE_DEF;
 const shiftRate=s=>num(s.rate)>0?num(s.rate):rateOf(byId("projects",s.projectId));
@@ -689,6 +700,8 @@ function buildTab(){
     <section class="panel"><h3>Новый проект</h3><form class="f" id="fProj" autocomplete="off">
       <div class="fld"><label for="pj-name">Название</label><input id="pj-name" required placeholder="Открытие кофейни"></div>
       <div class="fld"><label for="pj-client">Заказчик</label><input id="pj-client"></div>
+      <div class="fld pj-wide"><label for="pj-cat">Направление</label><select id="pj-cat" required><option value="">Выберите направление</option>${PJ_CATS.map(([c])=>`<option>${esc(c)}</option>`).join("")}</select></div>
+      <div class="fld pj-wide" id="pj-kind-f" hidden><label for="pj-kind">Вид</label><select id="pj-kind" required disabled></select></div>
       <div class="fld"><label for="pj-from">Старт</label><input type="date" id="pj-from"></div>
       <div class="fld"><label for="pj-to">Финиш</label><input type="date" id="pj-to"></div>
       <div class="fld"><label for="pj-rate">Ставка агитатору, ₽ в час</label><input type="number" id="pj-rate" min="1" step="1" value="550" required></div>
@@ -1076,8 +1089,9 @@ function upPromoters(){
 function upProjects(){
   const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru"));
   document.getElementById("pjN").textContent=`${pj.length}`;
-  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Заказчик</th><th>Сроки</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
-    <td><b>${esc(p.name)}</b>${p.example?' <span class="tag ex">пример</span>':""}</td><td>${esc(p.client||"—")}</td><td class="hint">${p.from?fmtShort(p.from):"—"} — ${p.to?fmtShort(p.to):"—"}</td>
+  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Направление</th><th>Заказчик</th><th>Сроки</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
+    <td><b>${esc(p.name)}</b>${p.example?' <span class="tag ex">пример</span>':""}</td>
+    <td>${p.category?`<span class="pj-cat">${esc(p.category)}</span>${p.kind?`<div class="hint">${esc(p.kind)}</div>`:""}`:'<span class="hint">не указано</span>'}</td><td>${esc(p.client||"—")}</td><td class="hint">${p.from?fmtShort(p.from):"—"} — ${p.to?fmtShort(p.to):"—"}</td>
     <td><input class="rate-in" type="number" min="1" step="1" value="${rateOf(p)}" data-prate="${esc(p.id)}" aria-label="Ставка для ${esc(p.name)}, рублей в час"></td>
     <td class="num">${S.points.filter(x=>x.projectId===p.id).length}</td><td class="num">${S.shifts.filter(x=>x.projectId===p.id).length}</td>
     <td>${p.active===false?'<span class="tag">завершён</span>':'<span class="chip st-ontime">идёт</span>'}</td>
@@ -1231,9 +1245,11 @@ function bindForms(){
       }catch(err){msg.className="err";msg.textContent="Не удалось: "+(err&&err.message||err)}finally{btn.disabled=false}
     });
   }
+  const pc=f("pj-cat"); if(pc)pc.addEventListener("change",()=>{const k=PJ_CATS.find(x=>x[0]===pc.value),sel=f("pj-kind"),w=f("pj-kind-f");
+    sel.innerHTML=k?`<option value="">Выберите вид</option>`+k[1].map(v=>`<option>${esc(v)}</option>`).join(""):"";sel.disabled=!k;w.hidden=!k;if(k)sel.focus()});
   const fj=f("fProj"); if(fj)fj.addEventListener("submit",async e=>{e.preventDefault();
-    const ok=await guard(()=>db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,rate:num(f("pj-rate").value)>0?num(f("pj-rate").value):RATE_DEF,active:true,createdAt:Date.now()}),"Проект создан");
-    if(ok)["pj-name","pj-client","pj-from","pj-to"].forEach(i=>f(i).value="")});
+    const ok=await guard(()=>db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:num(f("pj-rate").value)>0?num(f("pj-rate").value):RATE_DEF,active:true,createdAt:Date.now()}),"Проект создан");
+    if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat"].forEach(i=>f(i).value="");f("pj-cat").dispatchEvent(new Event("change"))}});
 }
 
 /* сжатие фото перед загрузкой */

@@ -424,6 +424,16 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
+.slotf{grid-column:1/-1}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.slot{font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:62px;padding:8px 4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);cursor:pointer}
+.slot b{font-size:14px;font-weight:600}
+.slot span{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
+.slot:hover{border-color:var(--ink-3)}
+.slot:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.slot[aria-checked="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.slot[aria-checked="true"] span{color:var(--lime)}
+@media (max-width:420px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #pj-kind-f[hidden]{display:none}
 .pj-wide{grid-column:span 2}
 @media (max-width:600px){.pj-wide{grid-column:1/-1}}
@@ -659,7 +669,7 @@ function buildTab(){
       <div class="fld"><label for="sh-point">Точка</label><select id="sh-point" required></select></div>
       <div class="fld"><label for="sh-prom">Сотрудник</label><select id="sh-prom" required></select></div>
       <div class="fld"><label for="sh-date">Дата</label><input type="date" id="sh-date" required></div>
-      <div class="fld"><label for="sh-slot">Слот</label><select id="sh-slot">${Object.entries(SLOTS).map(([k,v])=>`<option value="${k}">${v.l} · ${v.t}</option>`).join("")}</select></div>
+      <div class="fld slotf"><label id="sh-slot-l">Слот</label><input type="hidden" id="sh-slot" value="morning"><div class="slots" role="radiogroup" aria-labelledby="sh-slot-l">${Object.entries(SLOTS).map(([k,v],i)=>`<button type="button" class="slot" role="radio" data-slot="${k}" aria-checked="${i===0}"><b>${v.l}</b><span>${v.t}–${String(+v.t.slice(0,2)+3).padStart(2,"0")}:${v.t.slice(3)}</span></button>`).join("")}</div></div>
       <div class="fld"><label for="sh-start">Начало</label><input type="time" id="sh-start" value="09:00" required></div>
       <div class="fld"><label for="sh-type">Формат</label><select id="sh-type">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
       <div class="fld"><label for="sh-mat">Выдано материалов, шт.</label><input type="number" min="0" step="1" id="sh-mat" placeholder="например, 300"></div>
@@ -1201,7 +1211,7 @@ async function guard(fn,okMsg){
 function bindForms(){
   const f=id=>document.getElementById(id);
   const fs=f("fShift"); if(fs){
-    f("sh-slot").addEventListener("change",()=>{f("sh-start").value=SLOTS[f("sh-slot").value].t});
+    const sb=[...document.querySelectorAll("#fShift .slot")];sb.forEach(b=>b.addEventListener("click",()=>{f("sh-slot").value=b.dataset.slot;f("sh-start").value=SLOTS[b.dataset.slot].t;sb.forEach(x=>x.setAttribute("aria-checked",String(x===b)))}));
     fs.addEventListener("submit",async e=>{e.preventDefault();const pointId=f("sh-point").value,promoterId=f("sh-prom").value,date=f("sh-date").value,start=f("sh-start").value;
       const msg=f("shMsg"); msg.className="hint";
       if(!pointId||!promoterId){msg.className="err";msg.textContent="Выберите точку и сотрудника.";return}

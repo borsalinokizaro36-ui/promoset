@@ -292,9 +292,13 @@
     roleLabel: r => ROLE_L[r] || r,
     genPassword, makeLogin, login: loginOf,
     async create(d) {
-      const { error } = await sb.rpc("create_member", { p_login: d.login, p_password: d.password, p_first: d.first, p_last: d.last, p_phone: d.phone, p_telegram: d.telegram, p_email: d.email, p_role: d.role });
+      const { data, error } = await sb.rpc("create_member", { p_login: d.login, p_password: d.password, p_first: d.first, p_last: d.last, p_phone: d.phone, p_telegram: d.telegram, p_email: d.email, p_role: d.role });
       if (error) throw error;
+      return data;
     },
+    async occupancy(date) { const { data, error } = await sb.rpc("slot_occupancy", { p_date: date }); if (error) throw error; return data || []; },
+    async team() { const { data, error } = await sb.rpc("team_contacts"); if (error) throw error; return data || []; },
+    async report(id, left, contacts) { const { error } = await sb.rpc("staff_report", { p_shift: id, p_left: left, p_contacts: contacts }); if (error) throw error; },
     async tempPassword(id, email) {
       const pw = genPassword();
       const { error } = await sb.rpc("set_temp_password", { p_user: id, p_password: pw });

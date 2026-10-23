@@ -661,7 +661,7 @@ const tabsEl=document.getElementById("tabs");
 function renderTabs(){
   const pend=S.photos.filter(p=>p.status==="pending").length, nReq=isStaff()?0:(S.requests||[]).filter(r=>r.status==="new").length, nMsg=isStaff()?0:(S.messages||[]).filter(m=>!m.reply).length;
   {const pt=document.getElementById("pgTitle"),tt=(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
-  tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="reg"||window.PS_ROLE==="owner")&&(k!=="money"||(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
+  tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="reg"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="money"||(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.editShift=null;ui.armed=null;
   try{localStorage.setItem("ps-tab",ui.tab)}catch(e){} renderAll(true)});
@@ -783,14 +783,14 @@ function buildTab(){
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
     <form id="wrForm" class="wrf"><label for="wr-text">Сообщение</label><textarea id="wr-text" rows="4" maxlength="1000" required placeholder="Коротко и по делу"></textarea><div><button class="btn primary" type="submit">Отправить</button></div><p class="hint" id="wrMsg">Не больше трёх обращений в час. Ответ появится ниже.</p></form></section>
     <section class="panel"><h3>Мои обращения</h3><div id="wrList"></div></section>`,
-  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Только для владельца</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. При первом входе он сменит пароль на свой.</p></div>
+  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для владельца и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. При первом входе он сменит пароль на свой.</p></div>
     <section class="panel"><h3>Новый сотрудник</h3><form class="f" id="fReg" autocomplete="off">
       <div class="fld"><label for="rg-first">Имя</label><input id="rg-first" required></div>
       <div class="fld"><label for="rg-last">Фамилия</label><input id="rg-last" required></div>
       <div class="fld"><label for="rg-phone">Телефон</label><input id="rg-phone" inputmode="tel" placeholder="+7"></div>
       <div class="fld"><label for="rg-tg">Telegram</label><input id="rg-tg" placeholder="@ник"></div>
       <div class="fld"><label for="rg-mail">Почта, если есть</label><input id="rg-mail" type="email" placeholder="необязательно"></div>
-      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">администратор</option><option value="owner">владелец</option></select></div>
+      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">администратор</option>${window.PS_ROLE==="owner"?'<option value="owner">владелец</option>':""}</select></div>
       <div class="fld rg-wide"><label for="rg-login">Логин для входа</label><div class="pair"><input id="rg-login" required autocapitalize="none" spellcheck="false" placeholder="появится из имени"><button class="btn sm" type="button" id="rg-genl">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label for="rg-pass">Пароль</label><div class="pair"><input id="rg-pass" class="mono" required spellcheck="false"><button class="btn sm" type="button" id="rg-genp">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label class="chk"><input type="checkbox" id="rg-prom" checked> Добавить во вкладку «Сотрудники», чтобы ставить на смены</label></div>
@@ -813,7 +813,7 @@ function buildTab(){
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
   {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab))ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
-  if(!T[ui.tab]||(ui.tab==="access"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="reg"&&window.PS_ROLE!=="owner")||(ui.tab==="money"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin")))ui.tab="day";
+  if(!T[ui.tab]||(ui.tab==="access"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="reg"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="money"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin")))ui.tab="day";
   main.innerHTML=T[ui.tab]();
   const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
   bindForms();

@@ -425,6 +425,8 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
 body.staff .ctl{display:none}
+.mkc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}.mkc label{width:100%;font-size:13px;color:var(--ink-2)}.mkc input{font:inherit;flex:1;min-width:200px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink)}
+.ps-act.ps-mode{opacity:1;font-weight:600;color:var(--lime);margin-bottom:8px}
 #meBox,#pfBox,#rpBox{display:flex;flex-direction:column;gap:14px}
 #pfBox .kpis{margin:0}
 .mcardS{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:6px}
@@ -679,11 +681,12 @@ function renderProjSel(){
 const main=document.getElementById("main");
 let builtTab=null, lastMode=null;
 function renderAll(force){
+  {const sf=document.querySelector(".top .ctrls");let mb=document.getElementById("psMode");if(isMgr()&&sf){if(!mb){mb=document.createElement("button");mb.id="psMode";mb.type="button";mb.className="ps-act ps-mode";mb.onclick=()=>{ui.asStaff=!ui.asStaff;try{history.replaceState(null,"",location.pathname+location.search+(ui.asStaff?"#cabinet":""))}catch(_){}ui.tab=ui.asStaff?"me":"day";renderAll(true)};sf.prepend(mb)}mb.textContent=ui.asStaff?"← Пульт агентства":"Мой кабинет сотрудника"}else if(mb)mb.remove()}
   const mode=isStaff()?"staff":"team"; if(mode!==lastMode){lastMode=mode;force=true;document.body.classList.toggle("staff",mode==="staff");const lg=document.querySelector(".logo small");if(lg)lg.textContent=mode==="staff"?"кабинет сотрудника":"пульт агентства"}
   renderTabs(); renderProjSel();
   if(force||builtTab!==ui.tab){buildTab();builtTab=ui.tab}
   fillOptions();
-  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-res],form[data-rep],form[data-reply],#wrForm"))return;
+  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-res],form[data-rep],form[data-reply],#wrForm,.mkc"))return;
   updateTab();
 }
 function banner(){
@@ -1094,7 +1097,7 @@ function upAccess(){
   window.psMembers.list().then(list=>{
     const n=document.getElementById("acN");if(n)n.textContent=`${list.length}`;
     el.innerHTML=`<table><thead><tr><th>Имя</th><th>Логин и контакты</th><th>Роль</th><th>Зарегистрирован</th><th></th></tr></thead><tbody>${list.map(m=>{const self=window.PS_ME&&m.user_id===window.PS_ME.id;
-      return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}${own&&m.role==="staff"?`<div class="lnk">Карточка: ${cardSel(m)}</div>`:""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
+      return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}${own&&m.role!=="pending"?`<div class="lnk">Карточка: ${cardSel(m)}</div>`:""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
       <td>${own&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
       <td>${m.created_at?esc(new Date(m.created_at).toLocaleDateString("ru-RU")):"—"}</td>
       <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно закрыть доступ?":"Закрыть доступ"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
@@ -1347,6 +1350,8 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="mk-card"){const n=((document.getElementById("mkName")||{}).value||"").trim();if(!n){toast("Впишите имя и фамилию");return}
+    await guard(()=>db.collection("promoters").add({name:n,phone:"",telegram:"",agency:"",active:true,createdAt:Date.now(),userId:window.PS_ME.id}),"Карточка создана");if(document.activeElement)document.activeElement.blur();updateTab();return}
   if(act==="su-date"){ui.suDate=id;ui.occ=null;updateTab();return}
   if(act==="su-filter"){ui.suFilter=id;updateTab();return}
   if(act==="su-req"){if(!arm("su:"+id))return;const [pid,k]=id.split("|"),c=myCard();if(!c||!SLOTS[k])return;
@@ -1389,13 +1394,16 @@ main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");
 
 /* ---------- кабинет сотрудника ---------- */
 const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Сдать итоги"],["help","Как всё устроено"],["write","Написать руководителю"]];
-const isStaff=()=>window.PS_ROLE==="staff";
+const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="admin";
+const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());
+ui.asStaff=location.hash==="#cabinet";
+window.addEventListener("hashchange",()=>{const v=location.hash==="#cabinet";if(v!==ui.asStaff){ui.asStaff=v;renderAll(true)}});
 const ymdOf=t=>iso(new Date(t));
 const myCard=()=>{const id=window.PS_ME&&window.PS_ME.id;return id?S.promoters.find(p=>p.userId===id):null};
 const myShifts=()=>{const c=myCard();return c?S.shifts.filter(s=>s.promoterId===c.id):[]};
 const shiftEnd=s=>shiftStart(s)+SHIFT_MS;
 const mapLink=p=>p&&p.lat&&p.lng?`https://yandex.ru/maps/?pt=${p.lng},${p.lat}&z=17&l=map`:"";
-const noCard=()=>`<section class="panel"><h3>Кабинет ещё не привязан</h3><p class="hint">Ваш аккаунт пока не связан с карточкой сотрудника. Попросите руководителя привязать его во вкладке «Доступ» — после этого здесь появятся ваши смены и выплаты.</p></section>`;
+const noCard=()=>isMgr()?`<section class="panel"><h3>Ваша карточка сотрудника</h3><p class="hint">Чтобы работать как сотрудник — записываться на смены, отправлять фото и видеть свои выплаты, — нужна карточка во вкладке «Сотрудники». Создайте её здесь или привяжите существующую во вкладке «Доступ».</p><div class="mkc"><label for="mkName">Имя и фамилия</label><input id="mkName" value="${esc((window.PS_ME||{}).name||"")}" placeholder="Например, Роман Чудов" autocomplete="name"><button class="btn primary" type="button" data-act="mk-card">Создать карточку</button></div></section>`:`<section class="panel"><h3>Кабинет ещё не привязан</h3><p class="hint">Ваш аккаунт пока не связан с карточкой сотрудника. Попросите руководителя привязать его во вкладке «Доступ» — после этого здесь появятся ваши смены и выплаты.</p></section>`;
 function myShiftCard(s,big){
   const pt=byId("points",s.pointId)||{}, st=shiftState(s), ph=shiftPhotos(s), ml=mapLink(pt);
   return `<article class="mcardS ${big?"big":""}"><div class="mh"><div><div class="eyebrow">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}</div>

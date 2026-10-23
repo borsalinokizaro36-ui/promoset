@@ -104,7 +104,8 @@
         <label for="ps-email">Почта или логин</label><input id="ps-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
         <label for="ps-pass">Пароль</label><input id="ps-pass" type="password" autocomplete="current-password" required>
         <div class="e">${msg || ""}</div><button class="main" type="submit">Войти</button>
-        <div class="links"><button type="button" data-go="signup">Регистрация</button><button type="button" data-go="reset">Забыли пароль?</button></div></form>`,
+        <div class="links"><button type="button" data-go="reset">Забыли пароль?</button></div>
+        <p>Нет аккаунта? Логин и пароль выдаёт руководитель агентства.</p></form>`,
       signup: `<form data-m="signup">${brand}<h1>Регистрация</h1>
         <label for="ps-name">Имя и фамилия</label><input id="ps-name" autocomplete="name" required>
         <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>

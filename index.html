@@ -424,6 +424,51 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
+body.staff .ctl{display:none}
+#meBox,#pfBox,#rpBox{display:flex;flex-direction:column;gap:14px}
+#pfBox .kpis{margin:0}
+.mcardS{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.mcardS.big{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.mcardS .mh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.mcardS h3{margin:2px 0 0;font-size:17px}
+.mcardS p{margin:0}
+.mcardS .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.mlist{display:flex;flex-direction:column;gap:10px}
+.reqrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.reqrow:first-of-type{border-top:0}
+.reqrow .ra{display:flex;gap:6px;flex-wrap:wrap}
+.suhead{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.suchip{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.suchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.suchip:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sulist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.sucard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.sucard h3{margin:0;font-size:16px}
+.sucard p{margin:0}
+.sucard .slot span{font-family:inherit;font-size:12px;text-align:center}
+.slot:disabled{cursor:default}
+.slot.su-closed,.slot.su-busy,.slot.su-clash{opacity:.55}
+.slot.su-free span{color:var(--good)}
+.slot.su-mine{background:var(--good-soft);border-color:transparent}.slot.su-mine span{color:var(--good)}
+.slot.su-req{background:var(--info-soft);border-color:transparent}.slot.su-req span{color:var(--info)}
+.slot.arm{background:var(--ink);border-color:var(--ink);color:#fff}.slot.arm span{color:var(--lime)}
+.wrf{display:flex;flex-direction:column;gap:8px}
+.wrf label{font-size:13px;color:var(--ink-2)}
+.wrf textarea,.rpl textarea{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);resize:vertical;color:var(--ink)}
+.rpl{display:flex;gap:8px;align-items:flex-end;margin-top:8px;flex-wrap:wrap}.rpl textarea{flex:1;min-width:200px}
+.msg{border-top:1px solid var(--line);padding:12px 0}.msg:first-of-type{border-top:0}
+.msg .q{white-space:pre-wrap;margin-top:4px}
+.msg .a{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--teal-soft);white-space:pre-wrap}
+.pfhead h2{margin:4px 0 2px;font-size:26px}
+.pfhead p{margin:0}
+.tm{color:var(--ink);padding:3px 0}
+.help details{border-top:1px solid var(--line);padding:10px 0}
+.help summary{cursor:pointer;font-weight:600}
+.help ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.lnk{margin-top:6px;font-size:12.5px;color:var(--ink-3)}.lnk select{margin-left:4px;max-width:200px}
+.st-paid{color:var(--good);font-weight:600;white-space:nowrap}.st-due{color:var(--warn);white-space:nowrap}
+.bad{color:var(--bad)}
 .slotf{grid-column:1/-1}
 .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .slot{font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:62px;padding:8px 4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);cursor:pointer}
@@ -513,7 +558,7 @@ td select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;backgro
 (function(){
 "use strict";
 const COLS=["projects","points","promoters","shifts","photos"];
-const S={projects:[],points:[],promoters:[],shifts:[],photos:[]};
+const S={projects:[],points:[],promoters:[],shifts:[],photos:[],requests:[],messages:[]};
 const loaded={};
 let db=null, assets=null, dbState="loading";
 const SLOTS={morning:{l:"Утро",t:"09:00"},day1:{l:"День",t:"13:00"},evening:{l:"Вечер",t:"17:00"}};
@@ -612,9 +657,9 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!lb.hidden){lb.hidd
 /* ---------- шапка ---------- */
 const tabsEl=document.getElementById("tabs");
 function renderTabs(){
-  const pend=S.photos.filter(p=>p.status==="pending").length;
-  {const pt=document.getElementById("pgTitle"),tt=TABS.find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
-  tabsEl.innerHTML=TABS.filter(([k])=>(k!=="access"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="reg"||window.PS_ROLE==="owner")&&(k!=="money"||(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}</button>`).join("");
+  const pend=S.photos.filter(p=>p.status==="pending").length, nReq=isStaff()?0:(S.requests||[]).filter(r=>r.status==="new").length, nMsg=isStaff()?0:(S.messages||[]).filter(m=>!m.reply).length;
+  {const pt=document.getElementById("pgTitle"),tt=(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
+  tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="reg"||window.PS_ROLE==="owner")&&(k!=="money"||(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.editShift=null;ui.armed=null;
   try{localStorage.setItem("ps-tab",ui.tab)}catch(e){} renderAll(true)});
@@ -632,15 +677,17 @@ function renderProjSel(){
 
 /* ---------- каркас вкладок: формы рисуются один раз, списки — при каждом обновлении ---------- */
 const main=document.getElementById("main");
-let builtTab=null;
+let builtTab=null, lastMode=null;
 function renderAll(force){
+  const mode=isStaff()?"staff":"team"; if(mode!==lastMode){lastMode=mode;force=true;document.body.classList.toggle("staff",mode==="staff");const lg=document.querySelector(".logo small");if(lg)lg.textContent=mode==="staff"?"кабинет сотрудника":"пульт агентства"}
   renderTabs(); renderProjSel();
   if(force||builtTab!==ui.tab){buildTab();builtTab=ui.tab}
   fillOptions();
-  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-res]"))return;
+  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-res],form[data-rep],form[data-reply],#wrForm"))return;
   updateTab();
 }
 function banner(){
+  if(isStaff())return"";
   if(dbState==="off")return`<div class="banner"><b>База недоступна в этом просмотре.</b> Откройте страницу по ссылке в Claude — данные хранятся там и общие для всей команды.</div>`;
   if(S.projects.some(p=>p.example)||S.promoters.some(p=>p.example))return`<div class="banner ex"><b>Сейчас в системе примеры для показа.</b> Перед тест-драйвом удалите их во вкладке «Проекты» — заведённые вами точки, проекты и люди останутся.</div>`;
   if(COLS.every(c=>loaded[c])&&(!S.points.length||!S.promoters.length)){
@@ -664,7 +711,7 @@ function buildTab(){
     </div>`,
   shifts:()=>`${b}<div class="daygrid sgrid">
       <section class="dlist"><div class="fchips"><h3 id="shTitle"></h3><span class="hint" id="shN"></span></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="shList"></div></section>
-      <div class="scol"><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 4 часа, на точке до трёх смен в день.</p>
+      <div class="scol"><section class="panel" id="rqPanel" hidden></section><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 4 часа, на точке до трёх смен в день.</p>
     <form class="f" id="fShift" autocomplete="off">
       <div class="fld"><label for="sh-point">Точка</label><select id="sh-point" required></select></div>
       <div class="fld"><label for="sh-prom">Сотрудник</label><select id="sh-prom" required></select></div>
@@ -696,6 +743,7 @@ function buildTab(){
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Все точки</h3><span id="ptN"></span></div><div class="tbl-wrap" id="ptTbl"></div></section>`,
   promoters:()=>`${b}<div class="head"><div><div class="eyebrow">Люди</div><h2>Сотрудники</h2></div><p>Надёжность считается по фото: вовремя, с опозданием, не пришло.</p></div>
+    <section class="panel" id="msgPanel" hidden></section>
     <section class="panel"><h3>Добавить сотрудника</h3><form class="f" id="fProm" autocomplete="off">
       <div class="fld"><label for="pr-name">ФИО</label><input id="pr-name" required></div>
       <div class="fld"><label for="pr-phone">Телефон</label><input id="pr-phone" inputmode="tel" placeholder="+7"></div>
@@ -719,6 +767,19 @@ function buildTab(){
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Все проекты</h3><span id="pjN"></span></div><div class="tbl-wrap" id="pjTbl"></div></section>
     <section class="panel" id="exPanel"></section>`,
+  me:()=>`<div id="meBox"></div>`,
+  profile:()=>`<div id="pfBox"></div>`,
+  signup:()=>`<div id="suBox"></div>`,
+  report:()=>`<div id="rpBox"></div>`,
+  help:()=>`<section class="panel help"><h3>Как всё устроено</h3><p class="hint">Коротко о работе в кабинете: смена, фото, итоги и деньги.</p>
+    <details open><summary>До смены</summary><ul><li>Смены ставит руководитель. Можно записаться и самому: «Записаться на смену» → день → точка → нажмите на свободный слот два раза. Заявку подтверждает руководитель, ответ появится во вкладке «Моя смена».</li><li>Накануне проверьте «Моя смена»: там адрес точки и кнопка «Открыть на карте».</li></ul></details>
+    <details><summary>Во время смены</summary><ul><li>За полчаса до начала во вкладке «Моя смена» появится кнопка «Отправить фото с точки».</li><li>Пришлите фото в первые 20 минут смены — тогда смена засчитывается вовремя. Позже — засчитается с опозданием.</li><li>Смена без фото не оплачивается.</li></ul></details>
+    <details><summary>После смены</summary><ul><li>Во вкладке «Сдать итоги» укажите, сколько материалов осталось и сколько контактов собрали. Итоги принимаются двое суток после смены.</li><li>Не успели — передайте цифры руководителю.</li></ul></details>
+    <details><summary>Деньги</summary><ul><li>Оплачивается смена, которая закончилась и на которой есть фото: ${SHIFT_H} ч × ставка проекта.</li><li>Во вкладке «Мой профиль» видно, сколько заработано, что выплачено и что ждёт выплаты.</li></ul></details>
+    <details><summary>Если что-то не работает</summary><ul><li>Кабинет пустой — аккаунт ещё не привязан к карточке сотрудника. Напишите руководителю.</li><li>Забыли пароль — нажмите «Забыли пароль?» на экране входа или попросите руководителя выдать временный.</li><li>Вопрос не решается — вкладка «Написать руководителю».</li></ul></details></section>`,
+  write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
+    <form id="wrForm" class="wrf"><label for="wr-text">Сообщение</label><textarea id="wr-text" rows="4" maxlength="1000" required placeholder="Коротко и по делу"></textarea><div><button class="btn primary" type="submit">Отправить</button></div><p class="hint" id="wrMsg">Не больше трёх обращений в час. Ответ появится ниже.</p></form></section>
+    <section class="panel"><h3>Мои обращения</h3><div id="wrList"></div></section>`,
   reg:()=>`${b}<div class="head"><div><div class="eyebrow">Только для владельца</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. При первом входе он сменит пароль на свой.</p></div>
     <section class="panel"><h3>Новый сотрудник</h3><form class="f" id="fReg" autocomplete="off">
       <div class="fld"><label for="rg-first">Имя</label><input id="rg-first" required></div>
@@ -748,6 +809,7 @@ function buildTab(){
     <section class="panel"><div class="panel-h"><h3>По проектам</h3><button class="btn sm" data-act="copy-report">Скопировать отчёт</button></div><div class="tbl-wrap" id="smTbl"></div></section>
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
+  {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab))ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
   if(!T[ui.tab]||(ui.tab==="access"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="reg"&&window.PS_ROLE!=="owner")||(ui.tab==="money"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin")))ui.tab="day";
   main.innerHTML=T[ui.tab]();
   const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
@@ -766,7 +828,7 @@ function fillOptions(){
 
 function updateTab(){
   const bn=document.getElementById("bn"); if(bn)bn.innerHTML=banner();
-  ({reg:()=>{},money:upMoney,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
+  ({me:upMe,profile:upProfile,signup:upSignup,report:upReport,help:()=>{},write:upWrite,reg:()=>{},money:upMoney,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
 }
 
 /* ---------- общие куски ---------- */
@@ -1032,13 +1094,13 @@ function upAccess(){
   window.psMembers.list().then(list=>{
     const n=document.getElementById("acN");if(n)n.textContent=`${list.length}`;
     el.innerHTML=`<table><thead><tr><th>Имя</th><th>Логин и контакты</th><th>Роль</th><th>Зарегистрирован</th><th></th></tr></thead><tbody>${list.map(m=>{const self=window.PS_ME&&m.user_id===window.PS_ME.id;
-      return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
+      return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}${own&&m.role==="staff"?`<div class="lnk">Карточка: ${cardSel(m)}</div>`:""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
       <td>${own&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
       <td>${m.created_at?esc(new Date(m.created_at).toLocaleDateString("ru-RU")):"—"}</td>
       <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно закрыть доступ?":"Закрыть доступ"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
   }).catch(e=>{el.innerHTML=emptyBox("Не удалось загрузить список: "+esc(e&&e.message||e))});
 }
-function upShifts(){
+function upShifts(){upRequests();
   const sh=dayShifts(true);
   document.getElementById("shTitle").textContent="Смены на "+fmtDate(ui.date);
   document.getElementById("shN").textContent=sh.length?plural(sh.length,SM):"";
@@ -1083,7 +1145,7 @@ function promStats(id){
   const ot=pct(r.ontime,r.due); const risk=(r.due>=3&&ot!=null&&ot<70)||r.missed+r.nophoto>=2||rej>=2;
   return {...r,rej,ot,risk};
 }
-function upPromoters(){
+function upPromoters(){upMsgs();
   const prs=S.promoters.filter(p=>p.active!==false).sort((a,b)=>a.name.localeCompare(b.name,"ru"));
   document.getElementById("prN").textContent=`${prs.length}`;
   document.getElementById("prTbl").innerHTML=prs.length?`<table><thead><tr><th>Сотрудник</th><th>Контакты</th><th class="num">Смен</th><th class="num">Отработано</th><th>Фото вовремя</th><th class="num">Срывы</th><th class="num">Контактов</th><th></th><th></th></tr></thead><tbody>${prs.map(p=>{const r=promStats(p.id);
@@ -1244,8 +1306,8 @@ function bindForms(){
       if(!/^[a-z0-9._-]{3,40}$/.test(d.login)){msg.className="err";msg.textContent="Логин: от 3 до 40 латинских букв, цифр, точек или дефисов. Нажмите «Сгенерировать».";return}
       if(d.password.length<8){msg.className="err";msg.textContent="Пароль должен быть не короче 8 символов.";return}
       const btn=rg.querySelector("button[type=submit]");btn.disabled=true;
-      try{await window.psMembers.create(d);
-        if(f("rg-prom").checked&&db)await guard(()=>db.collection("promoters").add({name:d.first+" "+d.last,phone:d.phone,telegram:d.telegram,agency:"",login:d.login,active:true,createdAt:Date.now()}));
+      try{const uid=await window.psMembers.create(d);
+        if(f("rg-prom").checked&&db)await guard(()=>db.collection("promoters").add({name:d.first+" "+d.last,phone:d.phone,telegram:d.telegram,agency:"",login:d.login,userId:uid||null,active:true,createdAt:Date.now()}));
         const site=location.origin+location.pathname, txt=`Промосеть: ${site}\nЛогин: ${d.login}\nПароль: ${d.password}\nПри первом входе придумайте свой пароль.`;
         const box=f("rgDone");box.hidden=false;
         box.innerHTML=`<h3>Зарегистрирован: ${esc(d.first+" "+d.last)}</h3><pre class="creds">${esc(txt)}</pre><div class="rg-acts"><button class="btn primary" type="button" id="rg-copy">Скопировать данные для входа</button></div>`;
@@ -1257,6 +1319,10 @@ function bindForms(){
   }
   const pc=f("pj-cat"); if(pc)pc.addEventListener("change",()=>{const k=PJ_CATS.find(x=>x[0]===pc.value),sel=f("pj-kind"),w=f("pj-kind-f");
     sel.innerHTML=k?`<option value="">Выберите вид</option>`+k[1].map(v=>`<option>${esc(v)}</option>`).join(""):"";sel.disabled=!k;w.hidden=!k;if(k)sel.focus()});
+  const wf=f("wrForm"); if(wf)wf.addEventListener("submit",async e=>{e.preventDefault();const t=f("wr-text").value.trim(),msg=f("wrMsg");if(!t)return;const me=window.PS_ME||{},c=myCard();
+    if((S.messages||[]).filter(m=>m.userId===me.id&&Date.now()-m.createdAt<3600e3).length>=3){msg.className="err";msg.textContent="Не больше трёх обращений в час. Попробуйте чуть позже.";return}
+    const ok=await guard(()=>db.collection("messages").add({userId:me.id,promoterId:c?c.id:"",name:(c&&c.name)||me.name||"",text:t,status:"new",createdAt:Date.now()}),"Сообщение отправлено");
+    if(ok){f("wr-text").value="";msg.className="ok";msg.textContent="Отправлено. Ответ появится ниже.";updateTab()}});
   const fj=f("fProj"); if(fj)fj.addEventListener("submit",async e=>{e.preventDefault();
     const ok=await guard(()=>db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:num(f("pj-rate").value)>0?num(f("pj-rate").value):RATE_DEF,active:true,createdAt:Date.now()}),"Проект создан");
     if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat"].forEach(i=>f(i).value="");f("pj-cat").dispatchEvent(new Event("change"))}});
@@ -1281,6 +1347,16 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="su-date"){ui.suDate=id;ui.occ=null;updateTab();return}
+  if(act==="su-filter"){ui.suFilter=id;updateTab();return}
+  if(act==="su-req"){if(!arm("su:"+id))return;const [pid,k]=id.split("|"),c=myCard();if(!c||!SLOTS[k])return;
+    const ok=await guard(()=>db.collection("requests").add({userId:window.PS_ME.id,promoterId:c.id,name:c.name,pointId:pid,date:ui.suDate,slot:k,start:SLOTS[k].t,status:"new",createdAt:Date.now()}),"Заявка отправлена руководителю");ui.occ=null;updateTab();return}
+  if(act==="req-cancel"){if(!arm("rq:"+id))return;await guard(()=>db.doc("requests/"+id).delete(),"Заявка отменена");ui.occ=null;updateTab();return}
+  if(act==="req-ok"){const r=(S.requests||[]).find(x=>x.id===id),pt=r&&byId("points",r.pointId);if(!r||!pt){toast("Точка или заявка уже удалены");return}
+    if(S.shifts.some(s=>s.pointId===r.pointId&&s.date===r.date&&s.slot===r.slot)){toast("Этот слот уже занят");return}
+    await guard(async()=>{const ref=await db.collection("shifts").add({pointId:r.pointId,promoterId:r.promoterId,projectId:pt.projectId||"",rate:rateOf(byId("projects",pt.projectId)),date:r.date,slot:r.slot,start:r.start||SLOTS[r.slot].t,type:TYPES[0],matIssued:0,matLeft:null,contacts:null,missed:false,createdAt:Date.now(),fromRequest:r.id});
+      await db.doc("requests/"+id).update({status:"approved",shiftId:ref.id,decidedAt:Date.now()})},"Смена назначена: "+(r.name||prName(r.promoterId)));updateTab();return}
+  if(act==="req-no"){await guard(()=>db.doc("requests/"+id).update({status:"rejected",decidedAt:Date.now()}),"Заявка отклонена");updateTab();return}
   if(act==="pay-shift"){const s=byId("shifts",id);if(!s)return;const v=!s.paid;await guard(()=>db.doc("shifts/"+id).update({paid:v,paidAt:v?Date.now():null}),v?"Смена отмечена как выплаченная":"Отметка о выплате снята");updateTab();return}
   if(act==="pay"){e.preventDefault();const pj=b.dataset.pj,prm=b.dataset.pr,list=earned().filter(s=>inPj(s,pj)&&s.promoterId===prm);if(!list.length)return;
     if(list.every(s=>s.paid)){if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null})},"Отметка о выплате снята")}
@@ -1311,6 +1387,143 @@ main.addEventListener("change",async e=>{const s=e.target.closest&&e.target.clos
 document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;ui.selShift=null;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab()}});
 main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab();return}const z=e.target.closest("[data-zoom]");if(z){ui.mapZoom=z.dataset.zoom;updateTab();return}const b=e.target.closest("[data-pf]");if(b){ui.photoFilter=b.dataset.pf;updateTab()}const p=e.target.closest("[data-per]");if(p){ui.period=p.dataset.per;updateTab()}});
 
+/* ---------- кабинет сотрудника ---------- */
+const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Сдать итоги"],["help","Как всё устроено"],["write","Написать руководителю"]];
+const isStaff=()=>window.PS_ROLE==="staff";
+const ymdOf=t=>iso(new Date(t));
+const myCard=()=>{const id=window.PS_ME&&window.PS_ME.id;return id?S.promoters.find(p=>p.userId===id):null};
+const myShifts=()=>{const c=myCard();return c?S.shifts.filter(s=>s.promoterId===c.id):[]};
+const shiftEnd=s=>shiftStart(s)+SHIFT_MS;
+const mapLink=p=>p&&p.lat&&p.lng?`https://yandex.ru/maps/?pt=${p.lng},${p.lat}&z=17&l=map`:"";
+const noCard=()=>`<section class="panel"><h3>Кабинет ещё не привязан</h3><p class="hint">Ваш аккаунт пока не связан с карточкой сотрудника. Попросите руководителя привязать его во вкладке «Доступ» — после этого здесь появятся ваши смены и выплаты.</p></section>`;
+function myShiftCard(s,big){
+  const pt=byId("points",s.pointId)||{}, st=shiftState(s), ph=shiftPhotos(s), ml=mapLink(pt);
+  return `<article class="mcardS ${big?"big":""}"><div class="mh"><div><div class="eyebrow">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}</div>
+    <h3>${esc(pt.name||"Точка удалена")}</h3>${pt.address||pt.district?`<p class="hint">${esc([pt.address,pt.district].filter(Boolean).join(" · "))}</p>`:""}</div>${chip(st)}</div>
+    ${s.type||num(s.matIssued)?`<p class="hint">${esc([s.type,num(s.matIssued)?"выдано материалов: "+num(s.matIssued):""].filter(Boolean).join(" · "))}</p>`:""}
+    ${ph.length?`<p class="hint">Фото отправлены: ${ph.map(p=>fmtTime(p.takenAt)).join(", ")}</p>`:""}
+    ${big||ml?`<div class="acts">${big?`<label class="btn primary">📷 Отправить фото с точки<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" hidden></label>`:""}${ml?`<a class="btn" href="${ml}" target="_blank" rel="noopener">Открыть на карте</a>`:""}</div>`:""}</article>`;
+}
+function upMe(){
+  const el=document.getElementById("meBox"); if(!el)return;
+  const c=myCard(); if(!c){el.innerHTML=noCard();return}
+  const now=Date.now(), me=window.PS_ME||{}, mine=myShifts().slice().sort((a,b)=>shiftStart(a)-shiftStart(b));
+  const cur=mine.find(s=>!s.missed&&now>=shiftStart(s)-30*60e3&&now<shiftEnd(s));
+  const next=mine.find(s=>s!==cur&&shiftStart(s)>now);
+  const up=mine.filter(s=>s!==cur&&s!==next&&shiftStart(s)>now), past=mine.filter(s=>s!==cur&&shiftEnd(s)<=now).reverse().slice(0,10);
+  const rq=(S.requests||[]).filter(r=>r.userId===me.id&&(r.status==="new"||now-(r.decidedAt||0)<3*864e5)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  let h="";
+  if(cur){const ph=shiftPhotos(cur);h+=`<section class="panel"><div class="panel-h"><h3>Смена идёт</h3></div>${myShiftCard(cur,true)}<p class="hint">${ph.length?"Фото получено, спасибо. В конце смены можно прислать ещё одно.":"Пришлите фото с точки в первые 20 минут смены — так смена засчитывается вовремя."}</p></section>`}
+  else h+=`<section class="panel"><h3>${next?"Следующая смена":"Смен пока нет"}</h3>${next?myShiftCard(next,false)+`<p class="hint">Кнопка «Отправить фото с точки» появится здесь за полчаса до начала.</p>`:`<p class="hint">Смены ставит руководитель. Записаться можно и самому — во вкладке «Записаться на смену».</p>`}</section>`;
+  if(rq.length)h+=`<section class="panel"><div class="panel-h"><h3>Мои заявки</h3><span>${rq.length}</span></div>${rq.map(r=>{const pt=byId("points",r.pointId)||{};
+    const st=r.status==="new"?`<button class="btn sm ${ui.armed==="rq:"+r.id?"arm":""}" data-act="req-cancel" data-id="${esc(r.id)}">${ui.armed==="rq:"+r.id?"Точно отменить?":"Отменить"}</button>`:r.status==="approved"?`<span class="chip st-ontime">одобрена</span>`:`<span class="chip st-missed">отклонена</span>`;
+    return `<div class="reqrow"><div><b>${esc(pt.name||"Точка удалена")}</b><div class="hint">${esc(fmtDate(r.date))} · ${esc((SLOTS[r.slot]||{}).l||"")} ${esc(r.start||"")}${r.status==="new"?" · ждёт ответа":""}</div></div>${st}</div>`}).join("")}</section>`;
+  if(up.length)h+=`<section class="panel"><div class="panel-h"><h3>Дальше по графику</h3><span>${up.length}</span></div><div class="mlist">${up.map(s=>myShiftCard(s,false)).join("")}</div></section>`;
+  if(past.length)h+=`<section class="panel"><div class="panel-h"><h3>Прошедшие смены</h3></div><div class="mlist">${past.map(s=>myShiftCard(s,false)).join("")}</div></section>`;
+  el.innerHTML=h;
+}
+function upProfile(){
+  const el=document.getElementById("pfBox"); if(!el)return;
+  const c=myCard(); if(!c){el.innerHTML=noCard();return}
+  const now=Date.now(), mine=myShifts(), r=stats(mine), ot=pct(r.ontime,r.due);
+  const sum=l=>l.reduce((a,s)=>a+SHIFT_H*shiftRate(s),0), earnedL=mine.filter(s=>worked(shiftState(s,now))&&now>=shiftEnd(s)).sort((a,b)=>shiftStart(b)-shiftStart(a));
+  const tot=sum(earnedL), paid=sum(earnedL.filter(s=>s.paid));
+  const wk={}; for(const s of mine){const d=new Date(s.date+"T12:00:00");const mon=addDays(s.date,-((d.getDay()+6)%7));(wk[mon]=wk[mon]||[]).push(s)}
+  const weeks=Object.keys(wk).sort().reverse().slice(0,8).map(m=>{const l=wk[m],x=stats(l),e=l.filter(s=>worked(shiftState(s,now))&&now>=shiftEnd(s));
+    return `<tr><td>${esc(fmtShort(m))} — ${esc(fmtShort(addDays(m,6)))}</td><td class="num">${x.worked} из ${x.due}</td><td class="num">${x.contacts}</td><td class="num">${fmtRub(sum(e))}</td></tr>`}).join("");
+  const login=window.psMembers?window.psMembers.login((window.PS_ME||{}).email):"";
+  el.innerHTML=`<section class="panel pfhead"><div class="eyebrow">Сотрудник</div><h2>${esc(c.name)}</h2><p class="hint">${esc([login&&"логин "+login,c.phone,c.telegram].filter(Boolean).join(" · "))}</p></section>
+    <div class="kpis">${kpiHtml([{v:r.worked,l:"Смен отработано",s:`из ${r.due} наступивших`,c:"good"},{v:ot==null?"—":ot+"%",l:"Фото вовремя",s:"в первые 20 минут смены",c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},{v:r.contacts,l:"Контактов собрано"},{v:fmtRub(tot),l:"Заработано",s:"за отработанные смены"},{v:fmtRub(paid),l:"Выплачено",c:"good"},{v:fmtRub(tot-paid),l:"Ждёт выплаты",c:tot-paid?"warn":""}])}</div>
+    <section class="panel"><h3>Ваш руководитель</h3><div id="pfTeam" class="hint">Загружаю…</div><p class="hint">Руководитель ставит смены, выдаёт материалы и отмечает выплаты. Вопросы про смены и точки решает он.</p></section>
+    <section class="panel"><div class="panel-h"><h3>Мои выплаты</h3><span>${fmtRub(tot)}</span></div>${earnedL.length?`<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th class="num">Сумма</th><th>Статус</th></tr></thead><tbody>${earnedL.map(s=>`<tr><td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td><td>${s.paid?'<span class="st-paid">✓ выплачено</span>':'<span class="st-due">ждёт выплаты</span>'}</td></tr>`).join("")}</tbody></table></div>`:emptyBox("Отработанных смен пока нет.")}</section>
+    <section class="panel"><h3>По неделям</h3>${weeks?`<div class="tbl-wrap"><table><thead><tr><th>Неделя</th><th class="num">Отработано</th><th class="num">Контактов</th><th class="num">Заработано</th></tr></thead><tbody>${weeks}</tbody></table></div>`:emptyBox("Пока пусто.")}</section>`;
+  const fill=rows=>{const t=document.getElementById("pfTeam");if(!t)return;t.innerHTML=rows&&rows.length?rows.map(x=>`<div class="tm"><b>${esc(x.name||"Без имени")}</b> · ${esc(window.psMembers.roleLabel(x.role))}${x.phone?` · <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a>`:""}${x.telegram?` · ${esc(x.telegram)}`:""}</div>`).join(""):"Контакты руководителей пока не заполнены — напишите во вкладке «Написать руководителю»."};
+  if(ui.team)fill(ui.team);else if(window.psMembers&&window.psMembers.team)window.psMembers.team().then(rows=>{ui.team=rows||[];fill(ui.team)}).catch(()=>{const t=document.getElementById("pfTeam");if(t)t.textContent="Не удалось загрузить контакты."});
+}
+async function loadOcc(date){
+  if(ui.occLoading===date)return; ui.occLoading=date;
+  try{const rows=await window.psMembers.occupancy(date);const map={};for(const r of rows||[])map[r.point_id+"|"+r.slot]={s:r.shifts,r:r.requests};ui.occ={date,map}}
+  catch(e){console.error(e);ui.occ={date,map:{},err:true}}
+  ui.occLoading=null; if(ui.tab==="signup")updateTab();
+}
+function upSignup(){
+  const el=document.getElementById("suBox"); if(!el)return;
+  const c=myCard(); if(!c){el.innerHTML=noCard();return}
+  const days=[...Array(7)].map((_,i)=>addDays(today(),i));
+  if(!days.includes(ui.suDate))ui.suDate=days[0]; ui.suFilter=ui.suFilter||"free";
+  const date=ui.suDate, occ=ui.occ&&ui.occ.date===date?ui.occ.map:null; if(!occ)loadOcc(date);
+  const now=Date.now(), me=window.PS_ME||{}, mineD=myShifts().filter(s=>s.date===date), myReq=(S.requests||[]).filter(r=>r.userId===me.id&&r.date===date&&r.status==="new");
+  const pts=S.points.filter(p=>p.active!==false&&(!p.projectId||(byId("projects",p.projectId)||{}).active!==false)).sort((a,b)=>(a.district||"").localeCompare(b.district||"","ru")||a.name.localeCompare(b.name,"ru"));
+  const state=(p,k)=>{const st=new Date(date+"T"+SLOTS[k].t+":00").getTime(),o=occ&&occ[p.id+"|"+k];
+    if(mineD.some(s=>s.pointId===p.id&&s.slot===k))return["mine","ваша смена"];
+    if(myReq.some(r=>r.pointId===p.id&&r.slot===k))return["req","заявка подана"];
+    if(st<=now)return["closed","запись закрыта"];
+    if(!occ)return["closed","…"];
+    if(o&&o.s>0)return["busy","занято"];
+    if(mineD.some(s=>s.slot===k)||myReq.some(r=>r.slot===k))return["clash","вы заняты"];
+    return["free",o&&o.r?`свободно · хотят ещё ${o.r}`:"свободно"]};
+  const all=pts.map(p=>({p,sl:Object.keys(SLOTS).map(k=>[k,...state(p,k)])})), free=all.filter(x=>x.sl.some(s=>s[1]==="free")), list=ui.suFilter==="all"?all:free;
+  el.innerHTML=`<div class="suhead"><div class="chips">${days.map((d,i)=>`<button type="button" class="suchip ${d===date?"on":""}" data-act="su-date" data-id="${d}">${i===0?"сегодня":i===1?"завтра":esc(fmtShort(d))}</button>`).join("")}</div>
+    <div class="chips"><button type="button" class="suchip ${ui.suFilter==="free"?"on":""}" data-act="su-filter" data-id="free">Свободные ${occ?free.length:""}</button><button type="button" class="suchip ${ui.suFilter==="all"?"on":""}" data-act="su-filter" data-id="all">Все ${pts.length}</button></div></div>
+    ${!occ?`<p class="hint">Загружаю, какие слоты свободны…</p>`:ui.occ.err?`<p class="err">Не удалось узнать занятость точек. Обновите страницу.</p>`:""}
+    ${list.length?`<div class="sulist">${list.map(({p,sl})=>`<article class="sucard"><h3>${esc(p.name)}</h3>${p.district||p.address?`<p class="hint">${esc([p.district,p.address].filter(Boolean).join(" · "))}</p>`:""}
+      <div class="slots">${sl.map(([k,st,lab])=>{const key="su:"+p.id+"|"+k,arm=ui.armed===key;return `<button type="button" class="slot su-${st} ${arm?"arm":""}" ${st==="free"?`data-act="su-req" data-id="${esc(p.id+"|"+k)}"`:"disabled"} aria-label="${esc(p.name)}, ${SLOTS[k].l}: ${esc(lab)}"><b>${SLOTS[k].l}</b><span>${arm?"нажмите ещё раз":esc(lab)}</span></button>`}).join("")}</div></article>`).join("")}</div>`
+      :emptyBox(occ?"На этот день свободных слотов нет. Посмотрите другой день или нажмите «Все».":"Загружаю…")}
+    <p class="hint" style="margin-top:12px">Нажмите на свободный слот два раза — заявка уйдёт руководителю. Ответ появится во вкладке «Моя смена». «Хотят ещё» — на слот уже есть чужие заявки: подать можно, руководитель выберет одного.</p>`;
+}
+function upReport(){
+  const el=document.getElementById("rpBox"); if(!el)return;
+  const c=myCard(); if(!c){el.innerHTML=noCard();return}
+  const now=Date.now(), l=myShifts().filter(s=>!s.missed&&shiftStart(s)<=now&&now-shiftEnd(s)<2*864e5).sort((a,b)=>shiftStart(b)-shiftStart(a));
+  const todo=l.filter(s=>s.matLeft==null&&s.contacts==null), done=l.filter(s=>!(s.matLeft==null&&s.contacts==null));
+  el.innerHTML=(todo.length?todo.map(s=>{const id=esc(s.id);return `<section class="panel"><h3>${esc(ptName(s.pointId))}</h3><p class="hint">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}${num(s.matIssued)?` · выдано ${num(s.matIssued)} шт.`:""}</p>
+      <form class="f" data-rep="${id}"><div class="fld"><label for="rp-l-${id}">Осталось материалов, шт.</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-l-${id}" required></div>
+      <div class="fld"><label for="rp-c-${id}">Контактов собрано</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-c-${id}" required></div>
+      <div class="fld"><button class="btn primary" type="submit">Сдать итоги</button></div></form></section>`}).join("")
+    :`<section class="panel"><h3>Сейчас итоги не ждут</h3><p class="hint">Итоги принимаются с начала смены и ещё двое суток после её окончания. Не успели — передайте цифры руководителю, он внесёт их сам.</p></section>`)
+    +(done.length?`<section class="panel"><h3>Уже сдано</h3>${done.map(s=>`<div class="reqrow"><div><b>${esc(ptName(s.pointId))}</b><div class="hint">${esc(fmtShort(s.date))} · ${esc(s.start||"")}</div></div><div class="hint">остаток ${s.matLeft==null?"—":num(s.matLeft)} · контактов ${s.contacts==null?"—":num(s.contacts)}</div></div>`).join("")}</section>`:"");
+}
+function upWrite(){
+  const el=document.getElementById("wrList"); if(!el)return;
+  const me=window.PS_ME||{}, l=(S.messages||[]).filter(m=>m.userId===me.id).sort((a,b)=>b.createdAt-a.createdAt);
+  el.innerHTML=l.length?l.map(m=>`<div class="msg"><div class="hint">${esc(fmtShort(ymdOf(m.createdAt)))}, ${fmtTime(m.createdAt)} · ${m.reply?"есть ответ":"ждёт ответа"}</div><div class="q">${esc(m.text)}</div>${m.reply?`<div class="a"><b>${esc(m.repliedBy||"Руководитель")}:</b> ${esc(m.reply)}</div>`:""}</div>`).join(""):`<p class="hint">Обращений пока нет.</p>`;
+}
+/* сторона руководителя: заявки и обращения */
+function upRequests(){
+  const el=document.getElementById("rqPanel"); if(!el)return;
+  const rq=(S.requests||[]).filter(r=>r.status==="new").sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||"")));
+  el.hidden=!rq.length; if(!rq.length){el.innerHTML="";return}
+  el.innerHTML=`<div class="panel-h"><h3>Заявки сотрудников</h3><span>${rq.length}</span></div>${rq.map(r=>{const pt=byId("points",r.pointId)||{},taken=S.shifts.some(s=>s.pointId===r.pointId&&s.date===r.date&&s.slot===r.slot);
+    return `<div class="reqrow"><div><b>${esc(r.name||prName(r.promoterId))}</b><div class="hint">${esc(pt.name||"Точка удалена")} · ${esc(fmtShort(r.date))} · ${esc((SLOTS[r.slot]||{}).l||"")} ${esc(r.start||"")}${taken?' · <span class="bad">слот уже занят</span>':""}</div></div>
+      <div class="ra"><button class="btn sm primary" data-act="req-ok" data-id="${esc(r.id)}"${taken?" disabled":""}>Одобрить</button><button class="btn sm" data-act="req-no" data-id="${esc(r.id)}">Отклонить</button></div></div>`}).join("")}`;
+}
+function upMsgs(){
+  const el=document.getElementById("msgPanel"); if(!el)return;
+  const l=(S.messages||[]).slice().sort((a,b)=>(a.reply?1:0)-(b.reply?1:0)||b.createdAt-a.createdAt).slice(0,15);
+  el.hidden=!l.length; if(!l.length){el.innerHTML="";return}
+  const n=l.filter(m=>!m.reply).length;
+  el.innerHTML=`<div class="panel-h"><h3>Обращения сотрудников</h3><span>${n?"новых: "+n:""}</span></div>${l.map(m=>`<div class="msg"><div class="hint"><b>${esc(m.name||prName(m.promoterId))}</b> · ${esc(fmtShort(ymdOf(m.createdAt)))}, ${fmtTime(m.createdAt)}</div><div class="q">${esc(m.text)}</div>
+    ${m.reply?`<div class="a"><b>${esc(m.repliedBy||"Ответ")}:</b> ${esc(m.reply)}</div>`:`<form class="rpl" data-reply="${esc(m.id)}"><textarea rows="2" aria-label="Ответ для ${esc(m.name||"сотрудника")}" placeholder="Ответ сотруднику" required></textarea><button class="btn sm primary" type="submit">Ответить</button></form>`}</div>`).join("")}`;
+}
+const cardSel=m=>`<select data-link="${esc(m.user_id)}" aria-label="Карточка сотрудника для ${esc(m.email)}"><option value="">не привязан</option>${S.promoters.filter(p=>p.active!==false||p.userId===m.user_id).sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(p=>{const other=p.userId&&p.userId!==m.user_id;return `<option value="${esc(p.id)}"${p.userId===m.user_id?" selected":""}${other?" disabled":""}>${esc(p.name)}${other?" (занята)":""}</option>`}).join("")}</select>`;
+main.addEventListener("submit",async e=>{
+  const fm=e.target.closest&&e.target.closest("form[data-rep],form[data-reply]"); if(!fm)return; e.preventDefault();
+  const btn=fm.querySelector("button[type=submit]"); if(btn)btn.disabled=true;
+  if(fm.dataset.rep){const id=fm.dataset.rep, l=document.getElementById("rp-l-"+id).value, c=document.getElementById("rp-c-"+id).value;
+    try{await window.psMembers.report(id,l===""?null:num(l),c===""?null:num(c));const s=byId("shifts",id);if(s){s.matLeft=l===""?null:num(l);s.contacts=c===""?null:num(c)}toast("Итоги сданы, спасибо!");if(document.activeElement)document.activeElement.blur();updateTab()}
+    catch(err){toast("Не удалось: "+(err&&err.message||err));if(btn)btn.disabled=false}
+    return}
+  const id=fm.dataset.reply, t=fm.querySelector("textarea").value.trim(); if(!t){if(btn)btn.disabled=false;return}
+  const ok=await guard(()=>db.doc("messages/"+id).update({reply:t,status:"answered",repliedAt:Date.now(),repliedBy:(window.PS_ME&&window.PS_ME.name)||"Руководитель"}),"Ответ отправлен");
+  if(ok){if(document.activeElement)document.activeElement.blur();updateTab()}else if(btn)btn.disabled=false;
+});
+main.addEventListener("change",async e=>{
+  const s=e.target.closest&&e.target.closest("select[data-link]"); if(!s)return;
+  const uid=s.dataset.link, pid=s.value;
+  const ok=await guard(async()=>{for(const p of S.promoters.filter(p=>p.userId===uid&&p.id!==pid))await db.doc("promoters/"+p.id).update({userId:null});if(pid)await db.doc("promoters/"+pid).update({userId:uid})},pid?"Аккаунт привязан к карточке":"Привязка снята");
+  updateTab();
+});
+
 /* ---------- старт ---------- */
 renderAll(true);
 setInterval(()=>{if(ui.tab==="day"&&!ui.editShift)updateTab()},60000);
@@ -1319,7 +1532,7 @@ setInterval(()=>{if(ui.tab==="day"&&!ui.editShift)updateTab()},60000);
   if(!db){dbState="off";renderAll();return}
   dbState="on";
   try{assets=await window.claude.use("assets")}catch(e){assets=null}
-  for(const c of COLS){
+  for(const c of [...COLS,"requests","messages"]){
     db.collection(c).onSnapshot(snap=>{S[c]=snap.docs.map(d=>Object.assign({id:d.id},d.data()));IDXV++;loaded[c]=true;renderAll()},
       err=>{console.error(c,err);if(err&&err.code==="revoked"){dbState="off";renderAll()}});
   }

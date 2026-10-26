@@ -425,6 +425,21 @@ th{text-transform:none;letter-spacing:0;font-size:12.5px}
 .scard .a3 .btn{justify-content:center;min-height:40px}
 td.macts{white-space:nowrap}
 body.staff .ctl{display:none}
+.cps{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:6px}
+.cp{display:flex;flex-direction:column;gap:3px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);min-width:0}
+.cp b{font-size:13.5px}.cp .hint{font-size:12px}
+.cp-due{border-color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 1px var(--ink)}
+.cp-done{background:var(--good-soft);border-color:transparent}.cp-late{background:var(--warn-soft);border-color:transparent}
+.cp-overdue{border-style:dashed}.cp-missed{opacity:.6}
+.cp-ok{color:var(--good);font-weight:600;font-size:13px}.cp-lt{color:var(--warn);font-weight:600;font-size:13px}.cp-miss{color:var(--bad);font-size:13px}
+.cp-btn{display:inline-flex;justify-content:center;align-items:center;margin-top:2px;padding:7px 8px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:center}
+.cp-btn.due{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cp-btn:focus-within{outline:2px solid var(--ink);outline-offset:2px}
+.cp-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-bottom:12px;border-radius:14px;background:var(--ink);color:#fff}
+.cp-cta .eyebrow{color:var(--lime)}.cp-cta .hint{color:rgba(255,255,255,.75)}.cp-cta b{font-size:18px}
+.cp-cta .btn.primary{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.cp-cta.calm{background:var(--surface-2);color:var(--ink)}.cp-cta.calm .eyebrow{color:var(--ink-3)}.cp-cta.calm .hint{color:var(--ink-3)}
+.panel.notif{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.panel.notif p{margin:2px 0 0}.panel.notif>div{flex:1;min-width:220px;text-align:left}
 .mkc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}.mkc label{width:100%;font-size:13px;color:var(--ink-2)}.mkc input{font:inherit;flex:1;min-width:200px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink)}
 .ps-act.ps-mode{opacity:1;font-weight:600;color:var(--lime);margin-bottom:8px}
 #meBox,#pfBox,#rpBox{display:flex;flex-direction:column;gap:14px}
@@ -776,8 +791,8 @@ function buildTab(){
   report:()=>`<div id="rpBox"></div>`,
   help:()=>`<section class="panel help"><h3>Как всё устроено</h3><p class="hint">Коротко о работе в кабинете: смена, фото, итоги и деньги.</p>
     <details open><summary>До смены</summary><ul><li>Смены ставит руководитель. Можно записаться и самому: «Записаться на смену» → день → точка → нажмите на свободный слот два раза. Заявку подтверждает руководитель, ответ появится во вкладке «Моя смена».</li><li>Накануне проверьте «Моя смена»: там адрес точки и кнопка «Открыть на карте».</li></ul></details>
-    <details><summary>Во время смены</summary><ul><li>За полчаса до начала во вкладке «Моя смена» появится кнопка «Отправить фото с точки».</li><li>Пришлите фото в первые 20 минут смены — тогда смена засчитывается вовремя. Позже — засчитается с опозданием.</li><li>Смена без фото не оплачивается.</li></ul></details>
-    <details><summary>После смены</summary><ul><li>Во вкладке «Сдать итоги» укажите, сколько материалов осталось и сколько контактов собрали. Итоги принимаются двое суток после смены.</li><li>Не успели — передайте цифры руководителю.</li></ul></details>
+    <details><summary>Во время смены</summary><ul><li>За 10 минут до начала во вкладке «Моя смена» появится отчёт «Отметиться на точке». Пришлите фото в первые 20 минут смены — тогда смена засчитывается вовремя.</li><li>Дальше каждый час появляется «Отчёт за 1-й час», «за 2-й час» и так до конца смены. Сфотографируйте точку и отправьте в течение 15 минут.</li><li>Включите уведомления во вкладке «Моя смена» — сайт напомнит, когда пора сдавать отчёт.</li><li>Смена без фото не оплачивается.</li></ul></details>
+    <details><summary>После смены</summary><ul><li>Во вкладке «Отчёты» укажите, сколько материалов осталось и сколько контактов собрали. Там же можно досдать пропущенные фото — двое суток после смены, они засчитаются с опозданием.</li><li>Не успели — передайте цифры руководителю.</li></ul></details>
     <details><summary>Деньги</summary><ul><li>Оплачивается смена, которая закончилась и на которой есть фото: ${SHIFT_H} ч × ставка проекта.</li><li>Во вкладке «Мой профиль» видно, сколько заработано, что выплачено и что ждёт выплаты.</li></ul></details>
     <details><summary>Если что-то не работает</summary><ul><li>Кабинет пустой — аккаунт ещё не привязан к карточке сотрудника. Напишите руководителю.</li><li>Забыли пароль — нажмите «Забыли пароль?» на экране входа или попросите руководителя выдать временный.</li><li>Вопрос не решается — вкладка «Написать руководителю».</li></ul></details></section>`,
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
@@ -1123,10 +1138,10 @@ function upPhotos(){
   const list=S.photos.filter(p=>{const s=byId("shifts",p.shiftId);return s&&inProject(s)&&(ui.photoFilter==="all"||p.status===ui.photoFilter)}).sort((a,b)=>b.takenAt-a.takenAt);
   const g=document.getElementById("phGrid");
   if(!list.length){g.innerHTML=emptyBox(ui.photoFilter==="pending"?"Всё проверено. Новые фото появятся, когда сотрудники отчитаются со смен.":"Здесь пока пусто.");return;}
-  g.innerHTML=list.slice(0,120).map(p=>{const s=byId("shifts",p.shiftId);const late=p.takenAt>shiftStart(s)+GRACE_MS;
+  g.innerHTML=list.slice(0,120).map(p=>{const s=byId("shifts",p.shiftId);const late=photoLate(p,s), hl=photoHour(p);
     const img=p.assetId?`<div class="img" data-act="zoom" data-src="${esc(blobUrl(p.assetId))}"><img src="${esc(blobUrl(p.assetId))}" alt="Фото со смены: ${esc(ptName(s.pointId))}" loading="lazy"></div>`:`<div class="img ph-ex">Пример снимка<br>в демо-данных нет изображения</div>`;
-    return `<article class="ph">${img}<div class="bd"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip st-${p.status}">${{pending:"На проверке",accepted:"Принято",rejected:"Отклонено"}[p.status]}</span>${late?'<span class="chip st-late">позже 20 мин</span>':""}</div>
-      <b>${esc(ptName(s.pointId))}</b><div class="m">${esc(prName(s.promoterId))}</div><div class="m">${fmtShort(s.date)}, смена с ${esc(s.start)} · снято в ${fmtTime(p.takenAt)}</div></div>
+    return `<article class="ph">${img}<div class="bd"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip st-${p.status}">${{pending:"На проверке",accepted:"Принято",rejected:"Отклонено"}[p.status]}</span>${late?'<span class="chip st-late">с опозданием</span>':""}</div>
+      <b>${esc(ptName(s.pointId))}</b><div class="m">${esc(prName(s.promoterId))}</div><div class="m">${fmtShort(s.date)}, смена с ${esc(s.start)} · ${hl==="extra"?"доп. фото":hl==null||hl===0?"начало смены":hl+"-й час"} · снято в ${fmtTime(p.takenAt)}</div></div>
       <div class="ft">${p.status!=="accepted"?`<button class="btn sm primary" data-act="ph-ok" data-id="${esc(p.id)}">Принять</button>`:""}${p.status!=="rejected"?`<button class="btn sm danger" data-act="ph-no" data-id="${esc(p.id)}">Отклонить</button>`:""}</div></article>`}).join("");
 }
 
@@ -1335,11 +1350,11 @@ function bindForms(){
 function compress(file){return new Promise((res,rej)=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error("encode")),"image/jpeg",.85)};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("decode"))};img.src=u})}
 main.addEventListener("change",async e=>{
   const inp=e.target.closest("input[data-up]"); if(!inp||!inp.files||!inp.files[0])return;
-  const shiftId=inp.dataset.up, file=inp.files[0]; inp.value="";
+  const shiftId=inp.dataset.up, file=inp.files[0], hr=inp.dataset.hour; inp.value="";
   if(!assets){toast("Загрузка фото доступна редакторам страницы");return}
   toast("Загружаю фото…");
   try{const blob=await compress(file).catch(()=>file);const up=await assets.upload(blob,{type:blob.type&&/^image\/(jpeg|png|webp|gif)$/.test(blob.type)?blob.type:"image/jpeg"});
-    await guard(()=>db.collection("photos").add({shiftId,assetId:up.id,takenAt:file.lastModified&&Math.abs(Date.now()-file.lastModified)<864e5*3?file.lastModified:Date.now(),uploadedAt:Date.now(),status:"pending"}),"Фото загружено и ждёт проверки");}
+    await guard(()=>db.collection("photos").add({shiftId,hour:hr==null||hr===""?null:hr==="extra"?"extra":Number(hr),assetId:up.id,takenAt:isStaff()?Date.now():file.lastModified&&Math.abs(Date.now()-file.lastModified)<864e5*3?file.lastModified:Date.now(),uploadedAt:Date.now(),status:"pending"}),"Фото загружено и ждёт проверки");}
   catch(err){const c=err&&err.code;toast(c==="too_large"?"Файл слишком большой":c==="unsupported_type"?"Этот формат не подходит, нужен JPG или PNG":c==="quota_or_state"?"Место для фото закончилось":"Не удалось загрузить фото");console.error(err)}
 });
 main.addEventListener("submit",async e=>{const fm=e.target.closest("form[data-res]");if(!fm)return;e.preventDefault();const id=fm.dataset.res;
@@ -1350,6 +1365,7 @@ main.addEventListener("click",async e=>{
   const arm=key=>{if(ui.armed===key){ui.armed=null;return true}ui.armed=key;updateTab();setTimeout(()=>{if(ui.armed===key){ui.armed=null;updateTab()}},4000);return false};
   if(act==="map-back"){backToOkrugs();return}
   if(act==="day-f"){ui.dayF=id;updateTab();return}
+  if(act==="notif-on"){try{await Notification.requestPermission()}catch(_){}updateTab();return}
   if(act==="mk-card"){const n=((document.getElementById("mkName")||{}).value||"").trim();if(!n){toast("Впишите имя и фамилию");return}
     await guard(()=>db.collection("promoters").add({name:n,phone:"",telegram:"",agency:"",active:true,createdAt:Date.now(),userId:window.PS_ME.id}),"Карточка создана");if(document.activeElement)document.activeElement.blur();updateTab();return}
   if(act==="su-date"){ui.suDate=id;ui.occ=null;updateTab();return}
@@ -1393,7 +1409,7 @@ document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.c
 main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab();return}const z=e.target.closest("[data-zoom]");if(z){ui.mapZoom=z.dataset.zoom;updateTab();return}const b=e.target.closest("[data-pf]");if(b){ui.photoFilter=b.dataset.pf;updateTab()}const p=e.target.closest("[data-per]");if(p){ui.period=p.dataset.per;updateTab()}});
 
 /* ---------- кабинет сотрудника ---------- */
-const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Сдать итоги"],["help","Как всё устроено"],["write","Написать руководителю"]];
+const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Отчёты"],["help","Как всё устроено"],["write","Написать руководителю"]];
 const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="admin";
 const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());
 ui.asStaff=location.hash==="#cabinet";
@@ -1404,25 +1420,51 @@ const myShifts=()=>{const c=myCard();return c?S.shifts.filter(s=>s.promoterId===
 const shiftEnd=s=>shiftStart(s)+SHIFT_MS;
 const mapLink=p=>p&&p.lat&&p.lng?`https://yandex.ru/maps/?pt=${p.lng},${p.lat}&z=17&l=map`:"";
 const noCard=()=>isMgr()?`<section class="panel"><h3>Ваша карточка сотрудника</h3><p class="hint">Чтобы работать как сотрудник — записываться на смены, отправлять фото и видеть свои выплаты, — нужна карточка во вкладке «Сотрудники». Создайте её здесь или привяжите существующую во вкладке «Доступ».</p><div class="mkc"><label for="mkName">Имя и фамилия</label><input id="mkName" value="${esc((window.PS_ME||{}).name||"")}" placeholder="Например, Роман Чудов" autocomplete="name"><button class="btn primary" type="button" data-act="mk-card">Создать карточку</button></div></section>`:`<section class="panel"><h3>Кабинет ещё не привязан</h3><p class="hint">Ваш аккаунт пока не связан с карточкой сотрудника. Попросите руководителя привязать его во вкладке «Доступ» — после этого здесь появятся ваши смены и выплаты.</p></section>`;
+/* почасовые отчёты: отметка в начале смены и фото за каждый час */
+const CP_N=Math.round(SHIFT_H), CP_EARLY=10*60e3, CP_GRACE=15*60e3;
+const cpTime=(s,k)=>shiftStart(s)+k*3600e3;
+const cpLabel=k=>k===0?"Начало смены":`${k}-й час`;
+const cpTitle=k=>k===0?"Отметиться на точке":`Отчёт за ${k}-й час`;
+const cpGraceOf=k=>k===0?GRACE_MS:CP_GRACE;
+const photoHour=p=>p.hour==null||p.hour===""?null:p.hour==="extra"?"extra":Number(p.hour);
+const photoLate=(p,s)=>{const h=photoHour(p);if(h==="extra")return false;const k=h==null?0:h;return p.takenAt>cpTime(s,k)+cpGraceOf(k)};
+function cpPhotos(s){const by={},legacy=[];for(const p of shiftPhotos(s)){const h=photoHour(p);if(h==null)legacy.push(p);else(by[h]=by[h]||[]).push(p)}if(!by[0]&&legacy.length)by[0]=[legacy[0]];return by}
+function cpState(s,k,now){const by=cpPhotos(s),t=cpTime(s,k);
+  if(by[k]&&by[k].length){const p=by[k][0];return{st:p.takenAt>t+cpGraceOf(k)?"late":"done",p}}
+  if(now<t-CP_EARLY)return{st:"wait"};
+  if(now<=t+cpGraceOf(k))return{st:"due"};
+  if(now-shiftEnd(s)<2*864e5)return{st:"overdue"};
+  return{st:"missed"}}
+const upBtn=(s,k,txt,cls)=>`<label class="${cls}">${txt}<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" data-hour="${k}" hidden></label>`;
+function cpGrid(s){const now=Date.now();return `<div class="cps">${[...Array(CP_N+1)].map((_,k)=>{const c=cpState(s,k,now),t=cpTime(s,k);
+  const body=c.st==="done"?`<span class="cp-ok">✓ ${fmtTime(c.p.takenAt)}</span>`:c.st==="late"?`<span class="cp-lt">✓ ${fmtTime(c.p.takenAt)}, позже</span>`:c.st==="wait"?`<span class="hint">откроется в ${fmtTime(t-CP_EARLY)}</span>`:c.st==="due"?upBtn(s,k,"📷 Сдать","cp-btn due"):c.st==="overdue"?upBtn(s,k,"📷 Сдать с опозданием","cp-btn"):`<span class="cp-miss">не сдан</span>`;
+  return `<div class="cp cp-${c.st}"><b>${cpLabel(k)}</b><span class="hint">${fmtTime(t)}</span>${body}</div>`}).join("")}</div>`}
 function myShiftCard(s,big){
-  const pt=byId("points",s.pointId)||{}, st=shiftState(s), ph=shiftPhotos(s), ml=mapLink(pt);
+  const pt=byId("points",s.pointId)||{}, st=shiftState(s), ml=mapLink(pt), extra=(cpPhotos(s).extra||[]).length;
   return `<article class="mcardS ${big?"big":""}"><div class="mh"><div><div class="eyebrow">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}</div>
     <h3>${esc(pt.name||"Точка удалена")}</h3>${pt.address||pt.district?`<p class="hint">${esc([pt.address,pt.district].filter(Boolean).join(" · "))}</p>`:""}</div>${chip(st)}</div>
     ${s.type||num(s.matIssued)?`<p class="hint">${esc([s.type,num(s.matIssued)?"выдано материалов: "+num(s.matIssued):""].filter(Boolean).join(" · "))}</p>`:""}
-    ${ph.length?`<p class="hint">Фото отправлены: ${ph.map(p=>fmtTime(p.takenAt)).join(", ")}</p>`:""}
-    ${big||ml?`<div class="acts">${big?`<label class="btn primary">📷 Отправить фото с точки<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" hidden></label>`:""}${ml?`<a class="btn" href="${ml}" target="_blank" rel="noopener">Открыть на карте</a>`:""}</div>`:""}</article>`;
+    ${big?cpGrid(s):""}${extra?`<p class="hint">Дополнительных фото: ${extra}</p>`:""}
+    ${ml?`<div class="acts"><a class="btn" href="${ml}" target="_blank" rel="noopener">Открыть на карте</a></div>`:""}</article>`;
 }
+function dueList(){const now=Date.now(),out=[];for(const s of myShifts()){if(s.missed||now<shiftStart(s)-30*60e3||now>shiftEnd(s)+CP_GRACE)continue;for(let k=0;k<=CP_N;k++)if(cpState(s,k,now).st==="due")out.push({s,k})}return out}
 function upMe(){
   const el=document.getElementById("meBox"); if(!el)return;
   const c=myCard(); if(!c){el.innerHTML=noCard();return}
   const now=Date.now(), me=window.PS_ME||{}, mine=myShifts().slice().sort((a,b)=>shiftStart(a)-shiftStart(b));
-  const cur=mine.find(s=>!s.missed&&now>=shiftStart(s)-30*60e3&&now<shiftEnd(s));
+  const cur=mine.find(s=>!s.missed&&now>=shiftStart(s)-30*60e3&&now<shiftEnd(s)+CP_GRACE);
   const next=mine.find(s=>s!==cur&&shiftStart(s)>now);
   const up=mine.filter(s=>s!==cur&&s!==next&&shiftStart(s)>now), past=mine.filter(s=>s!==cur&&shiftEnd(s)<=now).reverse().slice(0,10);
   const rq=(S.requests||[]).filter(r=>r.userId===me.id&&(r.status==="new"||now-(r.decidedAt||0)<3*864e5)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  const canN="Notification" in window, nOn=canN&&Notification.permission==="granted";
   let h="";
-  if(cur){const ph=shiftPhotos(cur);h+=`<section class="panel"><div class="panel-h"><h3>Смена идёт</h3></div>${myShiftCard(cur,true)}<p class="hint">${ph.length?"Фото получено, спасибо. В конце смены можно прислать ещё одно.":"Пришлите фото с точки в первые 20 минут смены — так смена засчитывается вовремя."}</p></section>`}
-  else h+=`<section class="panel"><h3>${next?"Следующая смена":"Смен пока нет"}</h3>${next?myShiftCard(next,false)+`<p class="hint">Кнопка «Отправить фото с точки» появится здесь за полчаса до начала.</p>`:`<p class="hint">Смены ставит руководитель. Записаться можно и самому — во вкладке «Записаться на смену».</p>`}</section>`;
+  if(cur){const due=[...Array(CP_N+1)].map((_,k)=>k).filter(k=>cpState(cur,k,now).st==="due")[0];
+    const nxt=[...Array(CP_N+1)].map((_,k)=>k).find(k=>cpState(cur,k,now).st==="wait");
+    const cta=due!=null?`<div class="cp-cta"><div><div class="eyebrow">Сейчас</div><b>${cpTitle(due)}</b><div class="hint">Сфотографируйте точку и отправьте до ${fmtTime(cpTime(cur,due)+cpGraceOf(due))}</div></div>${upBtn(cur,due,"📷 Сдать отчёт","btn primary")}</div>`
+      :nxt!=null?`<div class="cp-cta calm"><div><div class="eyebrow">Следующий отчёт</div><b>${cpTitle(nxt)}</b><div class="hint">откроется в ${fmtTime(cpTime(cur,nxt)-CP_EARLY)}</div></div></div>`:"";
+    h+=`<section class="panel"><div class="panel-h"><h3>Смена идёт</h3></div>${cta}${myShiftCard(cur,true)}<p class="hint">В начале смены и каждый час здесь появляется отчёт: сфотографируйте точку и отправьте в течение 15 минут. В начале смены — в течение 20 минут, тогда смена засчитывается вовремя.</p></section>`}
+  else h+=`<section class="panel"><h3>${next?"Следующая смена":"Смен пока нет"}</h3>${next?myShiftCard(next,false)+`<p class="hint">Отчёты появятся здесь за 10 минут до начала смены: в начале и за каждый час работы.</p>`:`<p class="hint">Смены ставит руководитель. Записаться можно и самому — во вкладке «Записаться на смену».</p>`}</section>`;
+  if(canN&&!nOn)h+=`<section class="panel notif"><div><b>Уведомления об отчётах</b><p class="hint">Сайт напомнит, когда пора сдать отчёт за очередной час. Работает, пока страница открыта (можно в фоне).</p></div>${Notification.permission==="denied"?`<span class="hint">Уведомления запрещены в настройках браузера</span>`:`<button class="btn sm" type="button" data-act="notif-on">🔔 Включить</button>`}</section>`;
   if(rq.length)h+=`<section class="panel"><div class="panel-h"><h3>Мои заявки</h3><span>${rq.length}</span></div>${rq.map(r=>{const pt=byId("points",r.pointId)||{};
     const st=r.status==="new"?`<button class="btn sm ${ui.armed==="rq:"+r.id?"arm":""}" data-act="req-cancel" data-id="${esc(r.id)}">${ui.armed==="rq:"+r.id?"Точно отменить?":"Отменить"}</button>`:r.status==="approved"?`<span class="chip st-ontime">одобрена</span>`:`<span class="chip st-missed">отклонена</span>`;
     return `<div class="reqrow"><div><b>${esc(pt.name||"Точка удалена")}</b><div class="hint">${esc(fmtDate(r.date))} · ${esc((SLOTS[r.slot]||{}).l||"")} ${esc(r.start||"")}${r.status==="new"?" · ждёт ответа":""}</div></div>${st}</div>`}).join("")}</section>`;
@@ -1482,15 +1524,30 @@ function upSignup(){
 function upReport(){
   const el=document.getElementById("rpBox"); if(!el)return;
   const c=myCard(); if(!c){el.innerHTML=noCard();return}
-  const now=Date.now(), l=myShifts().filter(s=>!s.missed&&shiftStart(s)<=now&&now-shiftEnd(s)<2*864e5).sort((a,b)=>shiftStart(b)-shiftStart(a));
-  const todo=l.filter(s=>s.matLeft==null&&s.contacts==null), done=l.filter(s=>!(s.matLeft==null&&s.contacts==null));
-  el.innerHTML=(todo.length?todo.map(s=>{const id=esc(s.id);return `<section class="panel"><h3>${esc(ptName(s.pointId))}</h3><p class="hint">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}${num(s.matIssued)?` · выдано ${num(s.matIssued)} шт.`:""}</p>
-      <form class="f" data-rep="${id}"><div class="fld"><label for="rp-l-${id}">Осталось материалов, шт.</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-l-${id}" required></div>
-      <div class="fld"><label for="rp-c-${id}">Контактов собрано</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-c-${id}" required></div>
-      <div class="fld"><button class="btn primary" type="submit">Сдать итоги</button></div></form></section>`}).join("")
-    :`<section class="panel"><h3>Сейчас итоги не ждут</h3><p class="hint">Итоги принимаются с начала смены и ещё двое суток после её окончания. Не успели — передайте цифры руководителю, он внесёт их сам.</p></section>`)
-    +(done.length?`<section class="panel"><h3>Уже сдано</h3>${done.map(s=>`<div class="reqrow"><div><b>${esc(ptName(s.pointId))}</b><div class="hint">${esc(fmtShort(s.date))} · ${esc(s.start||"")}</div></div><div class="hint">остаток ${s.matLeft==null?"—":num(s.matLeft)} · контактов ${s.contacts==null?"—":num(s.contacts)}</div></div>`).join("")}</section>`:"");
+  const now=Date.now(), l=myShifts().filter(s=>!s.missed&&shiftStart(s)-30*60e3<=now&&now-shiftEnd(s)<7*864e5).sort((a,b)=>shiftStart(b)-shiftStart(a));
+  if(!l.length){el.innerHTML=`<section class="panel"><h3>Отчётов пока нет</h3><p class="hint">Здесь появятся ваши смены за последнюю неделю: фото за каждый час и итоги смены. Отчёты открываются за 10 минут до начала смены.</p></section>`;return}
+  el.innerHTML=l.map(s=>{const id=esc(s.id), open=now-shiftEnd(s)<2*864e5, done=!(s.matLeft==null&&s.contacts==null), by=cpPhotos(s), ok=[...Array(CP_N+1)].filter((_,k)=>by[k]&&by[k].length).length;
+    return `<section class="panel"><div class="panel-h"><h3>${esc(ptName(s.pointId))}</h3><span>фото ${ok} из ${CP_N+1}</span></div><p class="hint">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}${num(s.matIssued)?` · выдано ${num(s.matIssued)} шт.`:""}</p>
+      ${cpGrid(s)}
+      <div class="acts" style="margin-top:10px">${open?upBtn(s,"extra","📷 Добавить ещё фото","btn sm"):""}${(by.extra||[]).length?`<span class="hint">дополнительных фото: ${(by.extra||[]).length}</span>`:""}</div>
+      ${done?`<p class="hint" style="margin-top:10px">Итоги сданы: остаток ${s.matLeft==null?"—":num(s.matLeft)}, контактов ${s.contacts==null?"—":num(s.contacts)}.</p>`
+        :open&&now>=shiftStart(s)?`<form class="f" data-rep="${id}" style="margin-top:10px"><div class="fld"><label for="rp-l-${id}">Осталось материалов, шт.</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-l-${id}" required></div>
+        <div class="fld"><label for="rp-c-${id}">Контактов собрано</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-c-${id}" required></div>
+        <div class="fld"><button class="btn primary" type="submit">Сдать итоги смены</button></div></form>`:now<shiftStart(s)?"":`<p class="hint" style="margin-top:10px">Итоги смены не сданы. Срок прошёл — передайте цифры руководителю.</p>`}</section>`}).join("");
 }
+let notified=new Set();try{notified=new Set(JSON.parse(localStorage.getItem("ps-notified")||"[]"))}catch(_){}
+setInterval(()=>{
+  if(!isStaff()||!S.shifts)return;
+  const d=dueList(); document.title=(d.length?"🔔 ":"")+"Промосеть";
+  let fresh=false;
+  for(const {s,k} of d){const key=s.id+":"+k;if(notified.has(key))continue;notified.add(key);fresh=true;
+    const msg=cpTitle(k)+" — "+((byId("points",s.pointId)||{}).name||"точка");
+    toast("🔔 Пора: "+msg);
+    try{if("Notification" in window&&Notification.permission==="granted")new Notification("Промосеть: пора сдать отчёт",{body:msg,tag:key})}catch(_){}
+    try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(_){}}
+  if(fresh){try{localStorage.setItem("ps-notified",JSON.stringify([...notified].slice(-300)))}catch(_){}}
+  if(ui.tab==="me"||ui.tab==="report"){const a=document.activeElement;if(!(a&&a.closest&&a.closest("form[data-rep]")))updateTab()}
+},30000);
 function upWrite(){
   const el=document.getElementById("wrList"); if(!el)return;
   const me=window.PS_ME||{}, l=(S.messages||[]).filter(m=>m.userId===me.id).sort((a,b)=>b.createdAt-a.createdAt);

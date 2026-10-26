@@ -771,7 +771,7 @@ function buildTab(){
       <p class="hint" id="prMsg" style="grid-column:1/-1"></p>
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Состав и надёжность</h3><span id="prN"></span></div><div class="tbl-wrap" id="prTbl"></div>
-    <p class="hint">«Удалить» убирает карточку насовсем: будущие смены сотрудника отменяются, прошедшие смены и выплаты остаются в истории с его именем. «В архив» просто скрывает человека из списков.</p>
+    <p class="hint">«Удалить» убирает человека насовсем: карточку и вход на сайт. Будущие смены отменяются, прошедшие смены и выплаты остаются в истории с его именем. «В архив» просто скрывает человека из списков.</p>
     <p class="hint">«Проверить» — меньше 70% фото вовремя, два срыва или два отклонённых снимка: признаки работы мимо смены.</p></section>`,
   projects:()=>`${b}<div class="head"><div><div class="eyebrow">Заказчики</div><h2>Проекты</h2></div><p>Один проект — одна кампания заказчика. Фильтр проекта в шапке работает во всех вкладках.</p></div>
     <section class="panel"><h3>Новый проект</h3><form class="f" id="fProj" autocomplete="off">
@@ -1116,7 +1116,7 @@ function upAccess(){
       return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}${own&&m.role!=="pending"?`<div class="lnk">Карточка: ${cardSel(m)}</div>`:""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
       <td>${own&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
       <td>${m.created_at?esc(new Date(m.created_at).toLocaleDateString("ru-RU")):"—"}</td>
-      <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно закрыть доступ?":"Закрыть доступ"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
+      <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно удалить?":"Удалить"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
   }).catch(e=>{el.innerHTML=emptyBox("Не удалось загрузить список: "+esc(e&&e.message||e))});
 }
 function upShifts(){upRequests();
@@ -1386,7 +1386,7 @@ main.addEventListener("click",async e=>{
     updateTab();return}
   if(act==="money-pj"){const cur=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null);ui.moneyPj=cur===id?null:id;updateTab();return}
   if(act==="mem-pass"){if(!arm("pw:"+id))return;try{await window.psMembers.tempPassword(id,b.dataset.email||"")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
-  if(act==="mem-del"){if(!arm("mem:"+id))return;try{await window.psMembers.remove(id);toast("Доступ закрыт")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
+  if(act==="mem-del"){if(!arm("mem:"+id))return;const c=S.promoters.find(p=>p.userId===id);try{await deletePerson(c&&c.id,id);toast("Человек удалён")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
   if(act==="pick-prom"){const s=document.getElementById("sh-prom");if(s){s.value=id;s.focus()}return}
   if(act==="sel-shift"){ui.selShift=id||null;if(id&&LM){const s=byId("shifts",id),pt=s&&byId("points",s.pointId);if(pt&&pt.lat&&pt.lng&&ptRegion(pt)===ui.region)LM.map.flyTo([pt.lat,pt.lng],Math.max(LM.map.getZoom(),14.5),{duration:.6})}updateTab();return}
   if(act==="goto"){ui.tab=b.dataset.tab;renderAll(true);return}
@@ -1397,14 +1397,7 @@ main.addEventListener("click",async e=>{
   if(act==="toggle-miss"){const s=byId("shifts",id);await guard(()=>db.doc("shifts/"+id).update({missed:!s.missed}),s.missed?"Срыв снят":"Отмечен срыв");return}
   if(act==="del-shift"){if(!arm("sh:"+id))return;await guard(async()=>{for(const p of S.photos.filter(p=>p.shiftId===id))await db.doc("photos/"+p.id).delete();await db.doc("shifts/"+id).delete()},"Смена удалена");return}
   if(act==="del-point"){if(!arm("pt:"+id))return;await guard(()=>db.doc("points/"+id).delete(),"Точка удалена");return}
-  if(act==="del-prom"){if(!arm("del-pr:"+id))return;const p=byId("promoters",id);if(!p)return;const now=Date.now();
-    const fut=S.shifts.filter(s=>s.promoterId===id&&shiftStart(s)>now), past=S.shifts.filter(s=>s.promoterId===id&&shiftStart(s)<=now&&!s.promoterName);
-    const ok=await guard(async()=>{for(const s of fut){for(const ph of S.photos.filter(x=>x.shiftId===s.id))await db.doc("photos/"+ph.id).delete();await db.doc("shifts/"+s.id).delete()}
-      for(const s of past)await db.doc("shifts/"+s.id).update({promoterName:p.name});
-      for(const r of (S.requests||[]).filter(r=>r.promoterId===id&&r.status==="new"))await db.doc("requests/"+r.id).update({status:"rejected",decidedAt:now});
-      await db.doc("promoters/"+id).delete()},"Удалён: "+p.name+(fut.length?", отменено будущих смен: "+fut.length:""));
-    if(ok&&p.userId)setTimeout(()=>toast("У "+p.name+" остался вход на сайт — закройте доступ во вкладке «Доступ»"),2700);
-    updateTab();return}
+  if(act==="del-prom"){if(!arm("del-pr:"+id))return;const p=byId("promoters",id);if(!p)return;await guard(()=>deletePerson(id,p.userId),"Удалён: "+p.name);updateTab();return}
   if(act==="arch-prom"){if(!arm("pr:"+id))return;await guard(()=>db.doc("promoters/"+id).update({active:false}),"Сотрудник в архиве");return}
   if(act==="toggle-proj"){const p=byId("projects",id);await guard(()=>db.doc("projects/"+id).update({active:p.active===false}),p.active===false?"Проект возобновлён":"Проект завершён");return}
   if(act==="ph-ok"||act==="ph-no"){await guard(()=>db.doc("photos/"+id).update({status:act==="ph-ok"?"accepted":"rejected",checkedAt:Date.now()}),act==="ph-ok"?"Фото принято":"Фото отклонено");return}
@@ -1561,6 +1554,17 @@ function upWrite(){
   const el=document.getElementById("wrList"); if(!el)return;
   const me=window.PS_ME||{}, l=(S.messages||[]).filter(m=>m.userId===me.id).sort((a,b)=>b.createdAt-a.createdAt);
   el.innerHTML=l.length?l.map(m=>`<div class="msg"><div class="hint">${esc(fmtShort(ymdOf(m.createdAt)))}, ${fmtTime(m.createdAt)} · ${m.reply?"есть ответ":"ждёт ответа"}</div><div class="q">${esc(m.text)}</div>${m.reply?`<div class="a"><b>${esc(m.repliedBy||"Руководитель")}:</b> ${esc(m.reply)}</div>`:""}</div>`).join(""):`<p class="hint">Обращений пока нет.</p>`;
+}
+/* полное удаление человека: вход на сайт, карточка, будущие смены; история остаётся с именем */
+async function deletePerson(cardId,uid){
+  const p=cardId?byId("promoters",cardId):null, now=Date.now();
+  if(uid&&uid!==(window.PS_ME||{}).id)await window.psMembers.removeAccount(uid);
+  if(p){const fut=S.shifts.filter(s=>s.promoterId===p.id&&shiftStart(s)>now), past=S.shifts.filter(s=>s.promoterId===p.id&&shiftStart(s)<=now&&!s.promoterName);
+    for(const s of fut){for(const ph of S.photos.filter(x=>x.shiftId===s.id))await db.doc("photos/"+ph.id).delete();await db.doc("shifts/"+s.id).delete()}
+    for(const s of past)await db.doc("shifts/"+s.id).update({promoterName:p.name});
+    for(const r of (S.requests||[]).filter(r=>r.promoterId===p.id&&r.status==="new"))await db.doc("requests/"+r.id).update({status:"rejected",decidedAt:now});
+    await db.doc("promoters/"+p.id).delete()}
+  return p;
 }
 /* сторона руководителя: заявки и обращения */
 function upRequests(){

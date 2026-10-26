@@ -185,8 +185,7 @@
     const role = await loadRole();
     if (role === "error") return screen("pending", "Не удалось проверить доступ. Обновите страницу через минуту.");
     if (!role || role === "pending") return screen("pending");
-    if (me.must && !note) return screen("newpass", "Вы вошли по временному паролю. Придумайте свой: его будете знать только вы.");
-    toastMsg = note || "";
+    toastMsg = note || (me.must ? "Вы вошли по временному паролю. Сменить его можно в любой момент: «Сменить пароль» в меню." : "");
     if (box) box.remove();
     resolveAuth(true);
   }
@@ -328,7 +327,7 @@
   function showTemp(email, pw) {
     const m = document.createElement("div"); m.id = "ps-modal";
     m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
-      <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. При первом входе сайт попросит придумать свой.</p>
+      <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. Сменить временный пароль человек сможет сам, когда захочет: «Сменить пароль» в меню.</p>
       <div class="row"><button type="button" data-copy>Скопировать</button><button class="main" type="submit">Готово</button></div></form>`;
     document.body.appendChild(m);
     const cp = m.querySelector("[data-copy]");

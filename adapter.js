@@ -37,6 +37,8 @@
 #ps-modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
 #ps-modal button{font:inherit;font-weight:600;padding:10px 14px;border-radius:10px;border:1px solid #E3E1DB;background:#fff;cursor:pointer}
 #ps-modal button.main{background:#17181C;color:#fff;border-color:#17181C}
+#ps-modal a.main{font-weight:600;padding:10px 14px;border-radius:10px;background:#229ED9;color:#fff;text-decoration:none}
+#ps-modal .pm-t a{color:#229ED9}
 #ps-modal .e{color:#E0442F;font-size:13.5px;min-height:1em}
 .ps-me{font-size:12.5px;color:#9FA1A8;padding:0 6px 6px;overflow-wrap:anywhere}
 .ps-me b{display:block;color:#F2F1EC;font-weight:600;font-size:13px}
@@ -325,6 +327,38 @@
       m.remove(); showToast("Пароль изменён");
     });
   }
+  // ---------- Telegram-бот: привязка аккаунта ----------
+  async function telegramModal() {
+    const m = document.createElement("div"); m.id = "ps-modal";
+    m.innerHTML = `<form><h2>Telegram</h2><div class="tg-b"><p class="pm-t">Загружаю…</p></div><div class="e"></div><div class="row tg-r"><button type="button" data-x>Закрыть</button></div></form>`;
+    document.body.appendChild(m);
+    let alive = true, timer = 0;
+    const close = () => { alive = false; clearTimeout(timer); m.remove(); };
+    m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-x]")) close(); });
+    m.querySelector("form").addEventListener("submit", e => { e.preventDefault(); close(); });
+    const b = m.querySelector(".tg-b"), row = m.querySelector(".tg-r"), er = m.querySelector(".e");
+    const status = async () => { const { data, error } = await sb.rpc("tg_status"); if (error) throw error; return data || {}; };
+    const draw = async () => {
+      if (!alive) return;
+      let st; try { st = await status(); } catch (err) { er.textContent = "Не удалось: " + ruErr(err.message || String(err)); return; }
+      row.querySelectorAll(".tg-x").forEach(x => x.remove());
+      if (!st.bot) { b.innerHTML = `<p class="pm-t">Бот ещё не подключён. Владелец сети подключает его один раз, после этого здесь появится кнопка.</p>`; return; }
+      if (st.linked) {
+        b.innerHTML = `<p class="pm-t">✓ Уведомления приходят в Telegram${st.username ? " — @" + escH(st.username) : ""}, бот <a href="https://t.me/${escH(st.bot)}" target="_blank" rel="noopener">@${escH(st.bot)}</a>.</p>`;
+        row.insertAdjacentHTML("beforeend", `<button type="button" class="tg-x" data-off>Отключить</button>`);
+        row.querySelector("[data-off]").onclick = async () => { try { await sb.rpc("tg_unlink"); draw(); } catch (err) { er.textContent = ruErr(err.message || String(err)); } };
+        return;
+      }
+      const { data: code, error } = await sb.rpc("tg_link_code");
+      if (error) { er.textContent = ruErr(error.message); return; }
+      b.innerHTML = `<p class="pm-t">Нажмите кнопку: откроется бот <b>@${escH(st.bot)}</b>. В нём нажмите «Запустить» (Start) — и сюда начнут приходить новые смены, заявки и напоминания об отчётах.</p>
+        <p class="pm-t">Ссылка действует 15 минут.</p>`;
+      row.insertAdjacentHTML("beforeend", `<a class="main tg-x" href="https://t.me/${escH(st.bot)}?start=${escH(code)}" target="_blank" rel="noopener">Подключить Telegram</a>`);
+      const poll = async () => { if (!alive) return; try { const s2 = await status(); if (s2.linked) { draw(); showToast("Telegram подключён"); return; } } catch (_) {} timer = setTimeout(poll, 3000); };
+      timer = setTimeout(poll, 4000);
+    };
+    draw();
+  }
   function showTemp(email, pw) {
     const m = document.createElement("div"); m.id = "ps-modal";
     m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
@@ -360,8 +394,8 @@
     const add = () => {
       const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
       c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || loginOf(me.user.email))}</b>${escH(ROLE_L[me.role] || "")}</div>
-        <button class="ps-act ps-pass" type="button">Сменить пароль</button><button class="ps-act ps-out" type="button">Выйти</button>`);
-      c.querySelector(".ps-pass").onclick = changePassword;
+        <button class="ps-act ps-tg" type="button">Telegram</button><button class="ps-act ps-pass" type="button">Сменить пароль</button><button class="ps-act ps-out" type="button">Выйти</button>`);
+      c.querySelector(".ps-pass").onclick = changePassword; c.querySelector(".ps-tg").onclick = telegramModal;
       c.querySelector(".ps-out").onclick = async () => { await sb.auth.signOut(); location.reload(); };
       if (toastMsg) setTimeout(() => showToast(toastMsg), 600);
     };

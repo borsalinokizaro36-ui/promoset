@@ -798,7 +798,7 @@ function buildTab(){
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
     <form id="wrForm" class="wrf"><label for="wr-text">Сообщение</label><textarea id="wr-text" rows="4" maxlength="1000" required placeholder="Коротко и по делу"></textarea><div><button class="btn primary" type="submit">Отправить</button></div><p class="hint" id="wrMsg">Не больше трёх обращений в час. Ответ появится ниже.</p></form></section>
     <section class="panel"><h3>Мои обращения</h3><div id="wrList"></div></section>`,
-  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для владельца и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. При первом входе он сменит пароль на свой.</p></div>
+  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для владельца и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. Сменить пароль на свой человек сможет сам в любой момент.</p></div>
     <section class="panel"><h3>Новый сотрудник</h3><form class="f" id="fReg" autocomplete="off">
       <div class="fld"><label for="rg-first">Имя</label><input id="rg-first" required></div>
       <div class="fld"><label for="rg-last">Фамилия</label><input id="rg-last" required></div>
@@ -814,7 +814,7 @@ function buildTab(){
     </form></section>
     <section class="panel" id="rgDone" hidden></section>`,
   access:()=>`${b}<section class="panel"><div class="panel-h"><h3>Кто имеет доступ</h3><span id="acN"></span></div>
-    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Владелец видит всё и управляет доступом. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит. Если человек забыл пароль, нажмите «Временный пароль»: приложение придумает новый, вы отправите его человеку, а при первом входе он задаст свой. Временные пароли может ставить только владелец.</p>
+    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Владелец видит всё и управляет доступом. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит. Если человек забыл пароль, нажмите «Временный пароль»: приложение придумает новый, вы отправите его человеку, а сменить его на свой человек сможет в любой момент. Временные пароли может ставить только владелец.</p>
     <div class="tbl-wrap" id="acTbl"></div></section>`,
   money:()=>`${b}<div class="head"><div><div class="eyebrow">Оплата агитаторов</div><h2>Финансы</h2></div><p>Считаются смены, которые уже закончились и на которых агитатор отметился фото: ${SHIFT_H} ч × ставка проекта.</p></div>
     <section class="mtotal" id="mnTotal"></section>
@@ -1326,7 +1326,7 @@ function bindForms(){
       const btn=rg.querySelector("button[type=submit]");btn.disabled=true;
       try{const uid=await window.psMembers.create(d);
         if(f("rg-prom").checked&&db)await guard(()=>db.collection("promoters").add({name:d.first+" "+d.last,phone:d.phone,telegram:d.telegram,agency:"",login:d.login,userId:uid||null,active:true,createdAt:Date.now()}));
-        const site=location.origin+location.pathname, txt=`Промосеть: ${site}\nЛогин: ${d.login}\nПароль: ${d.password}\nПри первом входе придумайте свой пароль.`;
+        const site=location.origin+location.pathname, txt=`Промосеть: ${site}\nЛогин: ${d.login}\nПароль: ${d.password}\nПароль можно сменить в меню: «Сменить пароль».`;
         const box=f("rgDone");box.hidden=false;
         box.innerHTML=`<h3>Зарегистрирован: ${esc(d.first+" "+d.last)}</h3><pre class="creds">${esc(txt)}</pre><div class="rg-acts"><button class="btn primary" type="button" id="rg-copy">Скопировать данные для входа</button></div>`;
         f("rg-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(txt);toast("Скопировано")}catch(_){toast("Не удалось скопировать, выделите текст вручную")}});

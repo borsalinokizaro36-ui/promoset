@@ -289,6 +289,7 @@
     async list() { const { data, error } = await sb.from("members").select("user_id,email,name,role,created_at,phone,telegram,contact_email").order("created_at"); if (error) throw error; return data; },
     async setRole(id, role) { const { error } = await sb.from("members").update({ role }).eq("user_id", id); if (error) throw error; },
     async remove(id) { const { error } = await sb.from("members").delete().eq("user_id", id); if (error) throw error; },
+    async removeAccount(id) { const { error } = await sb.rpc("delete_member", { p_user: id }); if (error) throw error; },
     roleLabel: r => ROLE_L[r] || r,
     genPassword, makeLogin, login: loginOf,
     async create(d) {

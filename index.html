@@ -774,6 +774,14 @@ main .mcardS.big{border-color:var(--coral)!important;box-shadow:inset 0 0 0 1px 
 main a:not(.btn){color:var(--coral-d)}
 main .tl.sel{box-shadow:inset 3px 0 0 var(--coral)}
 main .btn.dash{border-color:rgba(239,64,86,.45);color:var(--coral-d)}
+/* ===== Ещё коралл: периоды статистики, фильтры фото, кнопки добавления, «Вышли на смены» ===== */
+html body main .seg button[aria-pressed="true"]{background-color:var(--coral)!important;border-color:var(--coral)!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.28)!important}
+html body main #fReg button[type=submit],html body main #fProj button[type=submit],html body main #fPoint button[type=submit],html body main #fProm button[type=submit]{
+  background-color:var(--coral);border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.30)}
+html body main .mtotal .v{color:#FF6B7D;text-shadow:0 1px 0 rgba(120,10,30,.18)}
+html body main .kstrip .kpi.hero{background:linear-gradient(150deg,#F4677A 0%,#EF4056 55%,#D92E45 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -26px 46px -28px rgba(10,209,201,.55),0 14px 36px rgba(239,64,86,.28)}
+html body main .kstrip .kpi.hero .s,html body main .kstrip .kpi.hero .v span{color:rgba(255,255,255,.85)}
 </style>
 <script>
 /* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */

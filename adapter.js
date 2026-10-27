@@ -37,6 +37,7 @@
 #ps-login button.main{font:inherit;font-weight:600;padding:12px;border:0;border-radius:10px;background:#17181C;color:#fff;cursor:pointer}
 #ps-login button.main:disabled{opacity:.6}
 #ps-login .links{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#ps-login .links a{font-size:13.5px;color:#17181C;font-weight:600}
 #ps-login .links button{border:0;background:none;padding:0;font:inherit;font-size:13.5px;color:#55575E;text-decoration:underline;cursor:pointer}
 #ps-login .e{color:#E0442F;font-size:13.5px;min-height:1em}
 #ps-login .ok{color:#23945A;font-size:13.5px}
@@ -137,6 +138,7 @@
         <label for="ps-pass">Новый пароль, не меньше 6 символов</label><input id="ps-pass" type="password" autocomplete="new-password" minlength="6" required>
         <label for="ps-pass2">Повторите пароль</label><input id="ps-pass2" type="password" autocomplete="new-password" minlength="6" required>
         <div class="e"></div><button class="main" type="submit">Сохранить пароль</button></form>`,
+      tgnolink: `<div class="card">${brand}<h1>Telegram ещё не привязан</h1><p>Привязать Telegram можно только на сайте Промосети:</p><p>1. Откройте сайт и войдите по логину и паролю.<br>2. Нажмите «Telegram» в меню → «Подключить Telegram».<br>3. В боте подтвердите: «Да, это я».</p><p>После этого Промосеть будет открываться здесь сама.</p><div class="links"><a href="${SITE}" target="_blank" rel="noopener">Открыть сайт</a></div></div>`,
       sent: `<div class="card">${brand}<h1>Проверьте почту</h1><p>${msg || ""}</p><div class="links"><button type="button" data-go="login">Ко входу</button></div></div>`,
       pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Создатель ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
     };
@@ -161,7 +163,6 @@
       if (m === "login") {
         const { error } = await sb.auth.signInWithPassword({ email: toEmail(v("ps-email")), password: v("ps-pass") });
         if (error) throw error;
-        if (TG_INIT) { try { const { data: s } = await sb.auth.getSession(); const r = await tgCall({ action: "tglink", initData: TG_INIT }, s.session.access_token); if (r && r.ok) { await afterSignIn("Telegram привязан: дальше бот будет входить сам."); return; } } catch (_) {} }
         await afterSignIn();
       } else if (m === "signup") {
         const email = v("ps-email").trim();
@@ -225,7 +226,7 @@
     const isRecovery = /type=recovery/.test(location.hash + location.search);
     const { data } = await sb.auth.getSession();
     if (isRecovery || recovering) { recovering = true; screen("newpass"); return; }
-    if (!data.session) { if (TG_INIT && await tgLogin()) return; screen("login"); return; }
+    if (!data.session) { if (TG_INIT) { if (!(await tgLogin())) screen("tgnolink"); return; } screen("login"); return; }
     await afterSignIn();
   })();
   const ready = authed;
@@ -377,7 +378,7 @@
       }
       const { data: code, error } = await sb.rpc("tg_link_code");
       if (error) { er.textContent = ruErr(error.message); return; }
-      b.innerHTML = `<p class="pm-t">Нажмите кнопку: откроется бот <b>@${escH(st.bot)}</b>. В нём нажмите «Запустить» (Start) — и сюда начнут приходить новые смены, заявки и напоминания об отчётах.</p>
+      b.innerHTML = `<p class="pm-t">Нажмите кнопку: откроется бот <b>@${escH(st.bot)}</b>. В нём нажмите «Запустить» (Start) и подтвердите «Да, это я». После этого Промосеть будет открываться прямо в Telegram, а бот пришлёт смены, заявки и напоминания об отчётах.</p>
         <p class="pm-t">Ссылка действует 15 минут.</p>`;
       row.insertAdjacentHTML("beforeend", `<a class="main tg-x" href="https://t.me/${escH(st.bot)}?start=${escH(code)}" target="_blank" rel="noopener">Подключить Telegram</a>`);
       const poll = async () => { if (!alive) return; try { const s2 = await status(); if (s2.linked) { draw(); showToast("Telegram подключён"); return; } } catch (_) {} timer = setTimeout(poll, 3000); };

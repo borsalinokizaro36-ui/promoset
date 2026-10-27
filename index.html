@@ -691,7 +691,7 @@ body,.mono,.kpi .v,.mcard .v,.mtotal .v{font-variant-numeric:tabular-nums lining
 @media (max-width:600px){.top{margin:8px;height:auto;top:0;border-radius:24px}.panel,.dlist{border-radius:22px}}
 /* ===== Палитра: Тиффани + коралл + белый по брендбуку 2026: #0AD1C9, #0BA8A2, #EF4056, #D6EEEC ===== */
 :root:root:root{--tif:#0AD1C9;--tif-2:#0BBFB8;--tif-d:#0BA8A2;--tif-dd:#088A85;--tif-soft:#D6EEEC;--coral:#EF4056;--coral-d:#D92E45;--coral-soft:#FDE3E6;
-  --lime:#0AD1C9;--teal-soft:#E8F6F5;--accent:#EF4056;--accent-soft:#FDE3E6;--bad:#EF4056;--bad-soft:#FDE3E6;--surface-2:#F1F8F7;--muted-soft:#E9F2F1;--ink:#15302F;--ink-2:#4B6462;--ink-3:#86A09D;--brand:#FFFFFF;--brand-ink:#15302F}
+  --lime:#0AD1C9;--teal-soft:#E8F6F5;--accent:#EF4056;--accent-soft:#FDE3E6;--bad:#EF4056;--bad-soft:#FDE3E6;--surface-2:#F1F8F7;--muted-soft:#E9F2F1;--warn:#B98A00;--warn-soft:#FFF3CF;--ink:#15302F;--ink-2:#4B6462;--ink-3:#86A09D;--brand:#FFFFFF;--brand-ink:#15302F}
 html{background:#F3FAF9 fixed;background-image:
   radial-gradient(42vw 42vw at 6% 10%,rgba(10,209,201,.26),transparent 62%),
   radial-gradient(34vw 34vw at 94% 6%,rgba(239,64,86,.11),transparent 60%),
@@ -1260,7 +1260,7 @@ function updateMap(sh,pst){
 function distOf(p){const list=ui.region==="msk"?MD.distMsk:ui.region==="spb"?SPB.d:MD.distMo;for(const d of list){if(!d._b){d._r=d.p.map(pl=>pl.map(r=>dp(r).map(([a,b])=>[b,a])));let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const pl of d._r)for(const[x,y]of pl[0]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}d._b=[x0,y0,x1,y1]}
   const[x0,y0,x1,y1]=d._b;if(p.lng<x0||p.lng>x1||p.lat<y0||p.lat>y1)continue;if(d._r.some(pl=>inRing(p.lng,p.lat,pl[0])&&!pl.slice(1).some(h=>inRing(p.lng,p.lat,h))))return d.full}return null}
 
-const COL={ontime:"#23945A",late:"#C98204",missed:"#E0442F",nophoto:"#E0442F",waiting:"#2F6FB0",upcoming:"#8C8E95"};
+const COL={ontime:"#23945A",late:"#D9A400",missed:"#EF4056",nophoto:"#EF4056",waiting:"#2F6FB0",upcoming:"#8C8E95"};
 const TLS={ontime:"отметился вовремя",late:"с опозданием",missed:"срыв",nophoto:"не отметился",waiting:"на точке, ждём фото",upcoming:"впереди"};
 const isProb=t=>t==="missed"||t==="nophoto"||t==="late";
 const toMin=t=>{const[h,m]=String(t||"09:00").split(":").map(Number);return h*60+(m||0)};

@@ -747,6 +747,33 @@ html body #ps-login input:focus{outline-color:var(--tif-d)}
   .top.menu-open .sidefoot{background:rgba(255,255,255,.82);box-shadow:inset 0 1px 0 #fff,0 18px 40px rgba(7,130,125,.18)}
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){html body .top{background:#fff}}
+/* ===== Больше коралла внутри разделов (меню и вкладки остаются бирюзовыми) ===== */
+html{background-image:
+  radial-gradient(42vw 42vw at 6% 10%,rgba(10,209,201,.24),transparent 62%),
+  radial-gradient(38vw 38vw at 94% 6%,rgba(239,64,86,.16),transparent 60%),
+  radial-gradient(46vw 46vw at 82% 90%,rgba(10,209,201,.18),transparent 62%),
+  radial-gradient(34vw 34vw at 18% 96%,rgba(239,64,86,.12),transparent 60%)}
+/* подписи-«надзаголовки» и заголовки панелей с коралловой меткой */
+main .eyebrow{color:var(--coral)!important}
+html body main .cp-cta:not(.calm) .eyebrow{color:#FFE3E8!important}
+main .panel>h3:first-child::before,main .panel-h h3::before,main .fchips h3::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--coral);margin:0 8px 2px 0;vertical-align:middle;box-shadow:0 0 0 3px rgba(239,64,86,.15)}
+/* фильтры, слоты и выбор смены — коралловые капли */
+html body main .fchips button[aria-pressed="true"],html body main .suchip.on,html body main .slot[aria-checked="true"]{
+  background-color:var(--coral);border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.28)}
+html body main .slot[aria-checked="true"] span{color:#fff}
+/* «Сдать отчёт» — главное действие сотрудника */
+html body main .cp-btn.due,html body main .cp-cta .btn.primary{background-color:var(--coral);border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.30)}
+html body main .cp-due{border-color:var(--coral)!important;box-shadow:inset 0 0 0 1px var(--coral)!important}
+/* суммы и важные цифры */
+main .mcard .v,main #pfBox .kpi:not(.good):not(.warn):not(.bad):not(.acc) .v{color:var(--coral)}
+main .mcard.on{border-color:var(--coral)!important;box-shadow:inset 0 0 0 1px var(--coral)!important;background-color:rgba(253,227,230,.6)!important}
+html body .mtotal,html body .kstrip .kpi.hero{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -26px 46px -28px rgba(239,64,86,.85),0 14px 36px rgba(11,168,162,.25)}
+/* текущая смена сотрудника — коралловая рамка */
+main .mcardS.big{border-color:var(--coral)!important;box-shadow:inset 0 0 0 1px var(--coral),0 10px 30px rgba(239,64,86,.12)!important}
+/* ссылки и выделение строки */
+main a:not(.btn){color:var(--coral-d)}
+main .tl.sel{box-shadow:inset 3px 0 0 var(--coral)}
+main .btn.dash{border-color:rgba(239,64,86,.45);color:var(--coral-d)}
 </style>
 <script>
 /* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */

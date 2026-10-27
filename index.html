@@ -1842,7 +1842,7 @@ setInterval(()=>{if(ui.tab==="day"&&!ui.editShift)updateTab()},60000);
 (async()=>{
   try{db=window.claude&&await window.claude.use("db")}catch(e){db=null}
   if(!db){dbState="off";renderAll();document.documentElement.classList.remove("ps-wait");return}
-  dbState="on";renderAll(true);requestAnimationFrame(()=>document.documentElement.classList.remove("ps-wait"));
+  dbState="on";renderAll(true);setTimeout(()=>document.documentElement.classList.remove("ps-wait"),0);
   try{assets=await window.claude.use("assets")}catch(e){assets=null}
   for(const c of [...COLS,"requests","messages"]){
     db.collection(c).onSnapshot(snap=>{S[c]=snap.docs.map(d=>Object.assign({id:d.id},d.data()));IDXV++;loaded[c]=true;renderAll()},

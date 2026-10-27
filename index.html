@@ -617,6 +617,35 @@ body,.mono,.kpi .v,.mcard .v,.mtotal .v{font-variant-numeric:tabular-nums lining
 .ctl .daynav button:hover{background:rgba(255,255,255,.9)}
 .ctl .daynav button:active{transform:scale(.9)}
 @media (max-width:900px){.ctl{border-radius:20px}.ctl .barx{border-bottom:0!important}}
+/* телефон и мини-приложение Telegram: компактная стеклянная шапка + плавающая стеклянная панель вкладок снизу, как в iOS */
+.lg-more{display:none}
+@media (max-width:600px){
+  html body{padding-bottom:0}
+  html body .top{position:sticky;top:max(8px,env(safe-area-inset-top,0px));margin:8px 8px 0;height:auto;overflow:visible;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:22px;z-index:900;
+    background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+  .top::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;background:rgba(20,21,25,.80);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.06),0 10px 30px rgba(23,24,28,.22)}
+  .top>.wrap{flex:1;min-width:0}
+  .logo{padding:0;font-size:16px}
+  .lg-more{display:grid;place-items:center;flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;color:#fff;font:600 13px/1 var(--f-body);letter-spacing:.02em;
+    background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .35s var(--spring)}
+  .lg-more:active{transform:scale(.9)}
+  .top .sidefoot{display:none}
+  .top.menu-open .sidefoot{display:flex;flex-direction:column;align-items:stretch;gap:2px;position:absolute;top:calc(100% + 8px);right:0;width:min(270px,calc(100vw - 16px));margin:0;padding:12px;border-radius:22px;
+    background:rgba(20,21,25,.86);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 18px 40px rgba(23,24,28,.3);animation:lgIn .45s var(--spring);transform-origin:top right}
+  .top.menu-open .sidefoot .ps-act{width:100%;text-align:left;padding:10px 8px;border-radius:12px}
+  html body .top .tabs{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:950;flex:none;order:0;padding:6px;border-radius:28px;
+    background:rgba(20,21,25,.78);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.07),0 14px 40px rgba(23,24,28,.30)}
+  .tabs .wrap{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:2px;scrollbar-width:none;scroll-behavior:smooth}
+  .tabs .wrap::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;width:auto;padding:11px 15px;font-size:13.5px;border-radius:22px}
+  .tabs .lg-blob{border-radius:22px}
+  main.wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+  .bar0{padding-top:16px}
+}
 .tabs{position:relative}
 .tabs .wrap{position:relative;z-index:1}
 .tab{border-radius:14px;transition:color .25s,background .25s,transform .35s var(--spring)}
@@ -672,6 +701,15 @@ document.addEventListener("DOMContentLoaded",()=>{
     new MutationObserver(()=>requestAnimationFrame(place)).observe(wrap,{childList:true,subtree:true,attributes:true,attributeFilter:["aria-selected"]});
     wrap.addEventListener("scroll",()=>{blob.style.transition="none";place();requestAnimationFrame(()=>blob.style.transition="")},{passive:true});
     addEventListener("resize",place);setTimeout(place,300)}
+  /* телефон / Telegram: кнопка меню с инициалами, активная вкладка прокручивается в центр панели */
+  const top=document.querySelector(".top");
+  if(top){const more=document.createElement("button");more.type="button";more.className="lg-more";more.setAttribute("aria-label","Меню");more.textContent="•••";top.appendChild(more);
+    const ini=()=>{const n=(window.PS_ME&&window.PS_ME.name||"").trim().split(/\s+/).filter(Boolean);if(n.length)more.textContent=n.slice(0,2).map(x=>x[0]).join("").toUpperCase()};
+    more.onclick=e=>{e.stopPropagation();ini();top.classList.toggle("menu-open")};
+    document.addEventListener("click",e=>{if(top.classList.contains("menu-open")&&!e.target.closest(".sidefoot"))top.classList.remove("menu-open");else if(e.target.closest(".sidefoot button"))setTimeout(()=>top.classList.remove("menu-open"),150)});
+    setTimeout(ini,1500)}
+  if(wrap){let last=null;new MutationObserver(()=>{const a=wrap.querySelector('.tab[aria-selected="true"]');if(!a||a.dataset.tab===last)return;last=a.dataset.tab;
+    if(wrap.scrollWidth>wrap.clientWidth)wrap.scrollTo({left:a.offsetLeft-(wrap.clientWidth-a.offsetWidth)/2,behavior:"smooth"})}).observe(wrap,{childList:true,subtree:true,attributes:true,attributeFilter:["aria-selected"]})}
   /* такая же «капля» в переключателе регионов (Москва / МО / СПб) */
   const ctl=document.querySelector(".ctl"), bx=document.getElementById("barX");
   if(ctl&&bx){const drop=document.createElement("i");drop.className="lg-drop";drop.setAttribute("aria-hidden","true");ctl.prepend(drop);ctl.classList.add("lg-on");

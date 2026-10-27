@@ -799,14 +799,14 @@ function buildTab(){
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
     <form id="wrForm" class="wrf"><label for="wr-text">Сообщение</label><textarea id="wr-text" rows="4" maxlength="1000" required placeholder="Коротко и по делу"></textarea><div><button class="btn primary" type="submit">Отправить</button></div><p class="hint" id="wrMsg">Не больше трёх обращений в час. Ответ появится ниже.</p></form></section>
     <section class="panel"><h3>Мои обращения</h3><div id="wrList"></div></section>`,
-  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для владельца и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. Сменить пароль на свой человек сможет сам в любой момент.</p></div>
+  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для создателя и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. Сменить пароль на свой человек сможет сам в любой момент.</p></div>
     <section class="panel"><h3>Новый сотрудник</h3><form class="f" id="fReg" autocomplete="off">
       <div class="fld"><label for="rg-first">Имя</label><input id="rg-first" required></div>
       <div class="fld"><label for="rg-last">Фамилия</label><input id="rg-last" required></div>
       <div class="fld"><label for="rg-phone">Телефон</label><input id="rg-phone" inputmode="tel" placeholder="+7"></div>
       <div class="fld"><label for="rg-tg">Telegram</label><input id="rg-tg" placeholder="@ник"></div>
       <div class="fld"><label for="rg-mail">Почта, если есть</label><input id="rg-mail" type="email" placeholder="необязательно"></div>
-      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">администратор</option>${window.PS_ROLE==="owner"?'<option value="owner">владелец</option>':""}</select></div>
+      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">администратор</option></select></div>
       <div class="fld rg-wide"><label for="rg-login">Логин для входа</label><div class="pair"><input id="rg-login" required autocapitalize="none" spellcheck="false" placeholder="появится из имени"><button class="btn sm" type="button" id="rg-genl">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label for="rg-pass">Пароль</label><div class="pair"><input id="rg-pass" class="mono" required spellcheck="false"><button class="btn sm" type="button" id="rg-genp">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label class="chk"><input type="checkbox" id="rg-prom" checked> Добавить во вкладку «Сотрудники», чтобы ставить на смены</label></div>
@@ -815,7 +815,7 @@ function buildTab(){
     </form></section>
     <section class="panel" id="rgDone" hidden></section>`,
   access:()=>`${b}<section class="panel"><div class="panel-h"><h3>Кто имеет доступ</h3><span id="acN"></span></div>
-    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Владелец видит всё и управляет доступом. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит. Если человек забыл пароль, нажмите «Временный пароль»: приложение придумает новый, вы отправите его человеку, а сменить его на свой человек сможет в любой момент. Временные пароли может ставить только владелец.</p>
+    <p class="hint">Новые люди регистрируются на странице входа и попадают сюда со статусом «ждёт одобрения»: пока вы не выберете им роль, они ничего не видят. Создатель видит всё и управляет доступом, эта роль только у одного человека. Администратор и сотрудник работают со всеми данными, список доступа администратор только видит. Если человек забыл пароль, нажмите «Временный пароль»: приложение придумает новый, вы отправите его человеку, а сменить его на свой человек сможет в любой момент. Временные пароли может ставить только создатель.</p>
     <div class="tbl-wrap" id="acTbl"></div></section>`,
   money:()=>`${b}<div class="head"><div><div class="eyebrow">Оплата агитаторов</div><h2>Финансы</h2></div><p>Считаются смены, которые уже закончились и на которых агитатор отметился фото: ${SHIFT_H} ч × ставка проекта.</p></div>
     <section class="mtotal" id="mnTotal"></section>
@@ -1109,7 +1109,7 @@ function upDay(){
 /* ---------- Смены ---------- */
 function upAccess(){
   const el=document.getElementById("acTbl");if(!el||!window.psMembers)return;
-  const own=window.PS_ROLE==="owner", R=["owner","admin","staff","pending"];
+  const own=window.PS_ROLE==="owner", R=["admin","staff","pending"];
   window.psMembers.list().then(list=>{
     const n=document.getElementById("acN");if(n)n.textContent=`${list.length}`;
     el.innerHTML=`<table><thead><tr><th>Имя</th><th>Логин и контакты</th><th>Роль</th><th>Зарегистрирован</th><th></th></tr></thead><tbody>${list.map(m=>{const self=window.PS_ME&&m.user_id===window.PS_ME.id;

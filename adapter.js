@@ -325,6 +325,7 @@
       return data;
     },
     async occupancy(date) { const { data, error } = await sb.rpc("slot_occupancy", { p_date: date }); if (error) throw error; return data || []; },
+    async tgBot() { try { const { data } = await sb.rpc("tg_status"); return (data && data.bot) || null; } catch (_) { return null; } },
     async team() { const { data, error } = await sb.rpc("team_contacts"); if (error) throw error; return data || []; },
     async report(id, left, contacts) { const { error } = await sb.rpc("staff_report", { p_shift: id, p_left: left, p_contacts: contacts }); if (error) throw error; },
     async tempPassword(id, email) {

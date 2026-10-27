@@ -718,15 +718,15 @@ function banner(){
 function buildTab(){
   const b=`<div id="bn"></div>`;
   const T={
-  day:()=>`${b}<div class="kstrip" id="dayKpi"></div>
-    <div class="daygrid">
+  day:()=>`${b}<div class="daygrid">
       <section class="dlist" aria-label="Смены дня"><div class="fchips" id="dayF"></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="dayList"></div><div class="dfoot" id="dayFoot"></div></section>
       <section class="mapcol"><div id="lmap" class="lmap" role="region" aria-label="Интерактивная карта"></div>
         <div class="mapov maphead" id="mapHead"><b id="mapTitle">Карта</b><span class="hint" id="schemaNote"></span></div>
         <div class="mapov scard" id="sCard" hidden></div>
         <div class="mapov mapfoot"><button class="mapback" id="mapBack" hidden data-act="map-back"></button><div class="legend" id="dayLeg"></div></div>
       </section>
-    </div>`,
+    </div>
+    <div class="kstrip kbelow" id="dayKpi"></div>`,
   shifts:()=>`${b}<div class="daygrid sgrid">
       <section class="dlist"><div class="fchips"><h3 id="shTitle"></h3><span class="hint" id="shN"></span></div><div class="axis" aria-hidden="true"><span>08:00</span><span>15:00</span><span>22:00</span></div><div id="shList"></div></section>
       <div class="scol"><section class="panel" id="rqPanel" hidden></section><section class="panel"><h3>Поставить смену</h3><p class="hint">Смена длится 4 часа, на точке до трёх смен в день.</p>

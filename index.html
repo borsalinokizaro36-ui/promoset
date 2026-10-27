@@ -689,6 +689,64 @@ body,.mono,.kpi .v,.mcard .v,.mtotal .v{font-variant-numeric:tabular-nums lining
 @media (prefers-reduced-motion:reduce){.lg-blob,.tab,.btn,.mcard,#ps-modal form{transition:none!important;animation:none!important}}
 @media (max-width:900px) and (min-width:601px){body{grid-template-columns:200px minmax(0,1fr)}}
 @media (max-width:600px){.top{margin:8px;height:auto;top:0;border-radius:24px}.panel,.dlist{border-radius:22px}}
+/* ===== Палитра: Тиффани + коралл + белый (тёмное меню и лайм убраны) ===== */
+:root:root:root{--tif:#81D8D0;--tif-2:#4FC9C0;--tif-d:#0AABA5;--tif-dd:#07827D;--tif-soft:#DDF4F1;--coral:#FF7F50;--coral-d:#F2622F;--coral-soft:#FFE6DC;
+  --lime:#81D8D0;--teal-soft:#E6F7F5;--ink:#15302F;--ink-2:#4B6462;--ink-3:#86A09D;--brand:#FFFFFF;--brand-ink:#15302F}
+html{background:#F3FAF9 fixed;background-image:
+  radial-gradient(42vw 42vw at 6% 10%,rgba(129,216,208,.50),transparent 62%),
+  radial-gradient(34vw 34vw at 94% 6%,rgba(255,127,80,.20),transparent 60%),
+  radial-gradient(46vw 46vw at 82% 90%,rgba(129,216,208,.38),transparent 62%),
+  radial-gradient(30vw 30vw at 18% 96%,rgba(255,127,80,.14),transparent 60%);background-attachment:fixed}
+:focus-visible{outline-color:var(--tif-d)}
+/* меню: белое стекло */
+html body .top{color:var(--ink);background:rgba(255,255,255,.62);
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.6),0 18px 50px rgba(7,130,125,.12)}
+html body .top .tab{color:var(--ink-2)}
+html body .top .tab:hover{background:rgba(129,216,208,.20);color:var(--ink)}
+html body .lg-on .tab[aria-selected="true"]{color:#06302E}
+.lg-blob{background:linear-gradient(180deg,#A6E8E2 0%,#81D8D0 50%,#5ECDC4 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -3px 8px rgba(7,130,125,.18),0 6px 18px rgba(10,171,165,.30)}
+.tab .n{background:var(--coral)!important;color:#fff!important}
+.tab[aria-selected="true"] .n{background:#fff!important;color:var(--coral-d)!important}
+.logo i{background-color:var(--tif)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 14px rgba(10,171,165,.30)}
+html body .ps-me{color:var(--ink-3)}html body .ps-me b{color:var(--ink)}
+html body .ps-act{color:var(--ink);opacity:.72}html body .ps-act:hover{background:rgba(129,216,208,.18);opacity:1}
+html body .ps-act.ps-mode{color:var(--tif-dd);opacity:1}
+/* верхняя панель: выбранный регион — коралловая капля */
+.lg-drop{background:linear-gradient(180deg,#FF9C78 0%,#FF7F50 55%,#F7703F 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -3px 8px rgba(160,50,10,.15),0 6px 16px rgba(255,127,80,.32)}
+/* главные кнопки и выбранные элементы — Тиффани */
+html body .btn.primary,html body .btn.dark,html body .fchips button[aria-pressed="true"],html body .suchip.on,html body .cp-btn.due,html body #ps-modal button.main,html body .slot[aria-checked="true"],html body .seg button[aria-pressed="true"]{
+  background-color:var(--tif-d);border-color:var(--tif-d);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px rgba(10,171,165,.28)}
+html body .slot[aria-checked="true"] span{color:#fff;opacity:.9}
+html body .btn.acc{background-color:var(--coral);border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px rgba(255,127,80,.30)}
+.av{background:var(--tif-soft)!important;color:var(--tif-dd)!important}
+.tl.sel{box-shadow:inset 3px 0 0 var(--tif-d)}
+.tag.ex{background:var(--coral-soft)!important;color:var(--coral-d)!important}
+.mcard.on{border-color:var(--tif-d)!important;box-shadow:inset 0 0 0 1px var(--tif-d)!important;background-color:rgba(221,244,241,.75)!important}
+.mcardS.big,.cp-due{border-color:var(--tif-d)!important;box-shadow:inset 0 0 0 1px var(--tif-d)!important}
+.fld input:focus,.fld select:focus,.fld textarea:focus,#ps-modal input:focus,#ps-login input:focus{box-shadow:0 0 0 3px rgba(129,216,208,.6),inset 0 1px 2px rgba(7,130,125,.08)!important}
+/* «героические» плашки: Тиффани с белым текстом, коралл — акцент */
+html body .kstrip .kpi.hero,html body .mtotal,html body .cp-cta:not(.calm){background:linear-gradient(150deg,#2CC4BC 0%,#0AABA5 55%,#07928D 100%);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -20px 40px -30px rgba(255,127,80,.6),0 14px 36px rgba(10,171,165,.25)}
+html body .kstrip .kpi.hero .s,html body .kstrip .kpi.hero .v span,html body .cp-cta .hint{color:rgba(255,255,255,.82)}
+html body .mtotal .v{color:#fff}
+html body .cp-cta .eyebrow{color:#FFE6DC}
+html body .cp-cta .btn.primary{background:#fff;border-color:#fff;color:var(--tif-dd)}
+.mt-split .dot.ok{background:var(--coral)!important}
+.toast{background-color:rgba(7,130,125,.88)!important}
+/* экран входа */
+html body #ps-login{background:#F3FAF9;background-image:radial-gradient(60vw 60vw at 10% 10%,rgba(129,216,208,.55),transparent 60%),radial-gradient(50vw 50vw at 90% 90%,rgba(255,127,80,.22),transparent 60%)}
+html body #ps-login .brand i{background-color:var(--tif)}
+html body #ps-login button.main{background:var(--tif-d);color:#fff}
+html body #ps-login input:focus{outline-color:var(--tif-d)}
+@media (max-width:600px){
+  .top::before{background:rgba(255,255,255,.66);box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.6),0 10px 30px rgba(7,130,125,.14)}
+  html body .top .tabs{background:rgba(255,255,255,.66);box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.6),0 14px 40px rgba(7,130,125,.18)}
+  .lg-more{color:#fff;background:linear-gradient(180deg,#4FC9C0,#0AABA5);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 12px rgba(10,171,165,.3)}
+  .top.menu-open .sidefoot{background:rgba(255,255,255,.82);box-shadow:inset 0 1px 0 #fff,0 18px 40px rgba(7,130,125,.18)}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){html body .top{background:#fff}}
 </style>
 <script>
 /* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */

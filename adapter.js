@@ -7,6 +7,10 @@
   const COLS = ["projects", "points", "promoters", "shifts", "photos"];
   const configured = typeof supabase !== "undefined" && CFG.supabaseUrl && /^https:\/\//.test(CFG.supabaseUrl) && CFG.supabaseKey && !/ВАШ/.test(CFG.supabaseUrl + CFG.supabaseKey);
   const sb = configured ? supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+  // пока роль не известна — интерфейс скрыт (у сотрудника не мелькает пульт руководителя)
+  document.documentElement.classList.add("ps-wait");
+  { const st = document.createElement("style"); st.textContent = "html.ps-wait body>*:not(#ps-login):not(#ps-modal):not(script){visibility:hidden!important}html.ps-wait body::after{content:'';position:fixed;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid rgba(11,168,162,.22);border-top-color:#0BA8A2;animation:psSpin .8s linear infinite;z-index:3000}@keyframes psSpin{to{transform:rotate(360deg)}}"; document.head.appendChild(st); }
+  setTimeout(() => document.documentElement.classList.remove("ps-wait"), 12000);
   const SITE = location.origin + location.pathname;
   // открыто внутри Telegram (мини-приложение бота): входим автоматически по Telegram
   let TG_INIT = "";
@@ -116,6 +120,7 @@
   const authed = new Promise(r => { resolveAuth = r; });
 
   function screen(mode, msg) {
+    document.documentElement.classList.remove("ps-wait");
     const b = ensureBox();
     if (!configured) { b.innerHTML = `<div class="card">${brand}<p>Сайт ещё не подключён к базе. Откройте файл <b>config.js</b> и впишите адрес и ключ проекта Supabase (см. инструкцию).</p></div>`; return; }
     const V = {

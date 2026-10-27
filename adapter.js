@@ -8,6 +8,18 @@
   const configured = typeof supabase !== "undefined" && CFG.supabaseUrl && /^https:\/\//.test(CFG.supabaseUrl) && CFG.supabaseKey && !/ВАШ/.test(CFG.supabaseUrl + CFG.supabaseKey);
   const sb = configured ? supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
   const SITE = location.origin + location.pathname;
+  // открыто внутри Telegram (мини-приложение бота): входим автоматически по Telegram
+  let TG_INIT = "";
+  try { TG_INIT = new URLSearchParams(location.hash.slice(1)).get("tgWebAppData") || sessionStorage.getItem("ps-tg-init") || ""; } catch (_) {}
+  if (TG_INIT) {
+    try { sessionStorage.setItem("ps-tg-init", TG_INIT); } catch (_) {}
+    try { const q = new URLSearchParams(location.search); history.replaceState(null, "", location.pathname + (q.has("cabinet") ? "#cabinet" : "")); } catch (_) {}
+    const sdk = document.createElement("script"); sdk.src = "https://telegram.org/js/telegram-web-app.js"; sdk.async = true;
+    sdk.onload = () => { try { const w = window.Telegram.WebApp; w.ready(); w.expand(); } catch (_) {} };
+    document.head.appendChild(sdk);
+  }
+  const tgCall = async (body, jwt) => (await fetch(CFG.supabaseUrl + "/functions/v1/tg-bot", { method: "POST",
+    headers: Object.assign({ "Content-Type": "application/json" }, jwt ? { Authorization: "Bearer " + jwt } : {}), body: JSON.stringify(body) })).json();
   const ROLE_L = { owner: "владелец", admin: "администратор", staff: "сотрудник", pending: "ждёт одобрения" };
   const escH = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -147,7 +159,9 @@
     try {
       if (m === "login") {
         const { error } = await sb.auth.signInWithPassword({ email: toEmail(v("ps-email")), password: v("ps-pass") });
-        if (error) throw error; await afterSignIn();
+        if (error) throw error;
+        if (TG_INIT) { try { const { data: s } = await sb.auth.getSession(); const r = await tgCall({ action: "tglink", initData: TG_INIT }, s.session.access_token); if (r && r.ok) { await afterSignIn("Telegram привязан: дальше бот будет входить сам."); return; } } catch (_) {} }
+        await afterSignIn();
       } else if (m === "signup") {
         const email = v("ps-email").trim();
         const { data, error } = await sb.auth.signUp({ email, password: v("ps-pass"), options: { data: { name: v("ps-name").trim() }, emailRedirectTo: SITE } });
@@ -192,6 +206,16 @@
     resolveAuth(true);
   }
 
+  async function tgLogin() {
+    try {
+      const r = await tgCall({ action: "tglogin", initData: TG_INIT });
+      if (!r || !r.ok || !r.token_hash) return false;
+      let { error } = await sb.auth.verifyOtp({ token_hash: r.token_hash, type: "magiclink" });
+      if (error) ({ error } = await sb.auth.verifyOtp({ token_hash: r.token_hash, type: "email" }));
+      if (error) return false;
+      await afterSignIn(); return true;
+    } catch (_) { return false; }
+  }
   let recovering = false;
   if (sb) sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") { recovering = true; screen("newpass"); } });
 
@@ -200,7 +224,7 @@
     const isRecovery = /type=recovery/.test(location.hash + location.search);
     const { data } = await sb.auth.getSession();
     if (isRecovery || recovering) { recovering = true; screen("newpass"); return; }
-    if (!data.session) { screen("login"); return; }
+    if (!data.session) { if (TG_INIT && await tgLogin()) return; screen("login"); return; }
     await afterSignIn();
   })();
   const ready = authed;

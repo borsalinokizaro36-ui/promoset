@@ -20,7 +20,7 @@
   }
   const tgCall = async (body, jwt) => (await fetch(CFG.supabaseUrl + "/functions/v1/tg-bot", { method: "POST",
     headers: Object.assign({ "Content-Type": "application/json" }, jwt ? { Authorization: "Bearer " + jwt } : {}), body: JSON.stringify(body) })).json();
-  const ROLE_L = { owner: "владелец", admin: "администратор", staff: "сотрудник", pending: "ждёт одобрения" };
+  const ROLE_L = { owner: "создатель", admin: "администратор", staff: "сотрудник", pending: "ждёт одобрения" };
   const escH = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   window.blobUrl = id => sb ? `${CFG.supabaseUrl}/storage/v1/object/public/photos/${encodeURIComponent(id)}` : "";
@@ -90,7 +90,7 @@
     });
   }
   const brand = `<div class="brand"><i aria-hidden="true"></i>Промосеть</div>`;
-  const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите владельца добавить вас." : m;
+  const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите создателя или администратора добавить вас." : m;
 
   const LOGIN_DOMAIN = "@promoset.local";
   const toEmail = s => { s = String(s || "").trim().toLowerCase(); return s.includes("@") ? s : s + LOGIN_DOMAIN; };
@@ -126,7 +126,7 @@
         <label for="ps-email">Электронная почта</label><input id="ps-email" type="email" autocomplete="username" required>
         <label for="ps-pass">Пароль, не меньше 6 символов</label><input id="ps-pass" type="password" autocomplete="new-password" minlength="6" required>
         <div class="e">${msg || ""}</div><button class="main" type="submit">Зарегистрироваться</button>
-        <p>После регистрации владелец агентства откроет вам доступ.</p>
+        <p>После регистрации создатель откроет вам доступ.</p>
         <div class="links"><button type="button" data-go="login">У меня уже есть вход</button></div></form>`,
       reset: `<form data-m="reset">${brand}<h1>Восстановление пароля</h1>
         <p>Пришлём на почту ссылку, по ней вы зададите новый пароль.</p>
@@ -138,7 +138,7 @@
         <label for="ps-pass2">Повторите пароль</label><input id="ps-pass2" type="password" autocomplete="new-password" minlength="6" required>
         <div class="e"></div><button class="main" type="submit">Сохранить пароль</button></form>`,
       sent: `<div class="card">${brand}<h1>Проверьте почту</h1><p>${msg || ""}</p><div class="links"><button type="button" data-go="login">Ко входу</button></div></div>`,
-      pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Владелец агентства ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
+      pending: `<div class="card">${brand}<h1>Заявка отправлена</h1><p>${msg || "Создатель ещё не открыл вам доступ. Как только откроет, обновите страницу."}</p><div class="links"><button type="button" data-go="reload">Обновить</button><button type="button" data-go="logout">Выйти</button></div></div>`,
     };
     b.innerHTML = V[mode]; addEyes(b);
     const f = b.querySelector("input"); if (f) setTimeout(() => f.focus(), 30);
@@ -168,7 +168,7 @@
         const { data, error } = await sb.auth.signUp({ email, password: v("ps-pass"), options: { data: { name: v("ps-name").trim() }, emailRedirectTo: SITE } });
         if (error) throw error;
         if (data && data.session) await afterSignIn();
-        else screen("sent", `Мы отправили письмо на ${escH(email)}. Нажмите в нём ссылку, чтобы подтвердить почту, затем войдите. Доступ откроет владелец агентства.`);
+        else screen("sent", `Мы отправили письмо на ${escH(email)}. Нажмите в нём ссылку, чтобы подтвердить почту, затем войдите. Доступ откроет создатель.`);
       } else if (m === "reset") {
         const email = v("ps-email").trim();
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: SITE });
@@ -367,7 +367,7 @@
       if (!alive) return;
       let st; try { st = await status(); } catch (err) { er.textContent = "Не удалось: " + ruErr(err.message || String(err)); return; }
       row.querySelectorAll(".tg-x").forEach(x => x.remove());
-      if (!st.bot) { b.innerHTML = `<p class="pm-t">Бот ещё не подключён. Владелец сети подключает его один раз, после этого здесь появится кнопка.</p>`; return; }
+      if (!st.bot) { b.innerHTML = `<p class="pm-t">Бот ещё не подключён. Создатель подключает его один раз, после этого здесь появится кнопка.</p>`; return; }
       if (st.linked) {
         b.innerHTML = `<p class="pm-t">✓ Уведомления приходят в Telegram${st.username ? " — @" + escH(st.username) : ""}, бот <a href="https://t.me/${escH(st.bot)}" target="_blank" rel="noopener">@${escH(st.bot)}</a>.</p>`;
         row.insertAdjacentHTML("beforeend", `<button type="button" class="tg-x" data-off>Отключить</button>`);

@@ -383,6 +383,40 @@
     };
     draw();
   }
+  // ---------- владелец: свой логин и пароль ----------
+  function credModal() {
+    const m = document.createElement("div"); m.id = "ps-modal";
+    const cur = loginOf(me.user && me.user.email);
+    m.innerHTML = `<form><h2>Логин и пароль</h2>
+      <p class="pm-t">Сейчас вы входите как <b>${escH(cur)}</b>. Задайте свой логин и пароль — по ним будете входить на сайт с любого устройства. После смены логина почта для входа больше не подойдёт — только новый логин.</p>
+      <label for="cm-l">Логин (латиница, цифры, точка, дефис)</label><input id="cm-l" autocomplete="username" autocapitalize="off" spellcheck="false" value="${escH(cur.includes("@") ? "" : cur)}" placeholder="например, roman">
+      <label for="cm-1">Новый пароль, не меньше 6 символов</label><input id="cm-1" type="password" autocomplete="new-password" minlength="6" placeholder="оставьте пустым, если не меняете">
+      <label for="cm-2">Повторите пароль</label><input id="cm-2" type="password" autocomplete="new-password" minlength="6"><div class="e"></div>
+      <div class="row"><button type="button" data-x>Отмена</button><button class="main" type="submit">Сохранить</button></div></form>`;
+    document.body.appendChild(m); addEyes(m); m.querySelector("#cm-l").focus();
+    m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-x]")) m.remove(); });
+    m.querySelector("form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const er = m.querySelector(".e"), btn = m.querySelector("button.main"), l = m.querySelector("#cm-l").value.trim().toLowerCase(),
+            a = m.querySelector("#cm-1").value, b = m.querySelector("#cm-2").value;
+      er.textContent = "";
+      if (!/^[a-z0-9._-]{3,40}$/.test(l)) { er.textContent = "Логин: от 3 до 40 латинских букв, цифр, точек, дефисов или подчёркиваний."; return; }
+      if (a || b) { if (a !== b) { er.textContent = "Пароли не совпадают."; return; } if (a.length < 6) { er.textContent = "Пароль должен быть не короче 6 символов."; return; } }
+      if (l === cur && !a) { m.remove(); return; }
+      btn.disabled = true;
+      try {
+        if (a) { const { error } = await sb.auth.updateUser({ password: a }); if (error) throw error; try { await sb.rpc("clear_must_change"); } catch (_) {} }
+        if (l !== cur) {
+          const { data, error } = await sb.rpc("set_my_login", { p_login: l }); if (error) throw error;
+          if (me.user) me.user.email = data; if (window.PS_ME) window.PS_ME.email = data;
+          try { await sb.auth.refreshSession(); } catch (_) {}
+          const nb = document.querySelector(".ps-me b"); if (nb && !me.name) nb.textContent = l;
+        }
+        m.remove();
+        showToast(l !== cur ? `Готово. Теперь входите: логин «${l}»${a ? " и новый пароль" : " и прежний пароль"}.` : "Пароль изменён");
+      } catch (x) { er.textContent = ruErr((x && x.message) || String(x)); btn.disabled = false; }
+    });
+  }
   function showTemp(email, pw) {
     const m = document.createElement("div"); m.id = "ps-modal";
     m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
@@ -419,7 +453,7 @@
       const c = document.querySelector(".top .ctrls"); if (!c || c.querySelector(".ps-out")) return;
       c.insertAdjacentHTML("beforeend", `<div class="ps-me"><b>${escH(me.name || loginOf(me.user.email))}</b>${escH(ROLE_L[me.role] || "")}</div>
         <button class="ps-act ps-tg" type="button">Telegram</button><button class="ps-act ps-pass" type="button">Сменить пароль</button><button class="ps-act ps-out" type="button">Выйти</button>`);
-      c.querySelector(".ps-pass").onclick = changePassword; c.querySelector(".ps-tg").onclick = telegramModal;
+      c.querySelector(".ps-pass").onclick = me.role === "owner" ? credModal : changePassword; if (me.role === "owner") c.querySelector(".ps-pass").textContent = "Логин и пароль"; c.querySelector(".ps-tg").onclick = telegramModal;
       c.querySelector(".ps-out").onclick = async () => { await sb.auth.signOut(); location.reload(); };
       if (toastMsg) setTimeout(() => showToast(toastMsg), 600);
     };

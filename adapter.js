@@ -49,6 +49,7 @@
 #ps-modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
 #ps-modal button{font:inherit;font-weight:600;padding:10px 14px;border-radius:10px;border:1px solid #E3E1DB;background:#fff;cursor:pointer}
 #ps-modal button.main{background:#17181C;color:#fff;border-color:#17181C}
+#ps-modal button.gen{align-self:flex-start;padding:6px 10px;font-size:13px;font-weight:500;margin-top:-2px}
 #ps-modal a.main{font-weight:600;padding:10px 14px;border-radius:10px;background:#229ED9;color:#fff;text-decoration:none}
 #ps-modal .pm-t a{color:#229ED9}
 #ps-modal .e{color:#E0442F;font-size:13.5px;min-height:1em}
@@ -389,12 +390,22 @@
     const cur = loginOf(me.user && me.user.email);
     m.innerHTML = `<form><h2>Логин и пароль</h2>
       <p class="pm-t">Сейчас вы входите как <b>${escH(cur)}</b>. Задайте свой логин и пароль — по ним будете входить на сайт с любого устройства. После смены логина почта для входа больше не подойдёт — только новый логин.</p>
-      <label for="cm-l">Логин (латиница, цифры, точка, дефис)</label><input id="cm-l" autocomplete="username" autocapitalize="off" spellcheck="false" value="${escH(cur.includes("@") ? "" : cur)}" placeholder="например, roman">
+      <label for="cm-l">Логин (латиница, цифры, точка, дефис)</label><input id="cm-l" autocomplete="username" autocapitalize="off" spellcheck="false" value="${escH(cur.includes("@") ? "" : cur)}" placeholder="например, roman"><button type="button" class="gen" data-gl>🎲 Придумать логин</button>
       <label for="cm-1">Новый пароль, не меньше 6 символов</label><input id="cm-1" type="password" autocomplete="new-password" minlength="6" placeholder="оставьте пустым, если не меняете">
-      <label for="cm-2">Повторите пароль</label><input id="cm-2" type="password" autocomplete="new-password" minlength="6"><div class="e"></div>
+      <label for="cm-2">Повторите пароль</label><input id="cm-2" type="password" autocomplete="new-password" minlength="6"><button type="button" class="gen" data-gp>🎲 Придумать пароль</button><div class="e"></div>
       <div class="row"><button type="button" data-x>Отмена</button><button class="main" type="submit">Сохранить</button></div></form>`;
     document.body.appendChild(m); addEyes(m); m.querySelector("#cm-l").focus();
     m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-x]")) m.remove(); });
+    let tries = 0;
+    m.querySelector("[data-gl]").onclick = () => {
+      const [first, ...rest] = String(me.name || "").trim().split(/\s+/);
+      m.querySelector("#cm-l").value = makeLogin(first, rest.join(" "), tries++ > 0) || ("owner" + String(10 + (crypto.getRandomValues(new Uint32Array(1))[0] % 90)));
+    };
+    m.querySelector("[data-gp]").onclick = () => {
+      const pw = genPassword();
+      ["#cm-1", "#cm-2"].forEach(id => { const i = m.querySelector(id); i.value = pw; i.type = "text"; });
+      m.querySelector(".e").textContent = "";
+    };
     m.querySelector("form").addEventListener("submit", async e => {
       e.preventDefault();
       const er = m.querySelector(".e"), btn = m.querySelector("button.main"), l = m.querySelector("#cm-l").value.trim().toLowerCase(),
@@ -413,19 +424,22 @@
           const nb = document.querySelector(".ps-me b"); if (nb && !me.name) nb.textContent = l;
         }
         m.remove();
-        showToast(l !== cur ? `Готово. Теперь входите: логин «${l}»${a ? " и новый пароль" : " и прежний пароль"}.` : "Пароль изменён");
+        if (a) showTemp(l + LOGIN_DOMAIN, a, "Ваш логин и пароль"); else showToast(l !== cur ? `Готово. Теперь входите: логин «${l}» и прежний пароль.` : "Пароль изменён");
       } catch (x) { er.textContent = ruErr((x && x.message) || String(x)); btn.disabled = false; }
     });
   }
-  function showTemp(email, pw) {
+  function showTemp(email, pw, own) {
     const m = document.createElement("div"); m.id = "ps-modal";
-    m.innerHTML = `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
-      <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. Сменить временный пароль человек сможет сам, когда захочет: «Сменить пароль» в меню.</p>
+    m.innerHTML = (own ? `<form><h2>${escH(own)}</h2><p class="pm-t">Логин</p><div class="pm-pw">${escH(loginOf(email))}</div><p class="pm-t">Пароль</p><div class="pm-pw">${escH(pw)}</div>
+      <p class="pm-t">Сохранено. Запишите логин и пароль — по ним вы входите на сайт с любого устройства.</p>`
+      : `<form><h2>Временный пароль</h2><p class="pm-t">Для ${escH(loginOf(email))}</p><div class="pm-pw">${escH(pw)}</div>
+      <p class="pm-t">Отправьте пароль человеку. Старый пароль больше не работает. Сменить временный пароль человек сможет сам, когда захочет: «Сменить пароль» в меню.</p>`)
+      + `
       <div class="row"><button type="button" data-copy>Скопировать</button><button class="main" type="submit">Готово</button></div></form>`;
     document.body.appendChild(m);
     const cp = m.querySelector("[data-copy]");
     cp.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(pw); cp.textContent = "Скопировано"; }
+      try { await navigator.clipboard.writeText(own ? `Логин: ${loginOf(email)}\nПароль: ${pw}` : pw); cp.textContent = "Скопировано"; }
       catch (_) { const r = document.createRange(); r.selectNodeContents(m.querySelector(".pm-pw")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = "Выделено, нажмите Ctrl+C"; }
     });
     m.querySelector("form").addEventListener("submit", e => { e.preventDefault(); m.remove(); });

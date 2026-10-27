@@ -552,7 +552,108 @@ td select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;backgro
 @media (max-width:1180px){.kstrip{grid-template-columns:repeat(3,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(2),.kstrip .kpi:nth-child(5){border-left:0}.kstrip .kpi:nth-child(n+2){border-top:1px solid var(--line)}.daygrid{grid-template-columns:290px minmax(0,1fr)}.sgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px) and (min-width:601px){body{grid-template-columns:188px minmax(0,1fr)}.top{padding:14px 8px 12px}.tab{padding:9px 10px;font-size:14px}.bar0{padding:16px 18px 4px}.bar0 h1{font-size:24px;flex-basis:100%}.ctl{width:100%}.ctl .barx{flex-basis:100%;border-left:0;border-bottom:1px solid var(--line)}.ctl .regsw{flex-wrap:nowrap;overflow-x:auto}.ctl .regsw button{white-space:nowrap}main.wrap{padding:10px 18px 32px}.daygrid{grid-template-columns:minmax(0,1fr)}.daygrid .mapcol{order:-1}.mapcol{min-height:max(640px,82vh)}.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(n){border-left:1px solid var(--line);border-top:1px solid var(--line)}.kstrip .kpi:nth-child(2n){border-left:0}.kstrip .kpi.hero{border:0}}
 @media (max-width:600px){body{display:block}.top{position:relative;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;gap:6px;z-index:900}.logo{padding:0}.tabs{flex-basis:100%;order:3}.tabs .wrap{flex-direction:row;overflow-x:auto;scrollbar-width:none}.tab{width:auto;padding:8px 12px}.sidefoot{margin:0 0 0 auto;padding:0}.sidefoot .ps-out{width:auto}.bar0{padding:14px 16px 2px}.bar0 h1{font-size:24px;flex-basis:100%}.ctl{width:100%}.ctl .barx{flex-basis:100%;border-left:0;border-bottom:1px solid var(--line)}.ctl .regsw{flex-wrap:nowrap;overflow-x:auto}.ctl .regsw button{white-space:nowrap}main.wrap{padding:10px 16px 32px}.daygrid{grid-template-columns:minmax(0,1fr)}.dlist{min-height:0}.daygrid .mapcol{order:-1}.mapcol{min-height:max(460px,70vh)}.kstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.kstrip .kpi.hero{grid-column:1/-1}.kstrip .kpi:nth-child(n){border-left:1px solid var(--line);border-top:1px solid var(--line)}.kstrip .kpi:nth-child(2n){border-left:0}.kstrip .kpi.hero{border:0}}
+/* ===== Liquid Glass: стеклянные поверхности поверх мягкого цветного фона (основа G3 сохраняется) ===== */
+:root:root:root{--glass:rgba(255,255,255,.56);--glass-hi:rgba(255,255,255,.78);--glass-line:rgba(255,255,255,.72);--glass-blur:blur(22px) saturate(175%);
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -14px 28px -22px rgba(255,255,255,.9),0 10px 34px rgba(23,24,28,.08),0 1px 2px rgba(23,24,28,.05);
+  --glass-sheen:linear-gradient(140deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.08) 42%,rgba(255,255,255,0) 60%,rgba(255,255,255,.22) 100%);
+  --spring:cubic-bezier(.34,1.56,.64,1);--line:rgba(23,24,28,.09)}
+html{background:#ECEDE8 fixed;background-image:
+  radial-gradient(40vw 40vw at 8% 12%,rgba(212,240,76,.38),transparent 60%),
+  radial-gradient(38vw 38vw at 92% 8%,rgba(120,200,255,.30),transparent 62%),
+  radial-gradient(44vw 44vw at 78% 88%,rgba(196,170,255,.28),transparent 62%),
+  radial-gradient(36vw 36vw at 22% 92%,rgba(255,190,150,.30),transparent 60%);background-attachment:fixed}
+html body{background:transparent}
+/* стекло: панели, списки, карточки, переключатели, подсказки */
+.panel,.dlist,.kstrip,.mcard,.mcardS,.sucard,.ctl,.empty,.banner,.tbl-wrap .tblcard,
+.maphead,.mapfoot .legend,.scard,.mapback,#ps-modal form,#ps-login .card,.toast{
+  background-color:var(--glass);background-image:var(--glass-sheen);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-line);box-shadow:var(--glass-shadow)}
+.panel,.dlist{border-radius:26px}
+.kstrip{border-radius:24px}
+.mcard,.mcardS,.sucard{border-radius:22px}
+.ctl{border-radius:18px}
+.kstrip .kpi{border-left-color:rgba(23,24,28,.07)}
+.kstrip .kpi.hero{background:linear-gradient(150deg,rgba(23,24,28,.92),rgba(38,40,46,.86));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -20px 40px -30px rgba(212,240,76,.5)}
+.mapcol{border:1px solid var(--glass-line);border-radius:26px;box-shadow:var(--glass-shadow)}
+.maphead{border-radius:16px}.scard{border-radius:22px;background-color:rgba(255,255,255,.7)}
+.mapfoot .legend{border-radius:16px;background-color:rgba(255,255,255,.62)}
+.mapback{border-radius:999px}
+.dfoot{background:rgba(255,255,255,.28);border-top-color:rgba(255,255,255,.6)}
+.axis,.tl{border-bottom-color:rgba(23,24,28,.06)}
+.tl[data-act]:hover,.tl.sel{background:rgba(255,255,255,.55)}
+.mtotal{background:linear-gradient(150deg,rgba(23,24,28,.93),rgba(40,42,48,.86));border-radius:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -24px 48px -34px rgba(212,240,76,.55),0 14px 40px rgba(23,24,28,.18)}
+.cp:not(.cp-done):not(.cp-late):not(.cp-due),.slot:not(.su-mine):not(.su-req):not(.arm):not([aria-checked="true"]),pre.creds{background:rgba(255,255,255,.42);border-color:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+.cp.cp-overdue{border-color:rgba(23,24,28,.28)}
+.cp,.slot{border-radius:16px}
+/* боковое меню: тёмное стекло, плавающее */
+body{grid-template-columns:244px minmax(0,1fr)}
+.top{margin:12px 0 12px 12px;height:calc(100vh - 24px);top:12px;border-radius:28px;background:rgba(20,21,25,.82);
+  -webkit-backdrop-filter:blur(26px) saturate(160%);backdrop-filter:blur(26px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.06),0 18px 50px rgba(23,24,28,.22)}
+.tabs{position:relative}
+.tabs .wrap{position:relative;z-index:1}
+.tab{border-radius:14px;transition:color .25s,background .25s,transform .35s var(--spring)}
+.tab:active{transform:scale(.96)}
+/* «капля»: активный пункт меню — перетекает между пунктами */
+.lg-blob{position:absolute;left:0;top:0;z-index:0;border-radius:14px;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,#E6FB86 0%,#D4F04C 55%,#C3E132 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -3px 8px rgba(0,0,0,.10),0 6px 18px rgba(212,240,76,.35);
+  transition:transform .55s var(--spring),width .45s var(--spring),height .45s var(--spring),opacity .2s}
+.lg-on .tab[aria-selected="true"]{background:transparent}
+.logo i{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 4px 14px rgba(212,240,76,.35)}
+/* кнопки: стеклянные капсулы с бликом под пальцем/курсором */
+.btn,.fchips button,.suchip,.paytog,.paybtn,.cp-btn,.mapback,.ctl .regsw button,#ps-modal button,.scard .x{
+  transition:transform .35s var(--spring),background-color .2s,border-color .2s,box-shadow .2s,color .2s}
+.btn,.fchips button,.suchip,.paybtn,.cp-btn{border-radius:999px}
+.btn:not(.primary):not(.dark):not(.acc):not(.danger),.fchips button:not([aria-pressed="true"]):not(.bad),.suchip:not(.on),.paybtn:not(.yes):not(.no):not(.part):not(.arm),.cp-btn:not(.due),#ps-modal button:not(.main){
+  background-color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 1px 3px rgba(23,24,28,.06)}
+.btn.primary,.btn.dark,.fchips button[aria-pressed="true"],.suchip.on,.cp-btn.due,#ps-modal button.main,.slot[aria-checked="true"],.ctl .regsw button[aria-selected="true"]{
+  background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 6px 16px rgba(23,24,28,.18)}
+.btn.acc{background-image:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 6px 16px rgba(212,240,76,.35)}
+.lg-hl{background-image:radial-gradient(90px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.65),rgba(255,255,255,0) 70%)!important}
+.btn.primary.lg-hl,.btn.dark.lg-hl,.cp-btn.due.lg-hl,#ps-modal button.main.lg-hl,.fchips button[aria-pressed="true"].lg-hl,.suchip.on.lg-hl{background-image:radial-gradient(90px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.28),rgba(255,255,255,0) 70%)!important}
+.btn:active,.fchips button:active,.suchip:active,.paytog:active,.paybtn:active,.cp-btn:active,.slot:active,.mcard:active,#ps-modal button:active{transform:scale(.95)}
+.mcard{transition:transform .4s var(--spring),box-shadow .25s}
+.mcard:hover{transform:translateY(-2px)}
+/* поля ввода: «утопленное» стекло */
+.fld input,.fld select,.fld textarea,.wrf textarea,.rpl textarea,.mkc input,td select,input.rate-in,#ps-modal input,#ps-login input{
+  background:rgba(255,255,255,.5)!important;border:1px solid rgba(255,255,255,.75)!important;border-radius:14px;
+  box-shadow:inset 0 1px 3px rgba(23,24,28,.08),inset 0 -1px 0 rgba(255,255,255,.8);transition:box-shadow .2s,background .2s}
+.fld input:focus,.fld select:focus,.fld textarea:focus,#ps-modal input:focus,#ps-login input:focus{background:rgba(255,255,255,.82)!important;box-shadow:0 0 0 3px rgba(212,240,76,.55),inset 0 1px 2px rgba(23,24,28,.06)}
+/* окна: стеклянный лист над размытым фоном */
+#ps-modal{background:rgba(30,32,38,.28);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%)}
+#ps-modal form{border-radius:30px;background-color:rgba(255,255,255,.74);animation:lgIn .5s var(--spring)}
+#ps-login .card{border-radius:30px;background-color:rgba(255,255,255,.66)}
+.toast{background-color:rgba(23,24,28,.78);color:#fff;border-color:rgba(255,255,255,.14);border-radius:999px}
+@keyframes lgIn{from{opacity:0;transform:scale(.92) translateY(8px)}to{opacity:1;transform:none}}
+.chip{box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .panel,.dlist,.kstrip,.mcard,.mcardS,.sucard,.ctl,.maphead,.mapfoot .legend,.scard,#ps-modal form,#ps-login .card{background-color:rgba(255,255,255,.9)}
+  .top{background:#17181C}}
+@media (prefers-reduced-motion:reduce){.lg-blob,.tab,.btn,.mcard,#ps-modal form{transition:none!important;animation:none!important}}
+@media (max-width:900px) and (min-width:601px){body{grid-template-columns:200px minmax(0,1fr)}}
+@media (max-width:600px){.top{margin:8px;height:auto;top:0;border-radius:24px}.panel,.dlist{border-radius:22px}}
 </style>
+<script>
+/* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */
+document.addEventListener("DOMContentLoaded",()=>{
+  const tabs=document.querySelector(".tabs"), wrap=document.getElementById("tabs");
+  if(tabs&&wrap){const blob=document.createElement("i");blob.className="lg-blob";blob.setAttribute("aria-hidden","true");tabs.prepend(blob);tabs.classList.add("lg-on");
+    const place=()=>{const a=wrap.querySelector('.tab[aria-selected="true"]');if(!a){blob.style.opacity=0;return}
+      const r=a.getBoundingClientRect(),p=tabs.getBoundingClientRect();
+      blob.style.width=r.width+"px";blob.style.height=r.height+"px";blob.style.transform=`translate(${r.left-p.left+wrap.scrollLeft*0}px,${r.top-p.top}px)`;blob.style.opacity=1};
+    new MutationObserver(()=>requestAnimationFrame(place)).observe(wrap,{childList:true,subtree:true,attributes:true,attributeFilter:["aria-selected"]});
+    wrap.addEventListener("scroll",()=>{blob.style.transition="none";place();requestAnimationFrame(()=>blob.style.transition="")},{passive:true});
+    addEventListener("resize",place);setTimeout(place,300)}
+  const SEL=".btn,.fchips button,.suchip,.paybtn,.cp-btn,.mapback,#ps-modal button,.slot,.mcard";let cur=null;
+  const move=e=>{const el=e.target.closest&&e.target.closest(SEL);if(cur&&cur!==el){cur.classList.remove("lg-hl");cur=null}
+    if(!el)return;const r=el.getBoundingClientRect();el.style.setProperty("--mx",(e.clientX-r.left)+"px");el.style.setProperty("--my",(e.clientY-r.top)+"px");
+    if(cur!==el){el.classList.add("lg-hl");cur=el}};
+  addEventListener("pointermove",move,{passive:true});addEventListener("pointerdown",move,{passive:true});
+  addEventListener("pointerleave",()=>{if(cur){cur.classList.remove("lg-hl");cur=null}});
+});
+</script>
 
 <header class="top">
   <div class="wrap"><div class="logo"><i aria-hidden="true"></i>Промосеть <small>пульт агентства</small></div></div>

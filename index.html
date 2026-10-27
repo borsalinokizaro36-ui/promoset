@@ -1327,7 +1327,7 @@ function bindForms(){
       const btn=rg.querySelector("button[type=submit]");btn.disabled=true;
       try{const uid=await window.psMembers.create(d);
         if(f("rg-prom").checked&&db)await guard(()=>db.collection("promoters").add({name:d.first+" "+d.last,phone:d.phone,telegram:d.telegram,agency:"",login:d.login,userId:uid||null,active:true,createdAt:Date.now()}));
-        const site=location.origin+location.pathname, txt=`Промосеть: ${site}\nЛогин: ${d.login}\nПароль: ${d.password}\nПароль можно сменить в меню: «Сменить пароль».`;
+        const site=location.origin+location.pathname, bot=window.psMembers.tgBot?await window.psMembers.tgBot():null, txt=`Промосеть — вход для: ${d.first} ${d.last}\nЛогин: ${d.login}\nПароль: ${d.password}\n\n`+(bot?`Удобнее всего через Telegram:\n1. Откройте бота https://t.me/${bot} и нажмите «Запустить».\n2. Нажмите «📱 Открыть Промосеть» и один раз войдите по логину и паролю.\nДальше бот будет открывать Промосеть сам и присылать смены и напоминания.\n\nИли на сайте: ${site}`:`Сайт: ${site}\nПароль можно сменить в меню: «Сменить пароль».`);
         const box=f("rgDone");box.hidden=false;
         box.innerHTML=`<h3>Зарегистрирован: ${esc(d.first+" "+d.last)}</h3><pre class="creds">${esc(txt)}</pre><div class="rg-acts"><button class="btn primary" type="button" id="rg-copy">Скопировать данные для входа</button></div>`;
         f("rg-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(txt);toast("Скопировано")}catch(_){toast("Не удалось скопировать, выделите текст вручную")}});

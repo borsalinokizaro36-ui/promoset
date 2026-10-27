@@ -16,7 +16,7 @@
     try { const q = new URLSearchParams(location.search); history.replaceState(null, "", location.pathname + (q.has("cabinet") ? "#cabinet" : "")); } catch (_) {}
     const sdk = document.createElement("script"); sdk.src = "https://telegram.org/js/telegram-web-app.js"; sdk.async = true;
     sdk.onload = () => { try { const w = window.Telegram.WebApp; w.ready(); w.expand();
-      try { w.setHeaderColor("#ECEDE8"); w.setBackgroundColor("#ECEDE8"); } catch (_) {}
+      try { w.setHeaderColor("#F3FAF9"); w.setBackgroundColor("#F3FAF9"); } catch (_) {}
       try { if (w.disableVerticalSwipes) w.disableVerticalSwipes(); } catch (_) {} } catch (_) {} };
     document.documentElement.classList.add("in-tg");
     document.head.appendChild(sdk);

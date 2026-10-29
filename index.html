@@ -1014,9 +1014,9 @@ function buildTab(){
       <div class="fld slotf"><label id="sh-slot-l">Слот</label><input type="hidden" id="sh-slot" value="morning"><div class="slots" role="radiogroup" aria-labelledby="sh-slot-l">${Object.entries(SLOTS).map(([k,v],i)=>`<button type="button" class="slot" role="radio" data-slot="${k}" aria-checked="${i===0}"><b>${v.l}</b><span>${v.t}–${String(+v.t.slice(0,2)+4).padStart(2,"0")}:${v.t.slice(3)}</span></button>`).join("")}</div></div>
       <div class="fld"><label for="sh-start">Начало</label><input type="time" id="sh-start" value="09:00" required></div>
       <div class="fld"><label for="sh-type">Формат</label><select id="sh-type">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
-      <div class="fld"><label for="sh-mat">Выдано материалов, шт.</label><input type="number" min="0" step="1" id="sh-mat" placeholder="например, 300"></div>
+      <div class="fld" hidden><label for="sh-mat">Выдано материалов, шт.</label><input type="number" min="0" step="1" id="sh-mat" placeholder="например, 300"></div>
       <div class="fld"><button class="btn primary" type="submit">Назначить</button></div>
-      <p class="hint" id="shMsg" style="grid-column:1/-1">Проект смены берётся из точки. Материалы нужны, чтобы потом сверить остаток.</p>
+      <p class="hint" id="shMsg" style="grid-column:1/-1">Проект смены берётся из точки.</p>
     </form></section>
       <section class="panel"><div class="panel-h"><h3>Свободные точки на этот день</h3><span id="freeN"></span></div><div id="free" class="legend"></div>
         <div class="panel-h" style="margin-top:6px"><h3>Сотрудники без смены</h3><span id="idleN"></span></div><div id="idleS" class="legend"></div></section></div>
@@ -1070,7 +1070,7 @@ function buildTab(){
   help:()=>`<section class="panel help"><h3>Как всё устроено</h3><p class="hint">Коротко о работе в кабинете: смена, фото, итоги и деньги.</p>
     <details open><summary>До смены</summary><ul><li>Смены ставит руководитель. Можно записаться и самому: «Записаться на смену» → день → точка → нажмите на свободный слот два раза. Заявку подтверждает руководитель, ответ появится во вкладке «Моя смена».</li><li>Накануне проверьте «Моя смена»: там адрес точки и кнопка «Открыть на карте».</li></ul></details>
     <details><summary>Во время смены</summary><ul><li>За 10 минут до начала во вкладке «Моя смена» появится отчёт «Отметиться на точке». Пришлите фото в первые 20 минут смены — тогда смена засчитывается вовремя.</li><li>Дальше каждый час появляется «Отчёт за 1-й час», «за 2-й час» и так до конца смены. Сфотографируйте точку и отправьте в течение 15 минут.</li><li>Включите уведомления во вкладке «Моя смена» — сайт напомнит, когда пора сдавать отчёт.</li><li>Смена без фото не оплачивается.</li></ul></details>
-    <details><summary>После смены</summary><ul><li>Во вкладке «Отчёты» укажите, сколько материалов осталось и сколько контактов собрали. Там же можно досдать пропущенные фото — двое суток после смены, они засчитаются с опозданием.</li><li>Не успели — передайте цифры руководителю.</li></ul></details>
+    <details><summary>После смены</summary><ul><li>Во вкладке «Отчёты» видно, какие фото за смену приняты, а какие нет.</li><li>Если что-то не получилось — напишите руководителю.</li></ul></details>
     <details><summary>Деньги</summary><ul><li>Оплачивается смена, которая закончилась и на которой есть фото: ${SHIFT_H} ч × ставка проекта.</li><li>Во вкладке «Мой профиль» видно, сколько заработано, что выплачено и что ждёт выплаты.</li></ul></details>
     <details><summary>Если что-то не работает</summary><ul><li>Кабинет пустой — аккаунт ещё не привязан к карточке сотрудника. Напишите руководителю.</li><li>Забыли пароль — нажмите «Забыли пароль?» на экране входа или попросите руководителя выдать временный.</li><li>Вопрос не решается — вкладка «Написать руководителю».</li></ul></details></section>`,
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
@@ -1131,13 +1131,12 @@ function updateTab(){
 const chip=st=>`<span class="chip st-${st}">${STL[st]}</span>`;
 function shiftRow(s,withActs,compact){
   const st=shiftState(s), ph=shiftPhotos(s), g=given(s);
-  const meta=[s.type, num(s.matIssued)?`выдано ${num(s.matIssued)}`+(g!=null?`, роздано ${g}`:""):"", num(s.contacts)?`контактов ${num(s.contacts)}`:"", ph.length?`фото ${ph.length}, первое в ${fmtTime(ph[0].takenAt)}`:""].filter(Boolean).join(" · ");
+  const meta=[s.type, ph.length?`фото ${ph.length}, первое в ${fmtTime(ph[0].takenAt)}`:""].filter(Boolean).join(" · ");
   let acts="";
   if(withActs){
     const canUp=!!assets;
     acts=`<div class="acts">
       <label class="btn sm" ${canUp?"":'aria-disabled="true" title="Загрузка фото доступна редакторам страницы"'}>📷 Добавить фото<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" hidden ${canUp?"":"disabled"}></label>
-      <button class="btn sm" data-act="edit-result" data-id="${esc(s.id)}">Итог смены</button>
       <button class="btn sm" data-act="toggle-miss" data-id="${esc(s.id)}">${s.missed?"Снять срыв":"Отметить срыв"}</button>
       <button class="btn sm danger ${ui.armed==="sh:"+s.id?"arm":""}" data-act="del-shift" data-id="${esc(s.id)}">${ui.armed==="sh:"+s.id?"Точно удалить?":"Удалить"}</button>
     </div>`;
@@ -1313,7 +1312,6 @@ function shiftActs(s){
   const canUp=!!assets;
   let a=`<div class="acts">
       <label class="btn sm" ${canUp?"":'aria-disabled="true" title="Загрузка фото доступна редакторам страницы"'}>📷 Добавить фото<input type="file" accept="image/*" capture="environment" data-up="${esc(s.id)}" hidden ${canUp?"":"disabled"}></label>
-      <button class="btn sm" data-act="edit-result" data-id="${esc(s.id)}">Итог смены</button>
       <button class="btn sm" data-act="toggle-miss" data-id="${esc(s.id)}">${s.missed?"Снять срыв":"Отметить срыв"}</button>
       <button class="btn sm danger ${ui.armed==="sh:"+s.id?"arm":""}" data-act="del-shift" data-id="${esc(s.id)}">${ui.armed==="sh:"+s.id?"Точно удалить?":"Удалить"}</button>
     </div>`;
@@ -1339,7 +1337,7 @@ function sCard(sh,sts){
   const t=sts.get(s.id), p=byId("promoters",s.promoterId)||{}, ph=shiftPhotos(s), g=given(s);
   const tgv=p.telegram||p.tg||"";const tg=tgv?"https://t.me/"+String(tgv).replace(/^@/,"").replace(/^https?:\/\/t\.me\//,""):"", tel=p.phone?String(p.phone).replace(/[^\d+]/g,""):"";
   el.innerHTML=`<div class="hd"><div class="av" aria-hidden="true">${esc(ini(p.name))}</div><div><b>${esc(prName(s.promoterId))}</b><small>${esc(ptName(s.pointId))} · <span class="mono">${esc(s.start)}–${esc(endT(s))}</span></small></div><button class="x" data-act="sel-shift" data-id="" aria-label="Закрыть карточку">×</button></div>
-    <div class="tgs"><span class="tg ${isProb(t)?"bad":t==="ontime"?"good":""}">${STL[t]}</span><span class="tg ${ph.length?"good":(t==="nophoto"||t==="missed")?"bad":""}">${ph.length?"фото в "+fmtTime(ph[0].takenAt):"нет фото"}</span><span class="tg">материалы ${g!=null?g:num(s.matIssued)}</span><span class="tg">контакты ${num(s.contacts)}</span>${s.type?`<span class="tg">${esc(s.type)}</span>`:""}</div>
+    <div class="tgs"><span class="tg ${isProb(t)?"bad":t==="ontime"?"good":""}">${STL[t]}</span><span class="tg ${ph.length?"good":(t==="nophoto"||t==="missed")?"bad":""}">${ph.length?"фото в "+fmtTime(ph[0].takenAt):"нет фото"}</span>${s.type?`<span class="tg">${esc(s.type)}</span>`:""}</div>
     <div class="a3"><a class="btn dark" ${tg?`href="${esc(tg)}" target="_blank" rel="noopener"`:'aria-disabled="true" title="Telegram не указан"'}>Написать</a><a class="btn" ${tel?`href="tel:${esc(tel)}"`:'aria-disabled="true" title="Телефон не указан"'}>Позвонить</a><button class="btn" data-act="goto" data-tab="shifts" aria-label="Открыть в назначении смен" title="Открыть в назначении смен">⋯</button></div>`;
   el.hidden=false; hd.hidden=true;
 }
@@ -1351,9 +1349,7 @@ function upDay(){
   document.getElementById("dayKpi").innerHTML=`<div class="kpi hero"><div><div class="l">Вышли на смены</div><div class="s">${fmtDate(ui.date)}${ui.date===today()?" · сегодня":""} · назначено ${r.total}</div></div><div class="v">${r.worked}<span>/${r.total}</span></div></div>`
     +K(r.missed+r.nophoto,"Срывы и нет фото",`срывов ${r.missed}, без фото ${r.nophoto}`,r.missed+r.nophoto?"bad":"")
     +K(ot==null?"—":ot+"%","Фото вовремя",`${r.ontime} из ${r.due} наступивших`,ot==null?"":ot>=85?"good":ot>=60?"warn":"bad")
-    +K(onNow,"На смене сейчас",ui.date===today()?"по фото с точки":"только для сегодня")
-    +K(r.given,"Материалов роздано",r.noLeft?`без остатка: ${plural(r.noLeft,SM)}`:`выдано ${r.issued}`)
-    +K(r.contacts,"Контактов собрано","анкеты, лиды, подписки");
+    +K(onNow,"На смене сейчас",ui.date===today()?"по фото с точки":"только для сегодня");
   document.getElementById("dayLeg").innerHTML=["ontime","late","nophoto","waiting","upcoming"].map(chip).join("");
   document.querySelectorAll("#regSw button").forEach(b=>b.setAttribute("aria-selected",b.dataset.reg===ui.region));
   for(const rg of ["msk","mo","spb"]){const n=S.shifts.filter(x=>x.date===ui.date&&inProject(x)&&shiftRegion(x)===rg).length;const e=document.getElementById("regN-"+rg);if(e)e.textContent=n?" · "+n:""}
@@ -1444,11 +1440,11 @@ function promStats(id){
 function upPromoters(){upMsgs();
   const prs=S.promoters.filter(p=>p.active!==false).sort((a,b)=>a.name.localeCompare(b.name,"ru"));
   document.getElementById("prN").textContent=`${prs.length}`;
-  document.getElementById("prTbl").innerHTML=prs.length?`<table><thead><tr><th>Сотрудник</th><th>Контакты</th><th class="num">Смен</th><th class="num">Отработано</th><th>Фото вовремя</th><th class="num">Срывы</th><th class="num">Контактов</th><th></th><th></th></tr></thead><tbody>${prs.map(p=>{const r=promStats(p.id);
+  document.getElementById("prTbl").innerHTML=prs.length?`<table><thead><tr><th>Сотрудник</th><th>Контакты</th><th class="num">Смен</th><th class="num">Отработано</th><th>Фото вовремя</th><th class="num">Срывы</th><th></th><th></th></tr></thead><tbody>${prs.map(p=>{const r=promStats(p.id);
     return `<tr><td><b>${esc(p.name)}</b>${p.agency?`<div class="hint">от ${esc(p.agency)}</div>`:""}${p.example?' <span class="tag ex">пример</span>':""}</td>
     <td class="hint">${esc([p.phone,p.telegram].filter(Boolean).join(" · ")||"—")}</td><td class="num">${r.total}</td><td class="num">${r.worked}</td>
     <td><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:${r.ot||0}%;background:${r.ot==null?"var(--line)":r.ot>=85?"var(--good)":r.ot>=60?"var(--warn)":"var(--bad)"}"></i></div><span style="min-width:38px;text-align:right">${r.ot==null?"—":r.ot+"%"}</span></div></td>
-    <td class="num">${r.missed+r.nophoto}</td><td class="num">${r.contacts}</td>
+    <td class="num">${r.missed+r.nophoto}</td>
     <td>${r.risk?'<span class="chip st-missed">Проверить</span>':r.due?'<span class="chip st-ontime">Надёжный</span>':""}</td>
     <td style="text-align:right;white-space:nowrap"><button class="btn sm ${ui.armed==="pr:"+p.id?"arm":""}" data-act="arch-prom" data-id="${esc(p.id)}">${ui.armed==="pr:"+p.id?"В архив?":"В архив"}</button> <button class="btn sm danger ${ui.armed==="del-pr:"+p.id?"arm":""}" data-act="del-prom" data-id="${esc(p.id)}" aria-label="Удалить сотрудника ${esc(p.name)}">${ui.armed==="del-pr:"+p.id?"Точно удалить?":"Удалить"}</button></td></tr>`}).join("")}</tbody></table>`:emptyBox("Сотрудников пока нет. Добавьте первого формой выше.");
 }
@@ -1522,9 +1518,7 @@ function upSummary(){
     {v:`${pct(r.worked,r.due)??"—"}${r.due?"%":""}`,l:"Смен отработано",s:`${r.worked} из ${r.due} наступивших`,c:"good"},
     {v:ot==null?"—":ot+"%",l:"Фото вовремя",s:`${r.ontime} из ${r.due}`,c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},
     {v:r.missed+r.nophoto,l:"Срывы и нет фото",c:r.missed+r.nophoto?"bad":"good"},
-    {v:ph.length,l:"Фото в архиве",s:`принято ${acc}`},
-    {v:r.given,l:"Материалов роздано",s:`выдано ${r.issued}`},
-    {v:r.contacts,l:"Контактов собрано",c:"acc"}]);
+    {v:ph.length,l:"Фото в архиве",s:`принято ${acc}`}]);
   // график
   const days=[]; const end=b||ui.date; const n=a?Math.min(31,Math.round((new Date(end)-new Date(a))/864e5)+1):14;
   for(let i=n-1;i>=0;i--)days.push(addDays(end,-i));
@@ -1542,12 +1536,11 @@ function upSummary(){
   // таблица по проектам
   const pjs=S.projects.filter(p=>ui.project==="all"||p.id===ui.project);
   const rows=pjs.map(p=>{const x=stats(sh.filter(s=>s.projectId===p.id));return{p,x}}).filter(o=>o.x.total);
-  document.getElementById("smTbl").innerHTML=rows.length?`<table><thead><tr><th>Проект</th><th class="num">Смен</th><th class="num">Отработано</th><th class="num">Фото вовремя</th><th class="num">Срывы</th><th class="num">Выдано</th><th class="num">Роздано</th><th class="num">Контактов</th></tr></thead><tbody>${rows.map(({p,x})=>`<tr><td><b>${esc(p.name)}</b>${p.client?`<div class="hint">${esc(p.client)}</div>`:""}</td><td class="num">${x.total}</td><td class="num">${x.worked}</td><td class="num">${pct(x.ontime,x.due)??"—"}${x.due?"%":""}</td><td class="num">${x.missed+x.nophoto}</td><td class="num">${x.issued}</td><td class="num">${x.given}</td><td class="num">${x.contacts}</td></tr>`).join("")}</tbody></table>`:emptyBox("За этот период смен нет.");
+  document.getElementById("smTbl").innerHTML=rows.length?`<table><thead><tr><th>Проект</th><th class="num">Смен</th><th class="num">Отработано</th><th class="num">Фото вовремя</th><th class="num">Срывы</th></tr></thead><tbody>${rows.map(({p,x})=>`<tr><td><b>${esc(p.name)}</b>${p.client?`<div class="hint">${esc(p.client)}</div>`:""}</td><td class="num">${x.total}</td><td class="num">${x.worked}</td><td class="num">${pct(x.ontime,x.due)??"—"}${x.due?"%":""}</td><td class="num">${x.missed+x.nophoto}</td></tr>`).join("")}</tbody></table>`:emptyBox("За этот период смен нет.");
   // сигналы
   const sig=[];
   if(r.missed+r.nophoto)sig.push(["st-missed",`${plural(r.missed+r.nophoto,SM)} без подтверждённого выхода`,"Срыв или ни одного фото со смены."]);
   if(r.late)sig.push(["st-late",`${plural(r.late,SM)} с опозданием`,"Первое фото позже 20 минут после начала."]);
-  if(r.noLeft)sig.push(["st-late",`${plural(r.noLeft,SM)} без внесённого остатка`,"По ним нельзя посчитать, сколько материалов роздано."]);
   const pend=ph.filter(p=>p.status==="pending").length; if(pend)sig.push(["st-pending",`${pend} фото ждут проверки`,"Откройте вкладку «Фотоотчёты»."]);
   const risky=S.promoters.filter(p=>p.active!==false&&promStats(p.id).risk); if(risky.length)sig.push(["st-missed",`${plural(risky.length,["сотрудник","сотрудника","сотрудников"])} под вопросом`,"Подробности во вкладке «Сотрудники»."]);
   document.getElementById("smSig").innerHTML=sig.length?sig.map(([c,t,d])=>`<div class="row" style="grid-template-columns:auto minmax(0,1fr)"><span class="chip ${c}">!</span><div class="who"><b>${t}</b><span>${d}</span></div></div>`).join(""):emptyBox("Сигналов нет: смены идут по плану.");
@@ -1557,7 +1550,7 @@ function reportText(){
   const ph=S.photos.filter(p=>sh.some(s=>s.id===p.shiftId)&&p.status!=="rejected").length;
   return [`Отчёт: ${ui.project==="all"?"все проекты":pjName(ui.project)}`,`Период: ${a?(a===b?fmtDate(a):fmtShort(a)+" — "+fmtShort(b)):"весь проект"}`,
     `Смен назначено: ${r.total}, отработано: ${r.worked} из ${r.due} наступивших`,`Фото вовремя: ${pct(r.ontime,r.due)??"—"}%`,
-    `Срывы и смены без фото: ${r.missed+r.nophoto}`,`Фотоотчётов: ${ph}`,`Материалов выдано: ${r.issued}, роздано: ${r.given}`,`Контактов собрано: ${r.contacts}`].join("\n");
+    `Срывы и смены без фото: ${r.missed+r.nophoto}`,`Фотоотчётов: ${ph}`].join("\n");
 }
 
 /* ---------- запись ---------- */
@@ -1722,7 +1715,7 @@ function myShiftCard(s,big){
   const pt=byId("points",s.pointId)||{}, st=shiftState(s), ml=mapLink(pt), extra=(cpPhotos(s).extra||[]).length;
   return `<article class="mcardS ${big?"big":""}"><div class="mh"><div><div class="eyebrow">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}</div>
     <h3>${esc(pt.name||"Точка удалена")}</h3>${pt.address||pt.district?`<p class="hint">${esc([pt.address,pt.district].filter(Boolean).join(" · "))}</p>`:""}</div>${chip(st)}</div>
-    ${s.type||num(s.matIssued)?`<p class="hint">${esc([s.type,num(s.matIssued)?"выдано материалов: "+num(s.matIssued):""].filter(Boolean).join(" · "))}</p>`:""}
+    ${s.type?`<p class="hint">${esc(s.type)}</p>`:""}
     ${big?cpGrid(s):""}${extra?`<p class="hint">Дополнительных фото: ${extra}</p>`:""}
     ${ml?`<div class="acts"><a class="btn" href="${ml}" target="_blank" rel="noopener">Открыть на карте</a></div>`:""}</article>`;
 }
@@ -1759,13 +1752,13 @@ function upProfile(){
   const tot=sum(earnedL), paid=sum(earnedL.filter(s=>s.paid));
   const wk={}; for(const s of mine){const d=new Date(s.date+"T12:00:00");const mon=addDays(s.date,-((d.getDay()+6)%7));(wk[mon]=wk[mon]||[]).push(s)}
   const weeks=Object.keys(wk).sort().reverse().slice(0,8).map(m=>{const l=wk[m],x=stats(l),e=l.filter(s=>worked(shiftState(s,now))&&now>=shiftEnd(s));
-    return `<tr><td>${esc(fmtShort(m))} — ${esc(fmtShort(addDays(m,6)))}</td><td class="num">${x.worked} из ${x.due}</td><td class="num">${x.contacts}</td><td class="num">${fmtRub(sum(e))}</td></tr>`}).join("");
+    return `<tr><td>${esc(fmtShort(m))} — ${esc(fmtShort(addDays(m,6)))}</td><td class="num">${x.worked} из ${x.due}</td><td class="num">${fmtRub(sum(e))}</td></tr>`}).join("");
   const login=window.psMembers?window.psMembers.login((window.PS_ME||{}).email):"";
   el.innerHTML=`<section class="panel pfhead"><div class="eyebrow">Сотрудник</div><h2>${esc(c.name)}</h2><p class="hint">${esc([login&&"логин "+login,c.phone,c.telegram].filter(Boolean).join(" · "))}</p></section>
-    <div class="kpis">${kpiHtml([{v:r.worked,l:"Смен отработано",s:`из ${r.due} наступивших`,c:"good"},{v:ot==null?"—":ot+"%",l:"Фото вовремя",s:"в первые 20 минут смены",c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},{v:r.contacts,l:"Контактов собрано"},{v:fmtRub(tot),l:"Заработано",s:"за отработанные смены"},{v:fmtRub(paid),l:"Выплачено",c:"good"},{v:fmtRub(tot-paid),l:"Ждёт выплаты",c:tot-paid?"warn":""}])}</div>
+    <div class="kpis">${kpiHtml([{v:r.worked,l:"Смен отработано",s:`из ${r.due} наступивших`,c:"good"},{v:ot==null?"—":ot+"%",l:"Фото вовремя",s:"в первые 20 минут смены",c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},{v:fmtRub(tot),l:"Заработано",s:"за отработанные смены"},{v:fmtRub(paid),l:"Выплачено",c:"good"},{v:fmtRub(tot-paid),l:"Ждёт выплаты",c:tot-paid?"warn":""}])}</div>
     <section class="panel"><h3>Ваш руководитель</h3><div id="pfTeam" class="hint">Загружаю…</div><p class="hint">Руководитель ставит смены, выдаёт материалы и отмечает выплаты. Вопросы про смены и точки решает он.</p></section>
     <section class="panel"><div class="panel-h"><h3>Мои выплаты</h3><span>${fmtRub(tot)}</span></div>${earnedL.length?`<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th class="num">Сумма</th><th>Статус</th></tr></thead><tbody>${earnedL.map(s=>`<tr><td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td><td>${s.paid?'<span class="st-paid">✓ выплачено</span>':'<span class="st-due">ждёт выплаты</span>'}</td></tr>`).join("")}</tbody></table></div>`:emptyBox("Отработанных смен пока нет.")}</section>
-    <section class="panel"><h3>По неделям</h3>${weeks?`<div class="tbl-wrap"><table><thead><tr><th>Неделя</th><th class="num">Отработано</th><th class="num">Контактов</th><th class="num">Заработано</th></tr></thead><tbody>${weeks}</tbody></table></div>`:emptyBox("Пока пусто.")}</section>`;
+    <section class="panel"><h3>По неделям</h3>${weeks?`<div class="tbl-wrap"><table><thead><tr><th>Неделя</th><th class="num">Отработано</th><th class="num">Заработано</th></tr></thead><tbody>${weeks}</tbody></table></div>`:emptyBox("Пока пусто.")}</section>`;
   const fill=rows=>{const t=document.getElementById("pfTeam");if(!t)return;t.innerHTML=rows&&rows.length?rows.map(x=>`<div class="tm"><b>${esc(x.name||"Без имени")}</b> · ${esc(window.psMembers.roleLabel(x.role))}${x.phone?` · <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a>`:""}${x.telegram?` · ${esc(x.telegram)}`:""}</div>`).join(""):"Контакты руководителей пока не заполнены — напишите во вкладке «Написать руководителю»."};
   if(ui.team)fill(ui.team);else if(window.psMembers&&window.psMembers.team)window.psMembers.team().then(rows=>{ui.team=rows||[];fill(ui.team)}).catch(()=>{const t=document.getElementById("pfTeam");if(t)t.textContent="Не удалось загрузить контакты."});
 }
@@ -1806,13 +1799,8 @@ function upReport(){
   const now=Date.now(), l=myShifts().filter(s=>!s.missed&&shiftStart(s)-30*60e3<=now&&now-shiftEnd(s)<7*864e5).sort((a,b)=>shiftStart(b)-shiftStart(a));
   if(!l.length){el.innerHTML=`<section class="panel"><h3>Отчётов пока нет</h3><p class="hint">Здесь появятся ваши смены за последнюю неделю: фото за каждый час и итоги смены. Отчёты открываются за 10 минут до начала смены.</p></section>`;return}
   el.innerHTML=l.map(s=>{const id=esc(s.id), open=now-shiftEnd(s)<2*864e5, done=!(s.matLeft==null&&s.contacts==null), by=cpPhotos(s), ok=[...Array(CP_N+1)].filter((_,k)=>by[k]&&by[k].length).length;
-    return `<section class="panel"><div class="panel-h"><h3>${esc(ptName(s.pointId))}</h3><span>фото ${ok} из ${CP_N+1}</span></div><p class="hint">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}${num(s.matIssued)?` · выдано ${num(s.matIssued)} шт.`:""}</p>
-      ${cpGrid(s)}
-      <div class="acts" style="margin-top:10px">${open?upBtn(s,"extra","📷 Добавить ещё фото","btn sm"):""}${(by.extra||[]).length?`<span class="hint">дополнительных фото: ${(by.extra||[]).length}</span>`:""}</div>
-      ${done?`<p class="hint" style="margin-top:10px">Итоги сданы: остаток ${s.matLeft==null?"—":num(s.matLeft)}, контактов ${s.contacts==null?"—":num(s.contacts)}.</p>`
-        :open&&now>=shiftStart(s)?`<form class="f" data-rep="${id}" style="margin-top:10px"><div class="fld"><label for="rp-l-${id}">Осталось материалов, шт.</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-l-${id}" required></div>
-        <div class="fld"><label for="rp-c-${id}">Контактов собрано</label><input type="number" min="0" step="1" inputmode="numeric" id="rp-c-${id}" required></div>
-        <div class="fld"><button class="btn primary" type="submit">Сдать итоги смены</button></div></form>`:now<shiftStart(s)?"":`<p class="hint" style="margin-top:10px">Итоги смены не сданы. Срок прошёл — передайте цифры руководителю.</p>`}</section>`}).join("");
+    return `<section class="panel"><div class="panel-h"><h3>${esc(ptName(s.pointId))}</h3><span>фото ${ok} из ${CP_N+1}</span></div><p class="hint">${esc(fmtDate(s.date))} · ${esc(s.start||"")}–${fmtTime(shiftEnd(s))}</p>
+      ${cpGrid(s)}</section>`}).join("");
 }
 let notified=new Set();try{notified=new Set(JSON.parse(localStorage.getItem("ps-notified")||"[]"))}catch(_){}
 setInterval(()=>{

@@ -782,6 +782,14 @@ html body main .mtotal .v{color:#FF6B7D;text-shadow:0 1px 0 rgba(120,10,30,.18)}
 html body main .kstrip .kpi.hero{background:linear-gradient(150deg,#F4677A 0%,#EF4056 55%,#D92E45 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -26px 46px -28px rgba(10,209,201,.55),0 14px 36px rgba(239,64,86,.28)}
 html body main .kstrip .kpi.hero .s,html body main .kstrip .kpi.hero .v span{color:rgba(255,255,255,.85)}
+/* фото на карте и код на фото */
+.ppc-ph{display:flex;gap:6px;overflow-x:auto;padding:2px 8px 8px 62px;scrollbar-width:thin}
+.ppc-ph button{flex:0 0 auto;width:64px;padding:0;border:0;background:none;cursor:zoom-in;text-align:center;font:inherit}
+.ppc-ph img{display:block;width:64px;height:64px;object-fit:cover;border-radius:10px;box-shadow:0 2px 8px rgba(14,42,71,.18)}
+.ppc-ph span{display:block;margin-top:3px;font-size:11px;color:#5B6B7A;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ppc-ph span b{color:var(--coral-d,#C92A3E)}
+.ph-codebox{margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(239,64,86,.08);font-size:13px}
+.ph-code{color:var(--coral-d,#C92A3E);letter-spacing:.14em;font-size:16px;font-variant-numeric:tabular-nums}
 </style>
 <script>
 /* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */
@@ -1286,9 +1294,9 @@ function updateMap(sh,pst){
     const dist=distOf(p);
     mk.bindPopup(`<div class="ppc"><div class="ppc-h"><b>${esc(p.name)}</b><span>${esc([p.address,dist].filter(Boolean).join(" · "))||"&nbsp;"}</span></div>
       ${n?`<div class="ppc-sum">${Object.entries(cntSt).map(([t,c])=>`<span class="ppc-pill" style="--c:${col[t]}">${STL[t]}${c>1?" · "+c:""}</span>`).join("")}</div>
-      <div class="ppc-l">${shs.map((s,i)=>{const t=sts[i],ph=shiftPhotos(s);return `<div class="ppc-r" style="--c:${col[t]}"><i></i><time>${esc(s.start)}</time><div><b>${esc(prName(s.promoterId))}</b><small><em>${STL[t]}</em> · ${ph.length?"фото в "+hm(ph[0].takenAt):t==="upcoming"?"смена впереди":t==="waiting"?"ждём фото":"фото нет"}</small></div></div>`}).join("")}</div>`
+      <div class="ppc-l">${shs.map((s,i)=>{const t=sts[i],ph=shiftPhotos(s);return `<div class="ppc-r" style="--c:${col[t]}"><i></i><time>${esc(s.start)}</time><div><b>${esc(prName(s.promoterId))}</b><small><em>${STL[t]}</em> · ${ph.length?"фото в "+hm(ph[0].takenAt):t==="upcoming"?"смена впереди":t==="waiting"?"ждём фото":"фото нет"}</small></div></div>${ph.length?`<div class="ppc-ph">${ph.map(f=>f.assetId?`<button type="button" data-src="${esc(blobUrl(f.assetId))}" title="${esc((photoHour(f)==="extra"?"доп. фото":photoHour(f)==null||photoHour(f)===0?"начало смены":photoHour(f)+"-й час")+(f.code?" · код "+f.code:""))}"><img src="${esc(blobUrl(f.assetId))}" alt="Фото со смены" loading="lazy"><span>${hm(f.takenAt)}${f.code?` · <b>${esc(f.code)}</b>`:""}</span></button>`:"").join("")}</div>`:""}`}).join("")}</div>`
       :`<div class="ppc-empty">Смен на этот день нет</div>`}
-      <div class="ppc-f"><a href="${y}" target="_blank" rel="noopener">Яндекс Карты ↗</a><a href="${gm}" target="_blank" rel="noopener">Google Карты ↗</a></div></div>`,{maxWidth:340,minWidth:300,className:"ppw",offset:[0,-10]});mk.on("popupopen",()=>{const t=mk.getTooltip();if(t)t.setOpacity(0)});mk.on("popupclose",()=>{const t=mk.getTooltip();if(t)t.setOpacity(.92)});
+      <div class="ppc-f"><a href="${y}" target="_blank" rel="noopener">Яндекс Карты ↗</a><a href="${gm}" target="_blank" rel="noopener">Google Карты ↗</a></div></div>`,{maxWidth:340,minWidth:300,className:"ppw",offset:[0,-10]});mk.on("popupopen",e=>{const t=mk.getTooltip();if(t)t.setOpacity(0);const el=e.popup.getElement();if(!el)return;el.querySelectorAll(".ppc-ph button").forEach(b=>{b.onclick=ev=>{ev.stopPropagation();lb.innerHTML=`<img src="${esc(b.dataset.src)}" alt="Фото со смены крупно">`;lb.hidden=false}});el.querySelectorAll(".ppc-ph img").forEach(i=>{if(!i.complete)i.addEventListener("load",()=>e.popup.update(),{once:true})})});mk.on("popupclose",()=>{const t=mk.getTooltip();if(t)t.setOpacity(.92)});
     mk.bindTooltip(esc(p.name),{direction:"top",offset:[0,-16],className:"mptt"});
     pts.addLayer(mk)}
 }
@@ -1411,7 +1419,7 @@ function upPhotos(){
   g.innerHTML=list.slice(0,120).map(p=>{const s=byId("shifts",p.shiftId);const late=photoLate(p,s), hl=photoHour(p);
     const img=p.assetId?`<div class="img" data-act="zoom" data-src="${esc(blobUrl(p.assetId))}"><img src="${esc(blobUrl(p.assetId))}" alt="Фото со смены: ${esc(ptName(s.pointId))}" loading="lazy"></div>`:`<div class="img ph-ex">Пример снимка<br>в демо-данных нет изображения</div>`;
     return `<article class="ph">${img}<div class="bd"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip st-${p.status}">${{pending:"На проверке",accepted:"Принято",rejected:"Отклонено"}[p.status]}</span>${late?'<span class="chip st-late">с опозданием</span>':""}</div>
-      <b>${esc(ptName(s.pointId))}</b><div class="m">${esc(prName(s.promoterId))}</div><div class="m">${fmtShort(s.date)}, смена с ${esc(s.start)} · ${hl==="extra"?"доп. фото":hl==null||hl===0?"начало смены":hl+"-й час"} · снято в ${fmtTime(p.takenAt)}</div></div>
+      <b>${esc(ptName(s.pointId))}</b><div class="m">${esc(prName(s.promoterId))}</div><div class="m">${fmtShort(s.date)}, смена с ${esc(s.start)} · ${hl==="extra"?"доп. фото":hl==null||hl===0?"начало смены":hl+"-й час"} · снято в ${fmtTime(p.takenAt)}</div>${p.code?`<div class="ph-codebox">Код на фото должен быть: <b class="ph-code">${esc(p.code)}</b></div>`:""}</div>
       <div class="ft">${p.status!=="accepted"?`<button class="btn sm primary" data-act="ph-ok" data-id="${esc(p.id)}">Принять</button>`:""}${p.status!=="rejected"?`<button class="btn sm danger" data-act="ph-no" data-id="${esc(p.id)}">Отклонить</button>`:""}</div></article>`}).join("");
 }
 

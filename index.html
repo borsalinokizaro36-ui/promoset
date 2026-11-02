@@ -1105,7 +1105,7 @@ function buildTab(){
       <div class="fld"><label for="rg-phone">Телефон</label><input id="rg-phone" inputmode="tel" placeholder="+7"></div>
       <div class="fld"><label for="rg-tg">Telegram</label><input id="rg-tg" placeholder="@ник"></div>
       <div class="fld"><label for="rg-mail">Почта, если есть</label><input id="rg-mail" type="email" placeholder="необязательно"></div>
-      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option>${isBoss()?`<option value="admin">координатор</option>`:""}${window.PS_ROLE==="owner"?`<option value="director">директор</option>`:""}</select></div>
+      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">координатор</option><option value="director">директор</option></select></div>
       <div class="fld rg-wide"><label for="rg-login">Логин для входа</label><div class="pair"><input id="rg-login" required autocapitalize="none" spellcheck="false" placeholder="появится из имени"><button class="btn sm" type="button" id="rg-genl">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label for="rg-pass">Пароль</label><div class="pair"><input id="rg-pass" class="mono" required spellcheck="false"><button class="btn sm" type="button" id="rg-genp">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label class="chk"><input type="checkbox" id="rg-prom" checked> Добавить во вкладку «Сотрудники», чтобы ставить на смены</label></div>
@@ -1370,8 +1370,8 @@ function upDay(){
 /* ---------- Смены ---------- */
 function upAccess(){
   const el=document.getElementById("acTbl");if(!el||!window.psMembers)return;
-  const own=isBoss(), R=window.PS_ROLE==="owner"?["director","admin","staff","pending"]:["admin","staff","pending"];
-  const can=m=>own&&(window.PS_ROLE==="owner"||["admin","staff","pending"].includes(m.role));
+  const own=window.PS_ROLE==="owner", R=["director","admin","staff","pending"];
+  const can=m=>own;
   window.psMembers.list().then(list=>{
     const n=document.getElementById("acN");if(n)n.textContent=`${list.length}`;
     el.innerHTML=`<table><thead><tr><th>Имя</th><th>Логин и контакты</th><th>Роль</th><th>Зарегистрирован</th><th></th></tr></thead><tbody>${list.map(m=>{const self=window.PS_ME&&m.user_id===window.PS_ME.id;
@@ -1740,7 +1740,7 @@ main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");
 /* ---------- кабинет сотрудника ---------- */
 const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Отчёты"],["help","Как всё устроено"],["write","Написать руководителю"]];
 const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="director"||window.PS_ROLE==="admin";
-const isBoss=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="director";
+const isBoss=isMgr; // директор и координатор — одинаковые права
 const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());
 ui.asStaff=location.hash==="#cabinet";
 try{const o=JSON.parse(sessionStorage.getItem("ps-open")||"null");if(o){sessionStorage.removeItem("ps-open");if(o.tab==="signup")ui.tab="signup";if(o.pj)ui.suProject=o.pj}}catch(_){}

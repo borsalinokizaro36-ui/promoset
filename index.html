@@ -770,6 +770,33 @@ html body main .kstrip .kpi.hero .s,html body main .kstrip .kpi.hero .v span{col
 .ppc-ph span b{color:var(--coral-d,#C92A3E)}
 .ph-codebox{margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(239,64,86,.08);font-size:13px}
 .ph-code{color:var(--coral-d,#C92A3E);letter-spacing:.14em;font-size:16px;font-variant-numeric:tabular-nums}
+/* набор на проект через чаты */
+.bc-row>td{padding:0 0 14px!important;background:transparent}
+.bc-panel{margin:4px 0 0;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.72);border:1px solid rgba(10,209,201,.35);box-shadow:0 6px 20px rgba(7,130,125,.10);display:flex;flex-direction:column;gap:12px;white-space:normal;text-align:left}
+.bc-panel h4{margin:0;font-size:16px}
+.bc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.bc-sec{display:flex;flex-direction:column;gap:8px}
+.bc-chats{display:flex;flex-direction:column;gap:6px}
+.bc-chat{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(10,209,201,.08);cursor:pointer}
+.bc-chat span{flex:1;font-weight:600}
+.bc-chat small{color:var(--muted,#86A09D)}
+.bc-prev{white-space:pre-wrap;font-size:13.5px;line-height:1.45;padding:12px 14px;border-radius:12px;background:#EEF6F5;border-left:3px solid var(--coral,#EF4056);max-height:340px;overflow:auto}
+.bc-ppl{display:flex;flex-wrap:wrap;gap:6px}
+.bc-panel textarea,.bc-panel input:not([type=checkbox]){width:100%;box-sizing:border-box}
+html body main .bc-panel button[data-act=bc-send]{background:var(--coral);background-image:none;border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.30)}
+html body main .bc-panel button[data-act=bc-send]:disabled{opacity:.5}
+/* бюджет и маржа */
+.pj-cat{white-space:nowrap}
+.bud-in{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.bud-in input.bud{width:92px}
+.bud-in+.hint,.bud-in input{font-size:13px}
+.pj-acts{display:flex;flex-direction:column;align-items:stretch;gap:6px;white-space:nowrap}
+.bud-in input.mg{width:56px;margin-right:3px}
+.mcard .mbud{display:flex;flex-direction:column;gap:5px;width:100%;margin-top:6px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+.mcard .mbud b{color:var(--ink)}
+.mcard .mbud-bar{display:block;height:6px;border-radius:3px;background:rgba(10,209,201,.15);overflow:hidden}
+.mcard .mbud-bar i{display:block;height:100%;background:var(--coral);border-radius:3px}
+.mcard .mbud .over,.mcard .mbud .over b{color:var(--coral-d,#C92A3E);font-weight:700}
 </style>
 <script>
 /* Liquid Glass: «капля» под активным пунктом меню и блик, который следует за курсором/пальцем */
@@ -905,7 +932,9 @@ const PJ_CATS=[
   ["Мероприятия с нуля",["Концепция","Сценарий","Оформление","Техническая режиссура","Координация"]],
   ["Event-маркетинг с работающими метриками",["Продажи","Посещаемость","Вовлечённость","Командное взаимодействие"]],
   ["Промо-акции и BTL под ключ",["Промо-активация","Бренд-коммуникация","Вовлекающий сценарий"]]];
-const RATE_DEF=550, SHIFT_H=SHIFT_MS/3600e3;
+const RATE_DEF=550, MARGIN_DEF=45, SHIFT_H=SHIFT_MS/3600e3;
+const marginOf=p=>p&&p.margin!=null&&p.margin!==""?Math.min(100,Math.max(0,num(p.margin))):MARGIN_DEF;
+const prBudget=p=>p&&num(p.budget)>0?num(p.budget)*(1-marginOf(p)/100):null;
 const rateOf=p=>num(p&&p.rate)>0?num(p.rate):RATE_DEF;
 const shiftRate=s=>num(s.rate)>0?num(s.rate):rateOf(byId("projects",s.projectId));
 const fmtRub=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(Math.round(v)).replace(/\s/g,"\u00a0")+"\u00a0₽";
@@ -955,7 +984,7 @@ function renderAll(force){
   renderTabs(); renderProjSel();
   if(force||builtTab!==ui.tab){buildTab();builtTab=ui.tab}
   fillOptions();
-  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-reply],#wrForm,.mkc"))return;
+  const a=document.activeElement; if(!force&&a&&a.closest&&a.closest("form[data-reply],#wrForm,.mkc,.bc-panel"))return;
   updateTab();
 }
 function banner(){
@@ -1035,7 +1064,8 @@ function buildTab(){
       <div class="fld pj-wide" id="pj-kind-f" hidden><label for="pj-kind">Вид</label><select id="pj-kind" required disabled></select></div>
       <div class="fld"><label for="pj-from">Старт</label><input type="date" id="pj-from"></div>
       <div class="fld"><label for="pj-to">Финиш</label><input type="date" id="pj-to"></div>
-      <div class="fld"><label for="pj-rate">Ставка агитатору, ₽ в час</label><input type="number" id="pj-rate" min="1" step="1" value="550" required></div>
+      <div class="fld"><label for="pj-budget">Общий бюджет проекта, ₽</label><input type="number" id="pj-budget" min="0" step="1000" inputmode="numeric" placeholder="например, 1000000"></div>
+      <div class="fld"><label for="pj-margin">Маржа агентства, %</label><input type="number" id="pj-margin" min="0" max="100" step="1" value="45" inputmode="numeric"></div>
       <div class="fld"><button class="btn primary" type="submit">Создать</button></div>
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Все проекты</h3><span id="pjN"></span></div><div class="tbl-wrap" id="pjTbl"></div></section>
@@ -1395,17 +1425,60 @@ function upPromoters(){upMsgs();
 function upProjects(){
   const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru"));
   document.getElementById("pjN").textContent=`${pj.length}`;
-  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Направление</th><th>Заказчик</th><th>Сроки</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
-    <td><b>${esc(p.name)}</b>${p.example?' <span class="tag ex">пример</span>':""}</td>
+  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Направление</th><th>Заказчик</th><th>Сроки</th><th>Бюджет · маржа</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
+    <td><b>${esc(p.name)}</b>${p.example?' <span class="tag ex">пример</span>':""}${(()=>{const n=pjPeople(p.id).length;return n?`<div class="hint">записались: ${n}</div>`:""})()}</td>
     <td>${p.category?`<span class="pj-cat">${esc(p.category)}</span>${p.kind?`<div class="hint">${esc(p.kind)}</div>`:""}`:'<span class="hint">не указано</span>'}</td><td>${esc(p.client||"—")}</td><td class="hint">${p.from?fmtShort(p.from):"—"} — ${p.to?fmtShort(p.to):"—"}</td>
+    <td><div class="bud-in"><input class="rate-in bud" type="number" min="0" step="1000" value="${num(p.budget)>0?num(p.budget):""}" placeholder="бюджет" data-pbudget="${esc(p.id)}" aria-label="Бюджет проекта ${esc(p.name)}, рублей"><span><input class="rate-in mg" type="number" min="0" max="100" step="1" value="${marginOf(p)}" data-pmargin="${esc(p.id)}" aria-label="Маржа проекта ${esc(p.name)}, процентов">%</span></div>${prBudget(p)!=null?`<div class="hint">промоутерам ${fmtRub(prBudget(p))}</div>`:""}</td>
     <td><input class="rate-in" type="number" min="1" step="1" value="${rateOf(p)}" data-prate="${esc(p.id)}" aria-label="Ставка для ${esc(p.name)}, рублей в час"></td>
     <td class="num">${S.points.filter(x=>x.projectId===p.id).length}</td><td class="num">${S.shifts.filter(x=>x.projectId===p.id).length}</td>
     <td>${p.active===false?'<span class="tag">завершён</span>':'<span class="chip st-ontime">идёт</span>'}</td>
-    <td style="text-align:right"><button class="btn sm" data-act="toggle-proj" data-id="${esc(p.id)}">${p.active===false?"Возобновить":"Завершить"}</button></td></tr>`).join("")}</tbody></table>`:emptyBox("Проектов пока нет.");
+    <td><div class="pj-acts">${p.active===false?"":`<button class="btn sm ${ui.bc===p.id?"primary":""}" data-act="bc-open" data-id="${esc(p.id)}" title="Позвать сотрудников из чатов Telegram">📣 Набор</button>`}<button class="btn sm" data-act="toggle-proj" data-id="${esc(p.id)}">${p.active===false?"Возобновить":"Завершить"}</button></div></td></tr>${ui.bc===p.id?`<tr class="bc-row"><td colspan="10">${bcPanel(p)}</td></tr>`:""}`).join("")}</tbody></table>`:emptyBox("Проектов пока нет.");
   const exN=COLS.reduce((n,c)=>n+S[c].filter(x=>x.example).length,0);
   document.getElementById("exPanel").innerHTML=exN?`<h3>Примеры для показа</h3><p class="hint">В системе ${exN} записей с пометкой «пример»: демо-проекты, точки, сотрудники, смены и снимки. Удалите их перед тест-драйвом — всё, что вы завели сами, останется.</p>
     <div><button class="btn danger ${ui.armed==="ex"?"arm":""}" data-act="del-examples">${ui.armed==="ex"?`Точно удалить ${exN} записей?`:"Удалить все примеры"}</button></div>`:`<h3>Примеры для показа</h3><p class="hint">Примеров нет — в системе только ваши данные.</p>`;
 }
+
+/* ---------- набор на проект через чаты Telegram ---------- */
+const pjPeople=id=>S.promoters.filter(x=>(x.projects||[]).includes(id));
+async function loadBc(id,quiet){
+  if(!window.psMembers||!window.psMembers.broadcast){ui.bcInfo={id,err:"Рассылка недоступна в этом просмотре"};updateTab();return}
+  if(!quiet){ui.bcInfo={id,loading:true};updateTab()}
+  try{const r=await window.psMembers.broadcast({action:"bc_info",projectId:id,note:ui.bcNote||"",curator:ui.bcCur||""});
+    if(ui.bc!==id)return;
+    if(!r||!r.ok){ui.bcInfo={id,err:r&&r.reason==="no_access"?"Рассылку делают только руководители":"Не получилось загрузить чаты"};updateTab();return}
+    if(ui.bcCur==null)ui.bcCur=r.curator||"";
+    ui.bcInfo=Object.assign({id},r);
+    if(quiet){const pv=document.getElementById("bcPrev");if(pv){pv.innerHTML=r.preview;return}}
+    updateTab()}
+  catch(e){ui.bcInfo={id,err:"Не получилось связаться с ботом"};updateTab()}
+}
+function bcPanel(p){
+  const I=ui.bcInfo&&ui.bcInfo.id===p.id?ui.bcInfo:null;
+  const ppl=pjPeople(p.id);
+  const who=`<div class="bc-sec"><b>Записались на проект: ${ppl.length}</b>${ppl.length?`<div class="bc-ppl">${ppl.map(x=>`<span class="tag">${esc(x.name)}</span>`).join("")}</div>`:`<p class="hint">Пока никого. Сотрудники появятся здесь, когда нажмут «Записаться на проект» под постом в чате.</p>`}</div>`;
+  if(!I||I.loading)return `<div class="bc-panel"><h4>Набор сотрудников на «${esc(p.name)}»</h4><p class="hint">Загружаю чаты…</p>${who}</div>`;
+  if(I.err)return `<div class="bc-panel"><h4>Набор сотрудников на «${esc(p.name)}»</h4><p class="err">${esc(I.err)}</p>${who}<div class="acts"><button class="btn sm" data-act="bc-refresh" data-id="${esc(p.id)}">Повторить</button><button class="btn sm" data-act="bc-close">Закрыть</button></div></div>`;
+  const bot=I.bot?"@"+esc(I.bot):"бота Промосети";
+  const sel=ui.bcSel&&ui.bcSel.id===p.id?ui.bcSel.set:null;
+  const chats=(I.chats||[]).map(c=>`<label class="bc-chat"><input type="checkbox" data-bcchat="${esc(c.id)}" ${!sel||sel.includes(c.id)?"checked":""}> <span>${esc(c.title||"Чат")}</span><small>${c.type==="channel"?"канал":"группа"}</small></label>`).join("");
+  const n=(I.chats||[]).filter(c=>!sel||sel.includes(c.id)).length;
+  const last=I.last?`<p class="hint">Последний набор: ${new Date(I.last.at).toLocaleDateString("ru-RU",{day:"numeric",month:"short"})} в ${fmtTime(I.last.at)}${I.last.by?", "+esc(I.last.by):""} — отправлено в ${I.last.sent} из ${I.last.total} чатов.</p>`:"";
+  return `<div class="bc-panel"><h4>Набор сотрудников на «${esc(p.name)}»</h4>
+    <p class="hint">Пост уйдёт в выбранные чаты с двумя кнопками: «Записаться на проект» — кто уже есть в Промосети, записывается сразу; «Написать куратору» — кого ещё нет, пишет куратору в личные сообщения, чтобы его зарегистрировали.</p>
+    <div class="bc-grid"><div class="bc-sec"><b>Куда отправить</b>${chats?`<div class="bc-chats">${chats}</div>`:`<p class="hint">Бот пока не состоит ни в одном чате.</p>`}
+      <p class="hint">Чтобы чат появился в списке, добавьте в него ${bot}: в Telegram откройте чат → «Добавить участника» → найдите ${bot}. В канал бота нужно добавить администратором. Потом нажмите «Обновить».</p>
+      <button class="btn sm" data-act="bc-refresh" data-id="${esc(p.id)}">↻ Обновить список чатов</button></div>
+    <div class="bc-sec"><div class="fld"><label for="bc-cur">Куратор — его @имя в Telegram</label><input id="bc-cur" list="bc-curs" value="${esc(ui.bcCur||"")}" placeholder="например, ivan_kurator" autocomplete="off"><datalist id="bc-curs">${(I.curators||[]).map(c=>`<option value="${esc(c.username)}">${esc(c.name)}</option>`).join("")}</datalist></div>
+      <div class="fld"><label for="bc-note">Добавить от себя (необязательно)</label><textarea id="bc-note" rows="3" maxlength="1000" placeholder="Например: нужны 10 человек на выходные, форма выдаётся на месте">${esc(ui.bcNote||"")}</textarea></div></div></div>
+    <div class="bc-sec"><b>Так увидят пост в чате</b><div class="bc-prev" id="bcPrev">${I.preview||""}</div>${(I.curators||[]).length||ui.bcCur?"":`<p class="hint">Без @имени куратора кнопки «Написать куратору» в посте не будет.</p>`}</div>
+    ${who}${last}
+    <div class="acts"><button class="btn primary ${ui.armed==="bc:"+p.id?"arm":""}" data-act="bc-send" data-id="${esc(p.id)}" ${n&&!ui.bcBusy?"":"disabled"}>${ui.bcBusy?"Отправляю…":ui.armed==="bc:"+p.id?`Точно отправить в ${n} ${n===1?"чат":n<5?"чата":"чатов"}?`:`📣 Отправить в ${n} ${n===1?"чат":n<5?"чата":"чатов"}`}</button><button class="btn sm" data-act="bc-close">Закрыть</button></div></div>`;
+}
+let bcT=null;
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="bc-note")ui.bcNote=t.value;else if(t.id==="bc-cur")ui.bcCur=t.value.trim().replace(/^@/,"").replace(/^https?:\/\/t\.me\//,"");else return;
+  clearTimeout(bcT);bcT=setTimeout(()=>{if(ui.bc)loadBc(ui.bc,true)},600)});
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.dataset.bcchat==null)return;
+  ui.bcSel={id:ui.bc,set:[...document.querySelectorAll("[data-bcchat]")].filter(x=>x.checked).map(x=>x.dataset.bcchat)};updateTab()});
 
 /* ---------- Деньги ---------- */
 const earned=(now=Date.now())=>S.shifts.filter(s=>worked(shiftState(s,now))&&now>=shiftStart(s)+SHIFT_MS);
@@ -1414,17 +1487,21 @@ function upMoney(){
   const now=Date.now(), paid=earned(now);
   const sum=l=>l.reduce((a,s)=>a+SHIFT_H*shiftRate(s),0), ppl=l=>new Set(l.map(s=>s.promoterId)).size, done=l=>l.filter(s=>s.paid);
   const tot=sum(paid), out=sum(done(paid));
+  const plan=id=>S.shifts.filter(s=>!s.missed&&inPj(s,id)&&!paid.includes(s)).reduce((a,s)=>a+SHIFT_H*shiftRate(s),0);
+  const bud=S.projects.filter(p=>num(p.budget)>0), budAll=bud.reduce((a,p)=>a+num(p.budget),0), prAll=bud.reduce((a,p)=>a+prBudget(p),0), spAll=bud.reduce((a,p)=>a+sum(paid.filter(s=>inPj(s,p.id))),0);
   document.getElementById("mnTotal").innerHTML=`<div class="l">Всего за все проекты</div><div class="v">${fmtRub(tot)}</div>
+    ${bud.length?`<div class="s">бюджеты проектов: ${fmtRub(budAll)} · маржа агентства: ${fmtRub(budAll-prAll)} · на промоутеров: ${fmtRub(prAll)} · ${prAll-spAll<0?"перерасход":"осталось"}: ${fmtRub(Math.abs(prAll-spAll))}</div>`:""}
     <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>
     <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span><span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out)}</span></div>`;
-  const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru")).map(p=>({id:p.id,name:p.name,client:p.client||"",rate:rateOf(p)}));
+  const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru")).map(p=>({id:p.id,name:p.name,client:p.client||"",rate:rateOf(p),budget:num(p.budget)>0?num(p.budget):0,margin:marginOf(p),pr:prBudget(p)}));
   if(paid.some(s=>inPj(s,"_none")))pj.push({id:"_none",name:"Без проекта",client:"проект удалён или не указан",rate:RATE_DEF});
   const of=id=>paid.filter(s=>inPj(s,id));
   let sel=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null); if(sel&&!pj.some(p=>p.id===sel))sel=null;
   document.getElementById("mnCards").innerHTML=pj.length?pj.map(p=>{const l=of(p.id),due=sum(l)-sum(done(l));return `<button class="mcard ${sel===p.id?"on":""}" type="button" data-act="money-pj" data-id="${esc(p.id)}" aria-pressed="${sel===p.id}">
     <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||" ")}</span><span class="v">${fmtRub(sum(l))}</span>
     <span class="s">смен: ${l.length} · ${l.length*SHIFT_H} ч · ставка ${fmtRub(p.rate)}/ч</span>
-    ${l.length?`<span class="s ${due?"due":"ok"}">${due?"ждут выплаты "+fmtRub(due):"всё выплачено"}</span>`:""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите ставку за час.");
+    ${p.budget?(()=>{const left=p.pr-sum(l),pl=plan(p.id);return `<span class="mbud"><span>Бюджет ${fmtRub(p.budget)} − маржа ${p.margin}% = <b>${fmtRub(p.pr)}</b> на промоутеров</span><span class="mbud-bar"><i style="width:${Math.min(100,p.pr?sum(l)/p.pr*100:0)}%"></i></span><span class="${left<0?"over":""}">начислено ${fmtRub(sum(l))} · ${left<0?"перерасход":"осталось"} <b>${fmtRub(Math.abs(left))}</b>${pl?` · в плане ещё ${fmtRub(pl)}`:""}</span></span>`})():`<span class="s">бюджет не указан — задайте его во вкладке «Проекты»</span>`}
+    ${l.length?`<span class="s ${due?"due":"ok"}">${due?"ждут выплаты "+fmtRub(due):"всё выплачено"}</span>`:""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите бюджет и маржу.");
   const det=document.getElementById("mnDet");
   if(!sel){det.innerHTML=`<h3>Кому и за что</h3><p class="hint">${pj.length?"Нажмите на проект, чтобы увидеть, кому сколько положено, за какие смены, по какой ставке и выплачено ли.":"Здесь появится расшифровка выплат по проекту."}</p>`;return}
   const p=pj.find(x=>x.id===sel), l=of(sel), by={}; ui.mpOpen=ui.mpOpen||new Set();
@@ -1435,7 +1512,7 @@ function upMoney(){
     const lab=armed?"Снять отметку?":st==="yes"?"✓ Выплачено":st==="part"?`Выплачено ${k} из ${n}`:"Не выплачено";
     const tip=st==="yes"?"Нажмите дважды, чтобы снять отметку о выплате":"Нажмите, чтобы отметить, что деньги выплачены";
     return `<button class="paybtn ${st} ${armed?"arm":""}" type="button" data-act="pay" data-pj="${esc(sel)}" data-pr="${esc(r.id)}" title="${tip}" aria-label="${esc(r.name)}: ${lab}. ${tip}">${lab}</button>`};
-  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}</span></div>
+  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}${p.pr!=null&&p.budget?` из ${fmtRub(p.pr)}`:""}</span></div>
     ${rows.length?rows.map(r=>`<details class="mp" data-pr="${esc(r.id)}"${ui.mpOpen.has(r.id)?" open":""}><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span>${payBtn(r)}</summary>
       <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num mh">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
@@ -1555,8 +1632,9 @@ function bindForms(){
     const ok=await guard(()=>db.collection("messages").add({userId:me.id,promoterId:c?c.id:"",name:(c&&c.name)||me.name||"",text:t,status:"new",createdAt:Date.now()}),"Сообщение отправлено");
     if(ok){f("wr-text").value="";msg.className="ok";msg.textContent="Отправлено. Ответ появится ниже.";updateTab()}});
   const fj=f("fProj"); if(fj)fj.addEventListener("submit",async e=>{e.preventDefault();
-    const ok=await guard(()=>db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:num(f("pj-rate").value)>0?num(f("pj-rate").value):RATE_DEF,active:true,createdAt:Date.now()}),"Проект создан");
-    if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat"].forEach(i=>f(i).value="");f("pj-cat").dispatchEvent(new Event("change"))}});
+    let ref=null;const ok=await guard(async()=>{ref=await db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:RATE_DEF,budget:num(f("pj-budget").value)>0?num(f("pj-budget").value):null,margin:Math.min(100,Math.max(0,f("pj-margin").value===""?MARGIN_DEF:num(f("pj-margin").value))),active:true,createdAt:Date.now()})},"Проект создан — теперь можно позвать сотрудников из чатов");
+    if(ok&&ref&&ref.id){ui.bc=ref.id;ui.bcInfo=null;ui.bcSel=null;ui.bcNote="";ui.bcCur=null;loadBc(ref.id)}
+    if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat","pj-budget"].forEach(i=>f(i).value="");f("pj-margin").value=MARGIN_DEF;f("pj-cat").dispatchEvent(new Event("change"))}});
 }
 
 /* сжатие фото перед загрузкой */
@@ -1580,6 +1658,7 @@ main.addEventListener("click",async e=>{
     await guard(()=>db.collection("promoters").add({name:n,phone:"",telegram:"",agency:"",active:true,createdAt:Date.now(),userId:window.PS_ME.id}),"Карточка создана");if(document.activeElement)document.activeElement.blur();updateTab();return}
   if(act==="su-date"){ui.suDate=id;ui.occ=null;updateTab();return}
   if(act==="su-filter"){ui.suFilter=id;updateTab();return}
+  if(act==="su-pj-clear"){ui.suProject=null;updateTab();return}
   if(act==="su-req"){if(!arm("su:"+id))return;const [pid,k]=id.split("|"),c=myCard();if(!c||!SLOTS[k])return;
     const ok=await guard(()=>db.collection("requests").add({userId:window.PS_ME.id,promoterId:c.id,name:c.name,pointId:pid,date:ui.suDate,slot:k,start:SLOTS[k].t,status:"new",createdAt:Date.now()}),"Заявка отправлена руководителю");ui.occ=null;updateTab();return}
   if(act==="req-cancel"){if(!arm("rq:"+id))return;await guard(()=>db.doc("requests/"+id).delete(),"Заявка отменена");ui.occ=null;updateTab();return}
@@ -1606,12 +1685,25 @@ main.addEventListener("click",async e=>{
   if(act==="del-point"){if(!arm("pt:"+id))return;await guard(()=>db.doc("points/"+id).delete(),"Точка удалена");return}
   if(act==="del-prom"){if(!arm("del-pr:"+id))return;const p=byId("promoters",id);if(!p)return;await guard(()=>deletePerson(id,p.userId),"Удалён: "+p.name);updateTab();return}
   if(act==="arch-prom"){if(!arm("pr:"+id))return;await guard(()=>db.doc("promoters/"+id).update({active:false}),"Сотрудник в архиве");return}
+  if(act==="bc-open"){if(ui.bc===id){ui.bc=null;updateTab();return}ui.bc=id;ui.bcInfo=null;ui.bcSel=null;ui.bcNote="";ui.bcCur=null;loadBc(id);return}
+  if(act==="bc-close"){ui.bc=null;updateTab();return}
+  if(act==="bc-refresh"){loadBc(id);return}
+  if(act==="bc-send"){if(!arm("bc:"+id))return;const I=ui.bcInfo||{};const sel=ui.bcSel&&ui.bcSel.id===id?ui.bcSel.set:(I.chats||[]).map(c=>c.id);
+    ui.bcBusy=true;updateTab();
+    try{const r=await window.psMembers.broadcast({action:"broadcast",projectId:id,chats:sel,note:ui.bcNote||"",curator:ui.bcCur||""});
+      if(r&&r.ok){const bad=(r.results||[]).filter(x=>!x.ok);toast(`Пост отправлен в ${r.sent} из ${r.total}`+(bad.length?`. Не дошло: ${bad.map(x=>x.title).join(", ")}`:""))}
+      else toast(r&&r.reason==="no_chats"?"Выберите хотя бы один чат":r&&r.reason==="inactive"?"Проект завершён — набор закрыт":"Не получилось отправить")}
+    catch(e){toast("Не получилось связаться с ботом")}
+    ui.bcBusy=false;loadBc(id);return}
   if(act==="toggle-proj"){const p=byId("projects",id);await guard(()=>db.doc("projects/"+id).update({active:p.active===false}),p.active===false?"Проект возобновлён":"Проект завершён");return}
   if(act==="ph-ok"||act==="ph-no"){await guard(()=>db.doc("photos/"+id).update({status:act==="ph-ok"?"accepted":"rejected",checkedAt:Date.now()}),act==="ph-ok"?"Фото принято":"Фото отклонено");return}
   if(act==="del-examples"){if(!arm("ex"))return;await guard(async()=>{for(const c of COLS)for(const x of S[c].filter(x=>x.example))await db.doc(c+"/"+x.id).delete()},"Примеры удалены");return}
   if(act==="copy-report"){const t=reportText();try{await navigator.clipboard.writeText(t);toast("Отчёт скопирован")}catch(err){lb.innerHTML=`<pre style="background:var(--surface);color:var(--ink);padding:16px;border-radius:12px;white-space:pre-wrap;max-width:560px;cursor:text" onclick="event.stopPropagation()">${esc(t)}</pre>`;lb.hidden=false}return}
 });
 main.addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.mp"))return;ui.mpOpen=ui.mpOpen||new Set();d.open?ui.mpOpen.add(d.dataset.pr):ui.mpOpen.delete(d.dataset.pr)},true);
+main.addEventListener("change",async e=>{const t=e.target.closest&&e.target.closest("input[data-pbudget],input[data-pmargin]");if(!t)return;
+  if(t.dataset.pbudget){const v=t.value===""?null:num(t.value);if(v!=null&&!(v>=0)){toast("Бюджет — число в рублях");updateTab();return}await guard(()=>db.doc("projects/"+t.dataset.pbudget).update({budget:v}),v?"Бюджет сохранён: "+fmtRub(v):"Бюджет убран")}
+  else{const v=num(t.value);if(t.value===""||v<0||v>100){toast("Маржа — от 0 до 100%");updateTab();return}await guard(()=>db.doc("projects/"+t.dataset.pmargin).update({margin:v}),"Маржа сохранена: "+v+"%")}});
 main.addEventListener("change",async e=>{const r=e.target.closest&&e.target.closest("input[data-prate]");if(!r)return;const v=num(r.value);if(!(v>0)){toast("Ставка должна быть больше нуля");updateTab();return}await guard(()=>db.doc("projects/"+r.dataset.prate).update({rate:v}),"Ставка сохранена: "+fmtRub(v)+" в час. Уже назначенные смены считаются по прежней ставке.")});
 main.addEventListener("change",async e=>{const s=e.target.closest&&e.target.closest("select[data-mrole]");if(!s)return;try{await window.psMembers.setRole(s.dataset.mrole,s.value);toast("Роль изменена: "+window.psMembers.roleLabel(s.value))}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab()});
 document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;ui.selShift=null;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab()}});
@@ -1622,6 +1714,7 @@ const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"]
 const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="admin";
 const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());
 ui.asStaff=location.hash==="#cabinet";
+try{const o=JSON.parse(sessionStorage.getItem("ps-open")||"null");if(o){sessionStorage.removeItem("ps-open");if(o.tab==="signup")ui.tab="signup";if(o.pj)ui.suProject=o.pj}}catch(_){}
 window.addEventListener("hashchange",()=>{const v=location.hash==="#cabinet";if(v!==ui.asStaff){ui.asStaff=v;renderAll(true)}});
 const ymdOf=t=>iso(new Date(t));
 const myCard=()=>{const id=window.PS_ME&&window.PS_ME.id;return id?S.promoters.find(p=>p.userId===id):null};
@@ -1712,7 +1805,7 @@ function upSignup(){
   if(!days.includes(ui.suDate))ui.suDate=days[0]; ui.suFilter=ui.suFilter||"free";
   const date=ui.suDate, occ=ui.occ&&ui.occ.date===date?ui.occ.map:null; if(!occ)loadOcc(date);
   const now=Date.now(), me=window.PS_ME||{}, mineD=myShifts().filter(s=>s.date===date), myReq=(S.requests||[]).filter(r=>r.userId===me.id&&r.date===date&&r.status==="new");
-  const pts=S.points.filter(p=>p.active!==false&&(!p.projectId||(byId("projects",p.projectId)||{}).active!==false)).sort((a,b)=>(a.district||"").localeCompare(b.district||"","ru")||a.name.localeCompare(b.name,"ru"));
+  const pts=S.points.filter(p=>p.active!==false&&(!p.projectId||(byId("projects",p.projectId)||{}).active!==false)&&(!ui.suProject||p.projectId===ui.suProject)).sort((a,b)=>(a.district||"").localeCompare(b.district||"","ru")||a.name.localeCompare(b.name,"ru"));
   const state=(p,k)=>{const st=new Date(date+"T"+SLOTS[k].t+":00").getTime(),o=occ&&occ[p.id+"|"+k];
     if(mineD.some(s=>s.pointId===p.id&&s.slot===k))return["mine","ваша смена"];
     if(myReq.some(r=>r.pointId===p.id&&r.slot===k))return["req","заявка подана"];
@@ -1723,7 +1816,7 @@ function upSignup(){
     return["free",o&&o.r?`свободно · хотят ещё ${o.r}`:"свободно"]};
   const all=pts.map(p=>({p,sl:Object.keys(SLOTS).map(k=>[k,...state(p,k)])})), free=all.filter(x=>x.sl.some(s=>s[1]==="free")), list=ui.suFilter==="all"?all:free;
   el.innerHTML=`<div class="suhead"><div class="chips">${days.map((d,i)=>`<button type="button" class="suchip ${d===date?"on":""}" data-act="su-date" data-id="${d}">${i===0?"сегодня":i===1?"завтра":esc(fmtShort(d))}</button>`).join("")}</div>
-    <div class="chips"><button type="button" class="suchip ${ui.suFilter==="free"?"on":""}" data-act="su-filter" data-id="free">Свободные ${occ?free.length:""}</button><button type="button" class="suchip ${ui.suFilter==="all"?"on":""}" data-act="su-filter" data-id="all">Все ${pts.length}</button></div></div>
+    <div class="chips"><button type="button" class="suchip ${ui.suFilter==="free"?"on":""}" data-act="su-filter" data-id="free">Свободные ${occ?free.length:""}</button><button type="button" class="suchip ${ui.suFilter==="all"?"on":""}" data-act="su-filter" data-id="all">Все ${pts.length}</button>${ui.suProject?`<button type="button" class="suchip on" data-act="su-pj-clear" title="Показать точки всех проектов">Проект «${esc(pjName(ui.suProject))}» ✕</button>`:""}</div></div>
     ${!occ?`<p class="hint">Загружаю, какие слоты свободны…</p>`:ui.occ.err?`<p class="err">Не удалось узнать занятость точек. Обновите страницу.</p>`:""}
     ${list.length?`<div class="sulist">${list.map(({p,sl})=>`<article class="sucard"><h3>${esc(p.name)}</h3>${p.district||p.address?`<p class="hint">${esc([p.district,p.address].filter(Boolean).join(" · "))}</p>`:""}
       <div class="slots">${sl.map(([k,st,lab])=>{const key="su:"+p.id+"|"+k,arm=ui.armed===key;return `<button type="button" class="slot su-${st} ${arm?"arm":""}" ${st==="free"?`data-act="su-req" data-id="${esc(p.id+"|"+k)}"`:"disabled"} aria-label="${esc(p.name)}, ${SLOTS[k].l}: ${esc(lab)}"><b>${SLOTS[k].l}</b><span>${arm?"нажмите ещё раз":esc(lab)}</span></button>`}).join("")}</div></article>`).join("")}</div>`

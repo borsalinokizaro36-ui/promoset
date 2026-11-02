@@ -785,6 +785,11 @@ html body main .kstrip .kpi.hero .s,html body main .kstrip .kpi.hero .v span{col
 .bc-panel textarea,.bc-panel input:not([type=checkbox]){width:100%;box-sizing:border-box}
 html body main .bc-panel button[data-act=bc-send]{background:var(--coral);background-image:none;border-color:var(--coral);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(239,64,86,.30)}
 html body main .bc-panel button[data-act=bc-send]:disabled{opacity:.5}
+/* координатор и премия */
+.pj-coord select{max-width:160px;font-size:13px}
+.pj-coord .bon{margin-top:4px;font-size:13px;white-space:nowrap}
+.pj-coord input.pct{width:58px;margin-right:2px;font-size:13px}
+#pj-coord-h{display:block;margin-top:4px}
 /* бюджет и маржа */
 .pj-cat{white-space:nowrap}
 .bud-in{display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -935,6 +940,15 @@ const PJ_CATS=[
 const RATE_DEF=550, MARGIN_DEF=45, SHIFT_H=SHIFT_MS/3600e3;
 const marginOf=p=>p&&p.margin!=null&&p.margin!==""?Math.min(100,Math.max(0,num(p.margin))):MARGIN_DEF;
 const prBudget=p=>p&&num(p.budget)>0?num(p.budget)*(1-marginOf(p)/100):null;
+/* премия координатора: 5 % от бюджета за первый проект; как только проектов два и больше — 10 % за каждый. Руководитель может поднять процент вручную */
+const coordProjects=uid=>S.projects.filter(p=>p.coordinatorId&&p.coordinatorId===uid);
+const autoBonusPct=uid=>coordProjects(uid).length>=2?10:5;
+const bonusPct=p=>!p||!p.coordinatorId?0:p.bonusPct!=null&&p.bonusPct!==""?num(p.bonusPct):autoBonusPct(p.coordinatorId);
+const bonusOf=p=>p&&p.coordinatorId&&num(p.budget)>0?num(p.budget)*bonusPct(p)/100:0;
+const coordList=()=>(ui.members||[]).filter(m=>m.role==="admin"||m.role==="director");
+function loadMembers(){if(ui.membersLoading||!window.psMembers||!isMgr())return;ui.membersLoading=true;window.psMembers.list().then(l=>{ui.members=l||[];ui.membersLoading=false;updateTab()}).catch(()=>{ui.membersLoading=false})}
+const coordName=p=>{if(!p||!p.coordinatorId)return"";const m=(ui.members||[]).find(x=>x.user_id===p.coordinatorId);return m&&m.name||p.coordinatorName||"координатор"};
+const coordOpts=(sel,short)=>`<option value="">— не выбран —</option>${coordList().map(m=>`<option value="${esc(m.user_id)}"${m.user_id===sel?" selected":""}>${esc(m.name||m.email)}${m.role==="director"?" (директор)":""}${short?"":` · ${coordProjects(m.user_id).length?"проектов: "+coordProjects(m.user_id).length:"нет проектов"}`}</option>`).join("")}`;
 const rateOf=p=>num(p&&p.rate)>0?num(p.rate):RATE_DEF;
 const shiftRate=s=>num(s.rate)>0?num(s.rate):rateOf(byId("projects",s.projectId));
 const fmtRub=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(Math.round(v)).replace(/\s/g,"\u00a0")+"\u00a0₽";
@@ -959,7 +973,7 @@ const tabsEl=document.getElementById("tabs");
 function renderTabs(){
   const pend=S.photos.filter(p=>p.status==="pending").length, nReq=isStaff()?0:(S.requests||[]).filter(r=>r.status==="new").length, nMsg=isStaff()?0:(S.messages||[]).filter(m=>!m.reply).length;
   {const pt=document.getElementById("pgTitle"),tt=(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
-  tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="reg"||window.PS_ROLE==="owner"||window.PS_ROLE==="admin")&&(k!=="money"||(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
+  tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||isBoss())&&(k!=="reg"||isMgr())&&(k!=="money"||isBoss())).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.armed=null;
   try{localStorage.setItem("ps-tab",ui.tab)}catch(e){} renderAll(true)});
@@ -1066,6 +1080,7 @@ function buildTab(){
       <div class="fld"><label for="pj-to">Финиш</label><input type="date" id="pj-to"></div>
       <div class="fld"><label for="pj-budget">Общий бюджет проекта, ₽</label><input type="number" id="pj-budget" min="0" step="1000" inputmode="numeric" placeholder="например, 1000000"></div>
       <div class="fld"><label for="pj-margin">Маржа агентства, %</label><input type="number" id="pj-margin" min="0" max="100" step="1" value="45" inputmode="numeric"></div>
+      <div class="fld pj-wide"><label for="pj-coord">Координатор проекта</label><select id="pj-coord">${coordOpts("")}</select><span class="hint" id="pj-coord-h">Премия координатора: 5 % от бюджета за первый проект, 10 % за каждый, когда проектов два и больше.</span></div>
       <div class="fld"><button class="btn primary" type="submit">Создать</button></div>
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Все проекты</h3><span id="pjN"></span></div><div class="tbl-wrap" id="pjTbl"></div></section>
@@ -1083,14 +1098,14 @@ function buildTab(){
   write:()=>`<section class="panel"><h3>Написать руководителю</h3><p class="hint">Пишите, если что-то не получается: не пришли материалы, не ставят смены, спор по выплате. Хватит пары предложений: что случилось и когда.</p>
     <form id="wrForm" class="wrf"><label for="wr-text">Сообщение</label><textarea id="wr-text" rows="4" maxlength="1000" required placeholder="Коротко и по делу"></textarea><div><button class="btn primary" type="submit">Отправить</button></div><p class="hint" id="wrMsg">Не больше трёх обращений в час. Ответ появится ниже.</p></form></section>
     <section class="panel"><h3>Мои обращения</h3><div id="wrList"></div></section>`,
-  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для создателя и администраторов</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. Сменить пароль на свой человек сможет сам в любой момент.</p></div>
+  reg:()=>`${b}<div class="head"><div><div class="eyebrow">Для руководителей</div><h2>Регистрация</h2></div><p>Заведите человека сами: логин и пароль приложение придумает, вы отправите их человеку. Сменить пароль на свой человек сможет сам в любой момент.</p></div>
     <section class="panel"><h3>Новый сотрудник</h3><form class="f" id="fReg" autocomplete="off">
       <div class="fld"><label for="rg-first">Имя</label><input id="rg-first" required></div>
       <div class="fld"><label for="rg-last">Фамилия</label><input id="rg-last" required></div>
       <div class="fld"><label for="rg-phone">Телефон</label><input id="rg-phone" inputmode="tel" placeholder="+7"></div>
       <div class="fld"><label for="rg-tg">Telegram</label><input id="rg-tg" placeholder="@ник"></div>
       <div class="fld"><label for="rg-mail">Почта, если есть</label><input id="rg-mail" type="email" placeholder="необязательно"></div>
-      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option><option value="admin">администратор</option></select></div>
+      <div class="fld"><label for="rg-role">Роль</label><select id="rg-role"><option value="staff">сотрудник</option>${isBoss()?`<option value="admin">координатор</option>`:""}${window.PS_ROLE==="owner"?`<option value="director">директор</option>`:""}</select></div>
       <div class="fld rg-wide"><label for="rg-login">Логин для входа</label><div class="pair"><input id="rg-login" required autocapitalize="none" spellcheck="false" placeholder="появится из имени"><button class="btn sm" type="button" id="rg-genl">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label for="rg-pass">Пароль</label><div class="pair"><input id="rg-pass" class="mono" required spellcheck="false"><button class="btn sm" type="button" id="rg-genp">Сгенерировать</button></div></div>
       <div class="fld rg-wide"><label class="chk"><input type="checkbox" id="rg-prom" checked> Добавить во вкладку «Сотрудники», чтобы ставить на смены</label></div>
@@ -1104,6 +1119,7 @@ function buildTab(){
   money:()=>`${b}<div class="head"><div><div class="eyebrow">Оплата агитаторов</div><h2>Финансы</h2></div><p>Считаются смены, которые уже закончились и на которых агитатор отметился фото: ${SHIFT_H} ч × ставка проекта.</p></div>
     <section class="mtotal" id="mnTotal"></section>
     <div class="mcards" id="mnCards"></div>
+    <section class="panel" id="mnBonus"></section>
     <section class="panel" id="mnDet"></section>`,
   summary:()=>`${b}<div class="head"><div><div class="eyebrow" id="smEb"></div><h2>Статистика</h2></div>
     <div class="seg" id="smSeg">${[["1","День"],["7","7 дней"],["30","30 дней"],["all","Весь проект"]].map(([k,l])=>`<button data-per="${k}">${l}</button>`).join("")}</div></div>
@@ -1113,7 +1129,7 @@ function buildTab(){
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
   {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab))ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
-  if(!T[ui.tab]||(ui.tab==="access"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="reg"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin"))||(ui.tab==="money"&&!(window.PS_ROLE==="owner"||window.PS_ROLE==="admin")))ui.tab="day";
+  if(!T[ui.tab]||(ui.tab==="access"&&!isBoss())||(ui.tab==="reg"&&!isMgr())||(ui.tab==="money"&&!isBoss()))ui.tab="day";
   main.innerHTML=T[ui.tab]();
   const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
   bindForms();
@@ -1354,14 +1370,15 @@ function upDay(){
 /* ---------- Смены ---------- */
 function upAccess(){
   const el=document.getElementById("acTbl");if(!el||!window.psMembers)return;
-  const own=window.PS_ROLE==="owner", R=["admin","staff","pending"];
+  const own=isBoss(), R=window.PS_ROLE==="owner"?["director","admin","staff","pending"]:["admin","staff","pending"];
+  const can=m=>own&&(window.PS_ROLE==="owner"||["admin","staff","pending"].includes(m.role));
   window.psMembers.list().then(list=>{
     const n=document.getElementById("acN");if(n)n.textContent=`${list.length}`;
     el.innerHTML=`<table><thead><tr><th>Имя</th><th>Логин и контакты</th><th>Роль</th><th>Зарегистрирован</th><th></th></tr></thead><tbody>${list.map(m=>{const self=window.PS_ME&&m.user_id===window.PS_ME.id;
       return `<tr><td><b>${esc(m.name||"—")}</b>${self?' <span class="tag">это вы</span>':""}${own&&m.role!=="pending"?`<div class="lnk">Карточка: ${cardSel(m)}</div>`:""}</td><td>${esc(window.psMembers.login(m.email))}${[m.phone,m.telegram,m.contact_email].filter(Boolean).length?`<div class="hint">${[m.phone,m.telegram,m.contact_email].filter(Boolean).map(esc).join(" · ")}</div>`:""}</td>
-      <td>${own&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
+      <td>${can(m)&&!self?`<select data-mrole="${esc(m.user_id)}" aria-label="Роль ${esc(m.email)}">${R.map(r=>`<option value="${r}"${m.role===r?" selected":""}>${esc(window.psMembers.roleLabel(r))}</option>`).join("")}</select>`:`<span class="chip ${m.role==="pending"?"st-late":"st-ontime"}">${esc(window.psMembers.roleLabel(m.role))}</span>`}</td>
       <td>${m.created_at?esc(new Date(m.created_at).toLocaleDateString("ru-RU")):"—"}</td>
-      <td class="macts">${own&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно удалить?":"Удалить"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
+      <td class="macts">${can(m)&&!self?`<button class="btn sm ${ui.armed==="pw:"+m.user_id?"arm":""}" data-act="mem-pass" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">${ui.armed==="pw:"+m.user_id?"Точно сменить пароль?":"Временный пароль"}</button> <button class="btn sm danger ${ui.armed==="mem:"+m.user_id?"arm":""}" data-act="mem-del" data-id="${esc(m.user_id)}">${ui.armed==="mem:"+m.user_id?"Точно удалить?":"Удалить"}</button>`:""}</td></tr>`}).join("")}</tbody></table>`;
   }).catch(e=>{el.innerHTML=emptyBox("Не удалось загрузить список: "+esc(e&&e.message||e))});
 }
 function upShifts(){upRequests();
@@ -1423,16 +1440,19 @@ function upPromoters(){upMsgs();
 
 /* ---------- Проекты ---------- */
 function upProjects(){
+  if(!ui.members)loadMembers();
+  {const s=document.getElementById("pj-coord");if(s&&document.activeElement!==s){const v=s.value;s.innerHTML=coordOpts(v)}}
   const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru"));
   document.getElementById("pjN").textContent=`${pj.length}`;
-  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Направление</th><th>Заказчик</th><th>Сроки</th><th>Бюджет · маржа</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
+  document.getElementById("pjTbl").innerHTML=pj.length?`<table><thead><tr><th>Проект</th><th>Направление</th><th>Заказчик</th><th>Сроки</th><th>Бюджет · маржа</th><th>Координатор · премия</th><th>Ставка, ₽/ч</th><th class="num">Точек</th><th class="num">Смен</th><th>Статус</th><th></th></tr></thead><tbody>${pj.map(p=>`<tr>
     <td><b>${esc(p.name)}</b>${p.example?' <span class="tag ex">пример</span>':""}${(()=>{const n=pjPeople(p.id).length;return n?`<div class="hint">записались: ${n}</div>`:""})()}</td>
     <td>${p.category?`<span class="pj-cat">${esc(p.category)}</span>${p.kind?`<div class="hint">${esc(p.kind)}</div>`:""}`:'<span class="hint">не указано</span>'}</td><td>${esc(p.client||"—")}</td><td class="hint">${p.from?fmtShort(p.from):"—"} — ${p.to?fmtShort(p.to):"—"}</td>
     <td><div class="bud-in"><input class="rate-in bud" type="number" min="0" step="1000" value="${num(p.budget)>0?num(p.budget):""}" placeholder="бюджет" data-pbudget="${esc(p.id)}" aria-label="Бюджет проекта ${esc(p.name)}, рублей"><span><input class="rate-in mg" type="number" min="0" max="100" step="1" value="${marginOf(p)}" data-pmargin="${esc(p.id)}" aria-label="Маржа проекта ${esc(p.name)}, процентов">%</span></div>${prBudget(p)!=null?`<div class="hint">промоутерам ${fmtRub(prBudget(p))}</div>`:""}</td>
+    <td class="pj-coord">${isBoss()?`<select data-pcoord="${esc(p.id)}" aria-label="Координатор проекта ${esc(p.name)}">${coordOpts(p.coordinatorId||"",true)}</select>`:`<b>${esc(coordName(p)||"—")}</b>`}${p.coordinatorId?`<div class="bon">${isBoss()?`<input class="rate-in pct" type="number" min="0" max="100" step="0.5" value="${bonusPct(p)}" data-pbonus="${esc(p.id)}" aria-label="Премия координатора, процентов">%`:`${bonusPct(p)}%`}${num(p.budget)>0?` = <b>${fmtRub(bonusOf(p))}</b>`:` <span class="hint">нужен бюджет</span>`}${p.bonusPct!=null&&p.bonusPct!==""?` <span class="tag" title="Процент задан вручную">вручную</span>`:""}</div>`:""}</td>
     <td><input class="rate-in" type="number" min="1" step="1" value="${rateOf(p)}" data-prate="${esc(p.id)}" aria-label="Ставка для ${esc(p.name)}, рублей в час"></td>
     <td class="num">${S.points.filter(x=>x.projectId===p.id).length}</td><td class="num">${S.shifts.filter(x=>x.projectId===p.id).length}</td>
     <td>${p.active===false?'<span class="tag">завершён</span>':'<span class="chip st-ontime">идёт</span>'}</td>
-    <td><div class="pj-acts">${p.active===false?"":`<button class="btn sm ${ui.bc===p.id?"primary":""}" data-act="bc-open" data-id="${esc(p.id)}" title="Позвать сотрудников из чатов Telegram">📣 Набор</button>`}<button class="btn sm" data-act="toggle-proj" data-id="${esc(p.id)}">${p.active===false?"Возобновить":"Завершить"}</button></div></td></tr>${ui.bc===p.id?`<tr class="bc-row"><td colspan="10">${bcPanel(p)}</td></tr>`:""}`).join("")}</tbody></table>`:emptyBox("Проектов пока нет.");
+    <td><div class="pj-acts">${p.active===false?"":`<button class="btn sm ${ui.bc===p.id?"primary":""}" data-act="bc-open" data-id="${esc(p.id)}" title="Позвать сотрудников из чатов Telegram">📣 Набор</button>`}<button class="btn sm" data-act="toggle-proj" data-id="${esc(p.id)}">${p.active===false?"Возобновить":"Завершить"}</button></div></td></tr>${ui.bc===p.id?`<tr class="bc-row"><td colspan="11">${bcPanel(p)}</td></tr>`:""}`).join("")}</tbody></table>`:emptyBox("Проектов пока нет.");
   const exN=COLS.reduce((n,c)=>n+S[c].filter(x=>x.example).length,0);
   document.getElementById("exPanel").innerHTML=exN?`<h3>Примеры для показа</h3><p class="hint">В системе ${exN} записей с пометкой «пример»: демо-проекты, точки, сотрудники, смены и снимки. Удалите их перед тест-драйвом — всё, что вы завели сами, останется.</p>
     <div><button class="btn danger ${ui.armed==="ex"?"arm":""}" data-act="del-examples">${ui.armed==="ex"?`Точно удалить ${exN} записей?`:"Удалить все примеры"}</button></div>`:`<h3>Примеры для показа</h3><p class="hint">Примеров нет — в системе только ваши данные.</p>`;
@@ -1490,9 +1510,14 @@ function upMoney(){
   const plan=id=>S.shifts.filter(s=>!s.missed&&inPj(s,id)&&!paid.includes(s)).reduce((a,s)=>a+SHIFT_H*shiftRate(s),0);
   const bud=S.projects.filter(p=>num(p.budget)>0), budAll=bud.reduce((a,p)=>a+num(p.budget),0), prAll=bud.reduce((a,p)=>a+prBudget(p),0), spAll=bud.reduce((a,p)=>a+sum(paid.filter(s=>inPj(s,p.id))),0);
   document.getElementById("mnTotal").innerHTML=`<div class="l">Всего за все проекты</div><div class="v">${fmtRub(tot)}</div>
-    ${bud.length?`<div class="s">бюджеты проектов: ${fmtRub(budAll)} · маржа агентства: ${fmtRub(budAll-prAll)} · на промоутеров: ${fmtRub(prAll)} · ${prAll-spAll<0?"перерасход":"осталось"}: ${fmtRub(Math.abs(prAll-spAll))}</div>`:""}
+    ${bud.length?`<div class="s">бюджеты проектов: ${fmtRub(budAll)} · маржа агентства: ${fmtRub(budAll-prAll)}${(()=>{const bn=S.projects.reduce((a,p)=>a+bonusOf(p),0);return bn?` (из неё премии координаторов ${fmtRub(bn)})`:""})()} · на промоутеров: ${fmtRub(prAll)} · ${prAll-spAll<0?"перерасход":"осталось"}: ${fmtRub(Math.abs(prAll-spAll))}</div>`:""}
     <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>
     <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span><span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out)}</span></div>`;
+  if(!ui.members)loadMembers();
+  {const el=document.getElementById("mnBonus");if(el){const cp=S.projects.filter(p=>p.coordinatorId);const by={};for(const p of cp)(by[p.coordinatorId]=by[p.coordinatorId]||[]).push(p);
+    const rows=Object.entries(by).map(([uid,ps])=>({uid,name:coordName(ps[0]),ps,total:ps.reduce((a,p)=>a+bonusOf(p),0)})).sort((a,b)=>b.total-a.total);
+    el.innerHTML=`<div class="panel-h"><h3>Премии координаторов</h3><span>${rows.length?fmtRub(rows.reduce((a,r)=>a+r.total,0)):""}</span></div><p class="hint">5 % от бюджета проекта за первый проект; когда у координатора два проекта и больше — 10 % за каждый. Процент можно поднять вручную во вкладке «Проекты».</p>`+
+      (rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Координатор</th><th>Проект</th><th class="num">Бюджет</th><th class="num">Премия, %</th><th class="num">Премия, ₽</th></tr></thead><tbody>${rows.map(r=>r.ps.map((p,i)=>`<tr>${i===0?`<td rowspan="${r.ps.length}"><b>${esc(r.name)}</b><div class="hint">проектов: ${r.ps.length} · итого ${fmtRub(r.total)}</div></td>`:""}<td>${esc(p.name)}${p.active===false?' <span class="tag">завершён</span>':""}</td><td class="num">${num(p.budget)>0?fmtRub(num(p.budget)):"—"}</td><td class="num">${bonusPct(p)}%${p.bonusPct!=null&&p.bonusPct!==""?" ✎":""}</td><td class="num"><b>${num(p.budget)>0?fmtRub(bonusOf(p)):"нужен бюджет"}</b></td></tr>`).join("")).join("")}</tbody></table></div>`:`<p class="hint">Пока ни у одного проекта нет координатора. Выберите его в «Проектах».</p>`)}}
   const pj=S.projects.slice().sort((a,b)=>(b.active!==false)-(a.active!==false)||a.name.localeCompare(b.name,"ru")).map(p=>({id:p.id,name:p.name,client:p.client||"",rate:rateOf(p),budget:num(p.budget)>0?num(p.budget):0,margin:marginOf(p),pr:prBudget(p)}));
   if(paid.some(s=>inPj(s,"_none")))pj.push({id:"_none",name:"Без проекта",client:"проект удалён или не указан",rate:RATE_DEF});
   const of=id=>paid.filter(s=>inPj(s,id));
@@ -1632,9 +1657,9 @@ function bindForms(){
     const ok=await guard(()=>db.collection("messages").add({userId:me.id,promoterId:c?c.id:"",name:(c&&c.name)||me.name||"",text:t,status:"new",createdAt:Date.now()}),"Сообщение отправлено");
     if(ok){f("wr-text").value="";msg.className="ok";msg.textContent="Отправлено. Ответ появится ниже.";updateTab()}});
   const fj=f("fProj"); if(fj)fj.addEventListener("submit",async e=>{e.preventDefault();
-    let ref=null;const ok=await guard(async()=>{ref=await db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:RATE_DEF,budget:num(f("pj-budget").value)>0?num(f("pj-budget").value):null,margin:Math.min(100,Math.max(0,f("pj-margin").value===""?MARGIN_DEF:num(f("pj-margin").value))),active:true,createdAt:Date.now()})},"Проект создан — теперь можно позвать сотрудников из чатов");
+    let ref=null;const ok=await guard(async()=>{ref=await db.collection("projects").add({name:f("pj-name").value.trim(),client:f("pj-client").value.trim(),from:f("pj-from").value,to:f("pj-to").value,category:f("pj-cat").value,kind:f("pj-kind").value,rate:RATE_DEF,budget:num(f("pj-budget").value)>0?num(f("pj-budget").value):null,margin:Math.min(100,Math.max(0,f("pj-margin").value===""?MARGIN_DEF:num(f("pj-margin").value))),...(()=>{const c=f("pj-coord").value,m=coordList().find(x=>x.user_id===c);return c?{coordinatorId:c,coordinatorName:m?m.name||"":""}:{}})(),active:true,createdAt:Date.now()})},"Проект создан — теперь можно позвать сотрудников из чатов");
     if(ok&&ref&&ref.id){ui.bc=ref.id;ui.bcInfo=null;ui.bcSel=null;ui.bcNote="";ui.bcCur=null;loadBc(ref.id)}
-    if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat","pj-budget"].forEach(i=>f(i).value="");f("pj-margin").value=MARGIN_DEF;f("pj-cat").dispatchEvent(new Event("change"))}});
+    if(ok){["pj-name","pj-client","pj-from","pj-to","pj-cat","pj-budget","pj-coord"].forEach(i=>f(i).value="");f("pj-margin").value=MARGIN_DEF;f("pj-cat").dispatchEvent(new Event("change"))}});
 }
 
 /* сжатие фото перед загрузкой */
@@ -1704,6 +1729,9 @@ main.addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("d
 main.addEventListener("change",async e=>{const t=e.target.closest&&e.target.closest("input[data-pbudget],input[data-pmargin]");if(!t)return;
   if(t.dataset.pbudget){const v=t.value===""?null:num(t.value);if(v!=null&&!(v>=0)){toast("Бюджет — число в рублях");updateTab();return}await guard(()=>db.doc("projects/"+t.dataset.pbudget).update({budget:v}),v?"Бюджет сохранён: "+fmtRub(v):"Бюджет убран")}
   else{const v=num(t.value);if(t.value===""||v<0||v>100){toast("Маржа — от 0 до 100%");updateTab();return}await guard(()=>db.doc("projects/"+t.dataset.pmargin).update({margin:v}),"Маржа сохранена: "+v+"%")}});
+main.addEventListener("change",async e=>{const t=e.target;if(!t||!t.dataset)return;
+  if(t.dataset.pcoord!=null){const id=t.dataset.pcoord,c=t.value,m=coordList().find(x=>x.user_id===c);await guard(()=>db.doc("projects/"+id).update({coordinatorId:c||null,coordinatorName:m?m.name||"":"",bonusPct:null}),c?`Координатор: ${m?m.name:""}. Премия считается автоматически`:"Координатор снят");return}
+  if(t.dataset.pbonus!=null){const id=t.dataset.pbonus,p=byId("projects",id);if(t.value===""){await guard(()=>db.doc("projects/"+id).update({bonusPct:null}),"Премия снова считается автоматически");return}const v=num(t.value);if(!(v>=0&&v<=100)){toast("Премия — от 0 до 100 %");updateTab();return}await guard(()=>db.doc("projects/"+id).update({bonusPct:v}),`Премия координатора: ${v}%`+(num(p&&p.budget)>0?` = ${fmtRub(num(p.budget)*v/100)}`:""));return}});
 main.addEventListener("change",async e=>{const r=e.target.closest&&e.target.closest("input[data-prate]");if(!r)return;const v=num(r.value);if(!(v>0)){toast("Ставка должна быть больше нуля");updateTab();return}await guard(()=>db.doc("projects/"+r.dataset.prate).update({rate:v}),"Ставка сохранена: "+fmtRub(v)+" в час. Уже назначенные смены считаются по прежней ставке.")});
 main.addEventListener("change",async e=>{const s=e.target.closest&&e.target.closest("select[data-mrole]");if(!s)return;try{await window.psMembers.setRole(s.dataset.mrole,s.value);toast("Роль изменена: "+window.psMembers.roleLabel(s.value))}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab()});
 document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;ui.selShift=null;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab()}});
@@ -1711,7 +1739,8 @@ main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");
 
 /* ---------- кабинет сотрудника ---------- */
 const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Отчёты"],["help","Как всё устроено"],["write","Написать руководителю"]];
-const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="admin";
+const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="director"||window.PS_ROLE==="admin";
+const isBoss=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="director";
 const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());
 ui.asStaff=location.hash==="#cabinet";
 try{const o=JSON.parse(sessionStorage.getItem("ps-open")||"null");if(o){sessionStorage.removeItem("ps-open");if(o.tab==="signup")ui.tab="signup";if(o.pj)ui.suProject=o.pj}}catch(_){}

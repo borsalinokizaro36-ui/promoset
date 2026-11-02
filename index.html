@@ -1636,7 +1636,7 @@ function bindForms(){
         const site=location.origin+location.pathname, bot=window.psMembers.tgBot?await window.psMembers.tgBot():null, txt=`Промосеть — вход для: ${d.first} ${d.last}\nЛогин: ${d.login}\nПароль: ${d.password}\n\n`+`Сайт: ${site}\n\n`+(bot?`Чтобы работать через Telegram:\n1. Войдите на сайте по логину и паролю.\n2. Нажмите «Telegram» в меню → «Подключить Telegram».\n3. В боте @${bot} подтвердите: «Да, это я».\nДальше Промосеть будет открываться прямо в Telegram, бот пришлёт смены и напоминания.`:`Пароль можно сменить в меню: «Сменить пароль».`);
         const box=f("rgDone");box.hidden=false;
         box.innerHTML=`<h3>Зарегистрирован: ${esc(d.first+" "+d.last)}</h3><pre class="creds">${esc(txt)}</pre><div class="rg-acts"><button class="btn primary" type="button" id="rg-copy">Скопировать данные для входа</button></div>`;
-        f("rg-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(txt);toast("Скопировано")}catch(_){toast("Не удалось скопировать, выделите текст вручную")}});
+        f("rg-copy").addEventListener("click",async()=>{if(window.psCopy&&await window.psCopy(txt)){toast("Скопировано")}else{const p=box.querySelector("pre.creds"),r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Текст выделен — нажмите Ctrl+C или «Копировать»")}});
         ["rg-first","rg-last","rg-phone","rg-tg","rg-mail","rg-login"].forEach(i=>f(i).value="");lEdited=false;gp();
         box.scrollIntoView({behavior:"smooth",block:"nearest"});
       }catch(err){msg.className="err";msg.textContent="Не удалось: "+(err&&err.message||err)}finally{btn.disabled=false}
@@ -1715,7 +1715,7 @@ main.addEventListener("click",async e=>{
   if(act==="toggle-proj"){const p=byId("projects",id);await guard(()=>db.doc("projects/"+id).update({active:p.active===false}),p.active===false?"Проект возобновлён":"Проект завершён");return}
   if(act==="ph-ok"||act==="ph-no"){await guard(()=>db.doc("photos/"+id).update({status:act==="ph-ok"?"accepted":"rejected",checkedAt:Date.now()}),act==="ph-ok"?"Фото принято":"Фото отклонено");return}
   if(act==="del-examples"){if(!arm("ex"))return;await guard(async()=>{for(const c of COLS)for(const x of S[c].filter(x=>x.example))await db.doc(c+"/"+x.id).delete()},"Примеры удалены");return}
-  if(act==="copy-report"){const t=reportText();try{await navigator.clipboard.writeText(t);toast("Отчёт скопирован")}catch(err){lb.innerHTML=`<pre style="background:var(--surface);color:var(--ink);padding:16px;border-radius:12px;white-space:pre-wrap;max-width:560px;cursor:text" onclick="event.stopPropagation()">${esc(t)}</pre>`;lb.hidden=false}return}
+  if(act==="copy-report"){const t=reportText();if(window.psCopy&&await window.psCopy(t)){toast("Отчёт скопирован")}else{lb.innerHTML=`<pre style="background:var(--surface);color:var(--ink);padding:16px;border-radius:12px;white-space:pre-wrap;max-width:560px;cursor:text" onclick="event.stopPropagation()">${esc(t)}</pre>`;lb.hidden=false}return}
 });
 main.addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.mp"))return;ui.mpOpen=ui.mpOpen||new Set();d.open?ui.mpOpen.add(d.dataset.pr):ui.mpOpen.delete(d.dataset.pr)},true);
 main.addEventListener("change",async e=>{const t=e.target.closest&&e.target.closest("input[data-pbudget],input[data-pmargin]");if(!t)return;

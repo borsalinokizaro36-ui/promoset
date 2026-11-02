@@ -28,6 +28,17 @@
   const tgCall = async (body, jwt) => (await fetch(CFG.supabaseUrl + "/functions/v1/tg-bot", { method: "POST",
     headers: Object.assign({ "Content-Type": "application/json" }, jwt ? { Authorization: "Bearer " + jwt } : {}), body: JSON.stringify(body) })).json();
   const ROLE_L = { owner: "создатель", director: "директор", admin: "координатор", staff: "сотрудник", pending: "ждёт одобрения" };
+  // копирование, которое работает и там, где буфер обмена закрыт (окно внутри приложения, Telegram)
+  window.psCopy = async t => {
+    try { if (navigator.clipboard && window.isSecureContext) { await Promise.race([navigator.clipboard.writeText(t), new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 1500))]); return true; } } catch (_) {}
+    try {
+      const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, t.length);
+      const ok = document.execCommand("copy"); ta.remove(); if (ok) return true;
+    } catch (_) {}
+    return false;
+  };
   const escH = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   window.blobUrl = id => sb ? `${CFG.supabaseUrl}/storage/v1/object/public/photos/${encodeURIComponent(id)}` : "";
@@ -449,8 +460,8 @@
     document.body.appendChild(m);
     const cp = m.querySelector("[data-copy]");
     cp.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(own ? `Логин: ${loginOf(email)}\nПароль: ${pw}` : pw); cp.textContent = "Скопировано"; }
-      catch (_) { const r = document.createRange(); r.selectNodeContents(m.querySelector(".pm-pw")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = "Выделено, нажмите Ctrl+C"; }
+      if (await window.psCopy(own ? `Логин: ${loginOf(email)}\nПароль: ${pw}` : pw)) cp.textContent = "Скопировано";
+      else { const r = document.createRange(); r.selectNodeContents(m.querySelector(".pm-pw")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); cp.textContent = "Выделено, нажмите Ctrl+C"; }
     });
     m.querySelector("form").addEventListener("submit", e => { e.preventDefault(); m.remove(); });
     cp.focus();

@@ -797,6 +797,7 @@ html body main .bc-panel button[data-act=bc-send]:disabled{opacity:.5}
 .bud-in+.hint,.bud-in input{font-size:13px}
 .pj-acts{display:flex;flex-direction:column;align-items:stretch;gap:6px;white-space:nowrap}
 .bud-in input.mg{width:56px;margin-right:3px}
+.mcard .vl{font-size:12px;color:var(--muted,#86A09D);margin-top:6px}
 .mcard .mbud{display:flex;flex-direction:column;gap:5px;width:100%;margin-top:6px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
 .mcard .mbud b{color:var(--ink)}
 .mcard .mbud-bar{display:block;height:6px;border-radius:3px;background:rgba(10,209,201,.15);overflow:hidden}
@@ -1501,8 +1502,10 @@ function upMoney(){
   const tot=sum(paid), out=sum(done(paid));
   const plan=id=>S.shifts.filter(s=>!s.missed&&inPj(s,id)&&!paid.includes(s)).reduce((a,s)=>a+SHIFT_H*shiftRate(s),0);
   const bud=S.projects.filter(p=>num(p.budget)>0), budAll=bud.reduce((a,p)=>a+num(p.budget),0), prAll=bud.reduce((a,p)=>a+prBudget(p),0), spAll=bud.reduce((a,p)=>a+sum(paid.filter(s=>inPj(s,p.id))),0);
-  document.getElementById("mnTotal").innerHTML=`<div class="l">Всего за все проекты</div><div class="v">${fmtRub(tot)}</div>
-    ${bud.length?`<div class="s">бюджеты проектов: ${fmtRub(budAll)} · маржа агентства: ${fmtRub(budAll-prAll)}${(()=>{const bn=S.projects.reduce((a,p)=>a+bonusOf(p),0);return bn?` (из неё премии координаторов ${fmtRub(bn)})`:""})()} · на промоутеров: ${fmtRub(prAll)} · ${prAll-spAll<0?"перерасход":"осталось"}: ${fmtRub(Math.abs(prAll-spAll))}</div>`:""}
+  const paidAll=bud.reduce((a,p)=>a+sum(done(paid.filter(s=>inPj(s,p.id)))),0), leftAll=prAll-paidAll;
+  document.getElementById("mnTotal").innerHTML=`${bud.length?`<div class="l">${leftAll<0?"Перерасход бюджета на промоутеров":"Осталось на выплаты промоутерам"}</div><div class="v">${fmtRub(Math.abs(leftAll))}</div>
+    <div class="s">из <b>${fmtRub(prAll)}</b> на промоутеров · выплачено ${fmtRub(paidAll)} · бюджеты проектов ${fmtRub(budAll)} − маржа агентства ${fmtRub(budAll-prAll)}${(()=>{const bn=S.projects.reduce((a,p)=>a+bonusOf(p),0);return bn?` (из неё премии координаторов ${fmtRub(bn)})`:""})()}</div>`
+    :`<div class="l">Начислено промоутерам за все проекты</div><div class="v">${fmtRub(tot)}</div><div class="s">Укажите бюджет и маржу проектов во вкладке «Проекты» — здесь будет видно, сколько денег на промоутеров осталось.</div>`}
     <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>
     <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span><span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out)}</span></div>`;
   if(!ui.members)loadMembers();
@@ -1515,9 +1518,9 @@ function upMoney(){
   const of=id=>paid.filter(s=>inPj(s,id));
   let sel=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null); if(sel&&!pj.some(p=>p.id===sel))sel=null;
   document.getElementById("mnCards").innerHTML=pj.length?pj.map(p=>{const l=of(p.id),due=sum(l)-sum(done(l));return `<button class="mcard ${sel===p.id?"on":""}" type="button" data-act="money-pj" data-id="${esc(p.id)}" aria-pressed="${sel===p.id}">
-    <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||" ")}</span><span class="v">${fmtRub(sum(l))}</span>
+    <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||" ")}</span>${p.budget?(()=>{const pd=sum(done(l)),left=p.pr-pd;return `<span class="vl">${left<0?"перерасход":"осталось на промоутеров"}</span><span class="v">${fmtRub(Math.abs(left))}</span><span class="s">из <b>${fmtRub(p.pr)}</b> · выплачено ${fmtRub(pd)}</span>`})():`<span class="vl">начислено</span><span class="v">${fmtRub(sum(l))}</span>`}
     <span class="s">смен: ${l.length} · ${l.length*SHIFT_H} ч · ставка ${fmtRub(p.rate)}/ч</span>
-    ${p.budget?(()=>{const left=p.pr-sum(l),pl=plan(p.id);return `<span class="mbud"><span>Бюджет ${fmtRub(p.budget)} − маржа ${p.margin}% = <b>${fmtRub(p.pr)}</b> на промоутеров</span><span class="mbud-bar"><i style="width:${Math.min(100,p.pr?sum(l)/p.pr*100:0)}%"></i></span><span class="${left<0?"over":""}">начислено ${fmtRub(sum(l))} · ${left<0?"перерасход":"осталось"} <b>${fmtRub(Math.abs(left))}</b>${pl?` · в плане ещё ${fmtRub(pl)}`:""}</span></span>`})():`<span class="s">бюджет не указан — задайте его во вкладке «Проекты»</span>`}
+    ${p.budget?(()=>{const pd=sum(done(l)),pl=plan(p.id);return `<span class="mbud"><span>Бюджет ${fmtRub(p.budget)} − маржа ${p.margin}% = <b>${fmtRub(p.pr)}</b> на промоутеров</span><span class="mbud-bar"><i style="width:${Math.min(100,p.pr?pd/p.pr*100:0)}%"></i></span><span>начислено за смены ${fmtRub(sum(l))}${pl?` · в плане ещё ${fmtRub(pl)}`:""}</span></span>`})():`<span class="s">бюджет не указан — задайте его во вкладке «Проекты»</span>`}
     ${l.length?`<span class="s ${due?"due":"ok"}">${due?"ждут выплаты "+fmtRub(due):"всё выплачено"}</span>`:""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите бюджет и маржу.");
   const det=document.getElementById("mnDet");
   if(!sel){det.innerHTML=`<h3>Кому и за что</h3><p class="hint">${pj.length?"Нажмите на проект, чтобы увидеть, кому сколько положено, за какие смены, по какой ставке и выплачено ли.":"Здесь появится расшифровка выплат по проекту."}</p>`;return}

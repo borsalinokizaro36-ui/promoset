@@ -27,7 +27,7 @@
   }
   const tgCall = async (body, jwt) => (await fetch(CFG.supabaseUrl + "/functions/v1/tg-bot", { method: "POST",
     headers: Object.assign({ "Content-Type": "application/json" }, jwt ? { Authorization: "Bearer " + jwt } : {}), body: JSON.stringify(body) })).json();
-  const ROLE_L = { owner: "создатель", admin: "администратор", staff: "сотрудник", pending: "ждёт одобрения" };
+  const ROLE_L = { owner: "создатель", director: "директор", admin: "координатор", staff: "сотрудник", pending: "ждёт одобрения" };
   const escH = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   window.blobUrl = id => sb ? `${CFG.supabaseUrl}/storage/v1/object/public/photos/${encodeURIComponent(id)}` : "";

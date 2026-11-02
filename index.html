@@ -514,6 +514,10 @@ details.mp .tbl-wrap{margin:0 0 12px}
 .paybtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .paytog{font:inherit;font-size:13px;font-weight:600;min-width:58px;padding:5px 10px;border-radius:999px;border:1px solid transparent;cursor:pointer;white-space:nowrap}
 .paytog.yes{background:var(--good-soft);color:var(--good)}
+.paytog.wait,.paybtn.wait{background:var(--info-soft,#E6F1FB);color:var(--info,#2F6FB0);border-color:transparent}
+.paytog.arm{background:var(--bad);color:#fff}
+.pay-wait{border:1px solid rgba(239,64,86,.35)}
+.pay-wait h3{margin:0 0 6px}
 .paytog.no{background:var(--surface-2);border-color:var(--line);color:var(--ink-2)}
 .paytog:hover{filter:brightness(.96)}
 .paytog:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -1507,7 +1511,7 @@ function upMoney(){
     <div class="s">из <b>${fmtRub(prAll)}</b> на промоутеров · выплачено ${fmtRub(paidAll)} · бюджеты проектов ${fmtRub(budAll)} − маржа агентства ${fmtRub(budAll-prAll)}${(()=>{const bn=S.projects.reduce((a,p)=>a+bonusOf(p),0);return bn?` (из неё премии координаторов ${fmtRub(bn)})`:""})()}</div>`
     :`<div class="l">Начислено промоутерам за все проекты</div><div class="v">${fmtRub(tot)}</div><div class="s">Укажите бюджет и маржу проектов во вкладке «Проекты» — здесь будет видно, сколько денег на промоутеров осталось.</div>`}
     <div class="s">смен: ${paid.length} · часов: ${paid.length*SHIFT_H} · агитаторов: ${ppl(paid)}</div>
-    <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span><span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out)}</span></div>`;
+    <div class="mt-split"><span><i class="dot ok"></i>выплачено ${fmtRub(out)}</span>${(()=>{const wt=sum(paid.filter(s=>s.paySent&&!s.paid));return `${wt?`<span><i class="dot due"></i>ждут подтверждения ${fmtRub(wt)}</span>`:""}${tot-out-wt>0||!wt?`<span><i class="dot due"></i>ждут выплаты ${fmtRub(tot-out-wt)}</span>`:""}`})()}</div>`;
   if(!ui.members)loadMembers();
   {const el=document.getElementById("mnBonus");if(el){const cp=S.projects.filter(p=>p.coordinatorId);const by={};for(const p of cp)(by[p.coordinatorId]=by[p.coordinatorId]||[]).push(p);
     const rows=Object.entries(by).map(([uid,ps])=>({uid,name:coordName(ps[0]),ps,total:ps.reduce((a,p)=>a+bonusOf(p),0)})).sort((a,b)=>b.total-a.total);
@@ -1521,23 +1525,23 @@ function upMoney(){
     <span class="n">${esc(p.name)}</span><span class="c">${esc(p.client||" ")}</span>${p.budget?(()=>{const pd=sum(done(l)),left=p.pr-pd;return `<span class="vl">${left<0?"перерасход":"осталось на промоутеров"}</span><span class="v">${fmtRub(Math.abs(left))}</span><span class="s">из <b>${fmtRub(p.pr)}</b> · выплачено ${fmtRub(pd)}</span>`})():`<span class="vl">начислено</span><span class="v">${fmtRub(sum(l))}</span>`}
     <span class="s">смен: ${l.length} · ${l.length*SHIFT_H} ч · ставка ${fmtRub(p.rate)}/ч</span>
     ${p.budget?(()=>{const pd=sum(done(l)),pl=plan(p.id);return `<span class="mbud"><span>Бюджет ${fmtRub(p.budget)} − маржа ${p.margin}% = <b>${fmtRub(p.pr)}</b> на промоутеров</span><span class="mbud-bar"><i style="width:${Math.min(100,p.pr?pd/p.pr*100:0)}%"></i></span><span>начислено за смены ${fmtRub(sum(l))}${pl?` · в плане ещё ${fmtRub(pl)}`:""}</span></span>`})():`<span class="s">бюджет не указан — задайте его во вкладке «Проекты»</span>`}
-    ${l.length?`<span class="s ${due?"due":"ok"}">${due?"ждут выплаты "+fmtRub(due):"всё выплачено"}</span>`:""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите бюджет и маржу.");
+    ${l.length?(()=>{const wt=sum(l.filter(s=>s.paySent&&!s.paid)),nd=due-wt;return `<span class="s ${due?"due":"ok"}">${due?[nd?"ждут выплаты "+fmtRub(nd):"",wt?"ждут подтверждения "+fmtRub(wt):""].filter(Boolean).join(" · "):"всё выплачено"}</span>`})():""}</button>`}).join(""):emptyBox("Проектов пока нет. Создайте проект во вкладке «Проекты» и укажите бюджет и маржу.");
   const det=document.getElementById("mnDet");
   if(!sel){det.innerHTML=`<h3>Кому и за что</h3><p class="hint">${pj.length?"Нажмите на проект, чтобы увидеть, кому сколько положено, за какие смены, по какой ставке и выплачено ли.":"Здесь появится расшифровка выплат по проекту."}</p>`;return}
   const p=pj.find(x=>x.id===sel), l=of(sel), by={}; ui.mpOpen=ui.mpOpen||new Set();
   for(const s of l)(by[s.promoterId]=by[s.promoterId]||[]).push(s);
   const rows=Object.entries(by).map(([id,ss])=>({id,name:prName(id),ss:ss.sort((a,b)=>shiftStart(b)-shiftStart(a)),total:sum(ss)})).sort((a,b)=>b.total-a.total);
   const hm=t=>new Date(t).toTimeString().slice(0,5);
-  const payBtn=r=>{const n=r.ss.length,k=done(r.ss).length,st=k===0?"no":k===n?"yes":"part",key="pay:"+sel+":"+r.id,armed=ui.armed===key;
-    const lab=armed?"Снять отметку?":st==="yes"?"✓ Выплачено":st==="part"?`Выплачено ${k} из ${n}`:"Не выплачено";
-    const tip=st==="yes"?"Нажмите дважды, чтобы снять отметку о выплате":"Нажмите, чтобы отметить, что деньги выплачены";
+  const payBtn=r=>{const n=r.ss.length,k=done(r.ss).length,w=r.ss.filter(s=>s.paySent&&!s.paid).length,st=k===n?"yes":k+w===n?"wait":k===0&&w===0?"no":"part",key="pay:"+sel+":"+r.id,armed=ui.armed===key;
+    const lab=armed?"Снять отметку?":st==="yes"?"✓ Получено":st==="wait"?"⏳ Ждём подтверждения":st==="part"?`Получено ${k} из ${n}${w?` · ждём ${w}`:""}`:"Не выплачено";
+    const tip=st==="yes"?"Сотрудник подтвердил получение. Нажмите дважды, чтобы снять отметку":st==="wait"?"Вы отметили выплату, сотрудник ещё не подтвердил получение":"Нажмите, когда перевели деньги: сотруднику придёт запрос подтвердить получение";
     return `<button class="paybtn ${st} ${armed?"arm":""}" type="button" data-act="pay" data-pj="${esc(sel)}" data-pr="${esc(r.id)}" title="${tip}" aria-label="${esc(r.name)}: ${lab}. ${tip}">${lab}</button>`};
-  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}${p.pr!=null&&p.budget?` из ${fmtRub(p.pr)}`:""}</span></div>
+  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}${p.pr!=null&&p.budget?` из ${fmtRub(p.pr)}`:""}</span></div><p class="hint">Перевели деньги — нажмите «Не выплачено» у человека или «выплатил» у смены. Сотруднику придёт запрос на сайте и в Telegram, и только после его подтверждения выплата засчитывается.</p>
     ${rows.length?rows.map(r=>`<details class="mp" data-pr="${esc(r.id)}"${ui.mpOpen.has(r.id)?" open":""}><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span>${payBtn(r)}</summary>
       <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num mh">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
         <td class="num mh">${SHIFT_H}</td><td class="num mh">${fmtRub(shiftRate(s))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td>
-        <td class="paycell"><button class="paytog ${s.paid?"yes":"no"}" type="button" data-act="pay-shift" data-id="${esc(s.id)}" aria-pressed="${!!s.paid}" title="${s.paid?"Нажмите, чтобы отметить как невыплаченную":"Нажмите, чтобы отметить как выплаченную"}" aria-label="Смена ${esc(fmtShort(s.date))}, ${fmtRub(SHIFT_H*shiftRate(s))}: ${s.paid?"выплачено":"не выплачено"}">${s.paid?"✓ да":"нет"}</button></td></tr>`).join("")}</tbody></table></div></details>`).join("")
+        <td class="paycell"><button class="paytog ${s.paid?"yes":s.paySent?"wait":"no"} ${ui.armed==="ps:"+s.id?"arm":""}" type="button" data-act="pay-shift" data-id="${esc(s.id)}" aria-pressed="${!!s.paid}" title="${s.paid?"Сотрудник подтвердил получение. Нажмите дважды, чтобы снять отметку":s.paySent?"Ждём подтверждения от сотрудника. Нажмите, чтобы отменить отметку «выплатил»":"Нажмите, когда перевели деньги"}" aria-label="Смена ${esc(fmtShort(s.date))}, ${fmtRub(SHIFT_H*shiftRate(s))}: ${s.paid?"получено":s.paySent?"ждём подтверждения":"не выплачено"}">${ui.armed==="ps:"+s.id?"снять?":s.paid?"✓ получено":s.paySent?"⏳ ждём":"выплатил"}</button></td></tr>`).join("")}</tbody></table></div></details>`).join("")
       :`<p class="hint">По этому проекту ещё нет отработанных смен.</p>`}`;
 }
 
@@ -1687,10 +1691,18 @@ main.addEventListener("click",async e=>{
     await guard(async()=>{const ref=await db.collection("shifts").add({pointId:r.pointId,promoterId:r.promoterId,projectId:pt.projectId||"",rate:rateOf(byId("projects",pt.projectId)),date:r.date,slot:r.slot,start:r.start||SLOTS[r.slot].t,type:TYPES[0],missed:false,createdAt:Date.now(),fromRequest:r.id});
       await db.doc("requests/"+id).update({status:"approved",shiftId:ref.id,decidedAt:Date.now()})},"Смена назначена: "+(r.name||prName(r.promoterId)));updateTab();return}
   if(act==="req-no"){await guard(()=>db.doc("requests/"+id).update({status:"rejected",decidedAt:Date.now()}),"Заявка отклонена");updateTab();return}
-  if(act==="pay-shift"){const s=byId("shifts",id);if(!s)return;const v=!s.paid;await guard(()=>db.doc("shifts/"+id).update({paid:v,paidAt:v?Date.now():null}),v?"Смена отмечена как выплаченная":"Отметка о выплате снята");updateTab();return}
+  if(act==="pay-shift"){const s=byId("shifts",id);if(!s)return;
+    if(s.paid){if(!arm("ps:"+id))return;await guard(()=>db.doc("shifts/"+id).update({paid:false,paidAt:null,paySent:false,paySentAt:null,payConfirmedAt:null}),"Отметка о выплате снята");updateTab();return}
+    if(s.paySent){await guard(()=>db.doc("shifts/"+id).update({paySent:false,paySentAt:null}),"Отметка «выплатил» отменена");updateTab();return}
+    await guard(()=>db.doc("shifts/"+id).update({paySent:true,paySentAt:Date.now()}),"Отмечено «выплатил». Ждём, когда сотрудник подтвердит получение");updateTab();return}
+  if(act==="pay-confirm"){const ids=id==="all"?myShifts().filter(s=>s.paySent&&!s.paid).map(s=>s.id):[id];if(!ids.length)return;b.disabled=true;
+    try{const r=await window.psMembers.payConfirm(ids);toast(r&&r.ok&&r.confirmed?`Спасибо! Получение ${fmtRub(r.sum)} подтверждено`:"Эта выплата уже подтверждена или отменена")}catch(err){toast("Не получилось подтвердить, попробуйте ещё раз");b.disabled=false}
+    return}
   if(act==="pay"){e.preventDefault();const pj=b.dataset.pj,prm=b.dataset.pr,list=earned().filter(s=>inPj(s,pj)&&s.promoterId===prm);if(!list.length)return;
-    if(list.every(s=>s.paid)){if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null})},"Отметка о выплате снята")}
-    else await guard(async()=>{const t=Date.now();for(const s of list.filter(s=>!s.paid))await db.doc("shifts/"+s.id).update({paid:true,paidAt:t})},"Отмечена выплата: "+prName(prm));
+    const unsent=list.filter(s=>!s.paid&&!s.paySent);
+    if(unsent.length)await guard(async()=>{const t=Date.now();for(const s of unsent)await db.doc("shifts/"+s.id).update({paySent:true,paySentAt:t})},`Отмечено «выплатил»: ${prName(prm)}, ${fmtRub(unsent.reduce((a,s)=>a+SHIFT_H*shiftRate(s),0))}. Ждём подтверждения от сотрудника`);
+    else if(list.some(s=>s.paySent&&!s.paid))toast("Ждём, когда сотрудник подтвердит получение. Отменить можно по отдельной смене — раскройте строку");
+    else{if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null,paySent:false,paySentAt:null,payConfirmedAt:null})},"Отметка о выплате снята")}
     updateTab();return}
   if(act==="money-pj"){const cur=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null);ui.moneyPj=cur===id?null:id;updateTab();return}
   if(act==="mem-pass"){if(!arm("pw:"+id))return;try{await window.psMembers.tempPassword(id,b.dataset.email||"")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
@@ -1810,8 +1822,9 @@ function upProfile(){
   const login=window.psMembers?window.psMembers.login((window.PS_ME||{}).email):"";
   el.innerHTML=`<section class="panel pfhead"><div class="eyebrow">Сотрудник</div><h2>${esc(c.name)}</h2><p class="hint">${esc([login&&"логин "+login,c.phone,c.telegram].filter(Boolean).join(" · "))}</p></section>
     <div class="kpis">${kpiHtml([{v:r.worked,l:"Смен отработано",s:`из ${r.due} наступивших`,c:"good"},{v:ot==null?"—":ot+"%",l:"Фото вовремя",s:"в первые 20 минут смены",c:ot==null?"":ot>=85?"good":ot>=60?"warn":"bad"},{v:fmtRub(tot),l:"Заработано",s:"за отработанные смены"},{v:fmtRub(paid),l:"Выплачено",c:"good"},{v:fmtRub(tot-paid),l:"Ждёт выплаты",c:tot-paid?"warn":""}])}</div>
+    ${(()=>{const w=earnedL.filter(s=>s.paySent&&!s.paid);return w.length?`<section class="panel pay-wait"><h3>💸 Руководитель отметил выплату ${fmtRub(sum(w))}</h3><p class="hint">За ${w.length===1?"смену":"смены"}: ${w.map(s=>esc(fmtShort(s.date))).join(", ")} — когда деньги придут, подтвердите получение — без этого выплата не считается завершённой.</p><div><button class="btn primary" data-act="pay-confirm" data-id="all">✅ Деньги получил — ${fmtRub(sum(w))}</button></div></section>`:""})()}
     <section class="panel"><h3>Ваш руководитель</h3><div id="pfTeam" class="hint">Загружаю…</div><p class="hint">Руководитель ставит смены, выдаёт материалы и отмечает выплаты. Вопросы про смены и точки решает он.</p></section>
-    <section class="panel"><div class="panel-h"><h3>Мои выплаты</h3><span>${fmtRub(tot)}</span></div>${earnedL.length?`<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th class="num">Сумма</th><th>Статус</th></tr></thead><tbody>${earnedL.map(s=>`<tr><td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td><td>${s.paid?'<span class="st-paid">✓ выплачено</span>':'<span class="st-due">ждёт выплаты</span>'}</td></tr>`).join("")}</tbody></table></div>`:emptyBox("Отработанных смен пока нет.")}</section>
+    <section class="panel"><div class="panel-h"><h3>Мои выплаты</h3><span>${fmtRub(tot)}</span></div>${earnedL.length?`<div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th class="num">Сумма</th><th>Статус</th></tr></thead><tbody>${earnedL.map(s=>`<tr><td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="num"><b>${fmtRub(SHIFT_H*shiftRate(s))}</b></td><td>${s.paid?'<span class="st-paid">✓ получено</span>':s.paySent?`<button class="btn sm primary" data-act="pay-confirm" data-id="${esc(s.id)}">Деньги получил</button>`:'<span class="st-due">ждёт выплаты</span>'}</td></tr>`).join("")}</tbody></table></div>`:emptyBox("Отработанных смен пока нет.")}</section>
     <section class="panel"><h3>По неделям</h3>${weeks?`<div class="tbl-wrap"><table><thead><tr><th>Неделя</th><th class="num">Отработано</th><th class="num">Заработано</th></tr></thead><tbody>${weeks}</tbody></table></div>`:emptyBox("Пока пусто.")}</section>`;
   const fill=rows=>{const t=document.getElementById("pfTeam");if(!t)return;t.innerHTML=rows&&rows.length?rows.map(x=>`<div class="tm"><b>${esc(x.name||"Без имени")}</b> · ${esc(window.psMembers.roleLabel(x.role))}${x.phone?` · <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a>`:""}${x.telegram?` · ${esc(x.telegram)}`:""}</div>`).join(""):"Контакты руководителей пока не заполнены — напишите во вкладке «Написать руководителю»."};
   if(ui.team)fill(ui.team);else if(window.psMembers&&window.psMembers.team)window.psMembers.team().then(rows=>{ui.team=rows||[];fill(ui.team)}).catch(()=>{const t=document.getElementById("pfTeam");if(t)t.textContent="Не удалось загрузить контакты."});

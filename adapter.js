@@ -17,7 +17,7 @@
   try { TG_INIT = new URLSearchParams(location.hash.slice(1)).get("tgWebAppData") || sessionStorage.getItem("ps-tg-init") || ""; } catch (_) {}
   if (TG_INIT) {
     try { sessionStorage.setItem("ps-tg-init", TG_INIT); } catch (_) {}
-    try { const q = new URLSearchParams(location.search); history.replaceState(null, "", location.pathname + (q.has("cabinet") ? "#cabinet" : "")); } catch (_) {}
+    try { const q = new URLSearchParams(location.search); if (q.get("tab") || q.get("pj")) sessionStorage.setItem("ps-open", JSON.stringify({ tab: q.get("tab") || "", pj: q.get("pj") || "" })); history.replaceState(null, "", location.pathname + (q.has("cabinet") ? "#cabinet" : "")); } catch (_) {}
     const sdk = document.createElement("script"); sdk.src = "https://telegram.org/js/telegram-web-app.js"; sdk.async = true;
     sdk.onload = () => { try { const w = window.Telegram.WebApp; w.ready(); w.expand();
       try { w.setHeaderColor("#F3FAF9"); w.setBackgroundColor("#F3FAF9"); } catch (_) {}
@@ -335,6 +335,7 @@
     },
     async occupancy(date) { const { data, error } = await sb.rpc("slot_occupancy", { p_date: date }); if (error) throw error; return data || []; },
     async tgBot() { try { const { data } = await sb.rpc("tg_status"); return (data && data.bot) || null; } catch (_) { return null; } },
+    async broadcast(body) { const { data } = await sb.auth.getSession(); return tgCall(body, data && data.session && data.session.access_token); },
     async team() { const { data, error } = await sb.rpc("team_contacts"); if (error) throw error; return data || []; },
     async tempPassword(id, email) {
       const pw = genPassword();

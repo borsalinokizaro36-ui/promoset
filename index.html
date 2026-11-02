@@ -1059,15 +1059,7 @@ function buildTab(){
     <section class="panel"><div class="panel-h"><h3>Все точки</h3><span id="ptN"></span></div><div class="tbl-wrap" id="ptTbl"></div></section>`,
   promoters:()=>`${b}<div class="head"><div><div class="eyebrow">Люди</div><h2>Сотрудники</h2></div><p>Надёжность считается по фото: вовремя, с опозданием, не пришло.</p></div>
     <section class="panel" id="msgPanel" hidden></section>
-    <section class="panel"><h3>Добавить сотрудника</h3><form class="f" id="fProm" autocomplete="off">
-      <div class="fld"><label for="pr-name">ФИО</label><input id="pr-name" required></div>
-      <div class="fld"><label for="pr-phone">Телефон</label><input id="pr-phone" inputmode="tel" placeholder="+7"></div>
-      <div class="fld"><label for="pr-tg">Telegram</label><input id="pr-tg" placeholder="@ник"></div>
-      <div class="fld"><label for="pr-ag">Субподрядчик</label><input id="pr-ag" placeholder="если от другого агентства"></div>
-      <div class="fld"><button class="btn primary" type="submit">Добавить</button></div>
-      <p class="hint" id="prMsg" style="grid-column:1/-1"></p>
-    </form></section>
-    <section class="panel"><div class="panel-h"><h3>Состав и надёжность</h3><span id="prN"></span></div><div class="tbl-wrap" id="prTbl"></div>
+    <section class="panel"><div class="panel-h"><h3>Состав и надёжность</h3><span id="prN"></span></div><p class="hint">Новых сотрудников заводят во вкладке «Регистрация»: там сразу создаются карточка и вход на сайт. <button class="btn sm" data-act="goto" data-tab="reg">Перейти в «Регистрацию»</button></p><div class="tbl-wrap" id="prTbl"></div>
     <p class="hint">«Удалить» убирает человека насовсем: карточку и вход на сайт. Будущие смены отменяются, прошедшие смены и выплаты остаются в истории с его именем. «В архив» просто скрывает человека из списков.</p>
     <p class="hint">«Проверить» — меньше 70% фото вовремя, два срыва или два отклонённых снимка: признаки работы мимо смены.</p></section>`,
   projects:()=>`${b}<div class="head"><div><div class="eyebrow">Заказчики</div><h2>Проекты</h2></div><p>Один проект — одна кампания заказчика. Фильтр проекта в шапке работает во всех вкладках.</p></div>

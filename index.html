@@ -69,6 +69,7 @@ main{padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
 .panel{background:var(--surface);display:flex;flex-direction:column;gap:12px;min-width:0}
 .panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .panel-h span{font-size:13px;color:var(--ink-3)}
+.xlbtn{margin-left:8px;white-space:nowrap;vertical-align:middle}
 /* чипы статусов */
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap}
 .chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
@@ -1568,6 +1569,57 @@ function upRating(){
 }
 
 /* ---------- Деньги ---------- */
+/* мини-генератор .xlsx: листы, жирные заголовки, суммы в рублях, ширина колонок */
+function xlsxBlob(sheets){
+  const enc=new TextEncoder(), X=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");
+  const col=i=>{let s="";i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
+  const sheetXml=sh=>{const rows=sh.rows.map((r,ri)=>`<row r="${ri+1}">${r.map((c,ci)=>{if(c==null||c==="")return"";const o=typeof c==="object"?c:{v:c};const ref=col(ci)+(ri+1),st=o.s?` s="${o.s}"`:"";
+      return typeof o.v==="number"?`<c r="${ref}"${st}><v>${o.v}</v></c>`:`<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${X(o.v)}</t></is></c>`}).join("")}</row>`).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${sh.freeze?`<sheetViews><sheetView workbookViewId="0"><pane ySplit="${sh.freeze}" topLeftCell="A${sh.freeze+1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`:""}${sh.cols?`<cols>${sh.cols.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols>`:""}<sheetData>${rows}</sheetData></worksheet>`};
+  const files=[["[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>`],
+    ["_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ["xl/workbook.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s,i)=>`<sheet name="${X(s.name.slice(0,31))}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")}</sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ["xl/styles.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0&quot; ₽&quot;"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD6EEEC"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`],
+    ...sheets.map((s,i)=>[`xl/worksheets/sheet${i+1}.xml`,sheetXml(s)])];
+  const T=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;T[n]=c>>>0}
+  const crc=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+  const parts=[],cd=[];let off=0;
+  const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>>24&255];
+  for(const [name,txt] of files){const nb=enc.encode(name),db=enc.encode(txt),c=crc(db);
+    const lh=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(db.length),...u32(db.length),...u16(nb.length),...u16(0)]);
+    parts.push(lh,nb,db);cd.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c),...u32(db.length),...u32(db.length),...u16(nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nb);off+=lh.length+nb.length+db.length}
+  const cdLen=cd.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdLen),...u32(off),...u16(0)]);
+  return new Blob([...parts,...cd,end],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+/* выгрузка выплат проекта в Excel */
+function pjXlsx(id){
+  const now=Date.now(), l=earned(now).filter(s=>inPj(s,id)).sort((a,b)=>shiftStart(a)-shiftStart(b));
+  const p=id==="_none"?{name:"Без проекта",client:""}:byId("projects",id); if(!p)return;
+  const amt=s=>SHIFT_H*shiftRate(s), sum=x=>x.reduce((a,s)=>a+amt(s),0);
+  const dt=t=>{if(!t)return"";const d=new Date(t);return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear()+" "+pad(d.getHours())+":"+pad(d.getMinutes())};
+  const dd=s=>s?s.slice(8,10)+"."+s.slice(5,7)+"."+s.slice(0,4):"";
+  const st=s=>s.paid?"Получено":s.paySent?"Ждём подтверждения":"Не выплачено";
+  const paidL=l.filter(s=>s.paid), wait=l.filter(s=>s.paySent&&!s.paid);
+  const H=a=>a.map(v=>({v,s:1})), M=v=>({v:Math.round(v),s:2}), MB=v=>({v:Math.round(v),s:4});
+  const bud=num(p.budget)>0?num(p.budget):0, pr=bud?prBudget(p):null;
+  const sv=[[{v:"Промосеть — выплаты по проекту",s:3}],[],["Проект",p.name||""],["Заказчик",p.client||"—"]];
+  if(bud)sv.push(["Бюджет проекта",M(bud)],["Маржа агентства",marginOf(p)+" %"],["На промоутеров",M(pr)]);
+  sv.push(["Начислено за смены",M(sum(l))],["Выплачено (подтверждено)",MB(sum(paidL))],["Ждёт подтверждения",M(sum(wait))],["Не выплачено",M(sum(l)-sum(paidL)-sum(wait))]);
+  if(bud)sv.push([pr-sum(paidL)<0?"Перерасход":"Осталось на промоутеров",MB(Math.abs(pr-sum(paidL)))]);
+  sv.push(["Смен",l.length],["Людей",new Set(l.map(s=>s.promoterId)).size],[],["Выгружено",dt(now)]);
+  const tx=[H(["Дата смены","ФИО","Точка","Время","Часы","Ставка, ₽/ч","Сумма","Статус","Отмечено «выплатил»","Подтверждено"])];
+  for(const s of l)tx.push([dd(s.date),prName(s.promoterId),ptName(s.pointId),(s.start||"")+"–"+fmtTime(shiftStart(s)+SHIFT_MS),SHIFT_H,M(shiftRate(s)),M(amt(s)),st(s),dt(s.paySentAt),dt(s.payConfirmedAt||(s.paid?s.paidAt:0))]);
+  if(l.length)tx.push(["","Итого","","",l.length*SHIFT_H,"",MB(sum(l))]);
+  const by={};for(const s of l)(by[s.promoterId]=by[s.promoterId]||[]).push(s);
+  const pp=[H(["ФИО","Смен","Часов","Начислено","Выплачено","Ждёт подтверждения","Не выплачено"])];
+  for(const [pid,ss] of Object.entries(by).sort((a,b)=>sum(b[1])-sum(a[1]))){const a=sum(ss),b=sum(ss.filter(s=>s.paid)),c=sum(ss.filter(s=>s.paySent&&!s.paid));pp.push([prName(pid),ss.length,ss.length*SHIFT_H,M(a),M(b),M(c),M(a-b-c)])}
+  const blob=xlsxBlob([{name:"Выплаты",cols:[13,28,26,13,7,12,12,20,20,18],freeze:1,rows:tx},{name:"По людям",cols:[28,8,8,14,14,20,14],freeze:1,rows:pp},{name:"Сводка",cols:[28,24],rows:sv}]);
+  const a=document.createElement("a"), fn=`Промосеть — ${String(p.name||"проект").replace(/[\\/:*?"<>|]/g," ").trim()} — выплаты ${dd(today())}.xlsx`;
+  a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+  toast(l.length?`Скачан Excel: ${plural(l.length,["смена","смены","смен"])}`:"Скачан Excel — отработанных смен пока нет");
+}
 const earned=(now=Date.now())=>S.shifts.filter(s=>worked(shiftState(s,now))&&now>=shiftStart(s)+SHIFT_MS);
 const inPj=(s,id)=>id==="_none"?(!s.projectId||!byId("projects",s.projectId)):s.projectId===id;
 function upMoney(){
@@ -1606,7 +1658,7 @@ function upMoney(){
     const lab=armed?"Снять отметку?":st==="yes"?"✓ Получено":st==="wait"?"⏳ Ждём подтверждения":st==="part"?`Получено ${k} из ${n}${w?` · ждём ${w}`:""}`:"Не выплачено";
     const tip=st==="yes"?"Сотрудник подтвердил получение. Нажмите дважды, чтобы снять отметку":st==="wait"?"Вы отметили выплату, сотрудник ещё не подтвердил получение":"Нажмите, когда перевели деньги: сотруднику придёт запрос подтвердить получение";
     return `<button class="paybtn ${st} ${armed?"arm":""}" type="button" data-act="pay" data-pj="${esc(sel)}" data-pr="${esc(r.id)}" title="${tip}" aria-label="${esc(r.name)}: ${lab}. ${tip}">${lab}</button>`};
-  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}${p.pr!=null&&p.budget?` из ${fmtRub(p.pr)}`:""}</span></div><p class="hint">Перевели деньги — нажмите «Не выплачено» у человека или «выплатил» у смены. Сотруднику придёт запрос на сайте и в Telegram, и только после его подтверждения выплата засчитывается.</p>
+  det.innerHTML=`<div class="panel-h"><h3>${esc(p.name)}: кому и за что</h3><span>${fmtRub(sum(l))}${p.pr!=null&&p.budget?` из ${fmtRub(p.pr)}`:""} <button class="btn sm xlbtn" type="button" data-act="pj-xlsx" data-id="${esc(sel)}" title="Все выплаты по проекту: ФИО, сумма, дата и смена">⬇&nbsp;Скачать Excel</button></span></div><p class="hint">Перевели деньги — нажмите «Не выплачено» у человека или «выплатил» у смены. Сотруднику придёт запрос на сайте и в Telegram, и только после его подтверждения выплата засчитывается.</p>
     ${rows.length?rows.map(r=>`<details class="mp" data-pr="${esc(r.id)}"${ui.mpOpen.has(r.id)?" open":""}><summary><b>${esc(r.name)}</b><span class="h">смен: ${r.ss.length} · ${r.ss.length*SHIFT_H} ч</span><span class="x">${fmtRub(r.total)}</span>${payBtn(r)}</summary>
       <div class="tbl-wrap"><table><thead><tr><th>Дата</th><th>Точка</th><th>Время</th><th class="mh">Работа</th><th class="num mh">Часы</th><th class="num mh">Ставка</th><th class="num">Сумма</th><th>Выплата</th></tr></thead><tbody>${r.ss.map(s=>`<tr>
         <td>${esc(fmtShort(s.date))}</td><td>${esc(ptName(s.pointId))}</td><td class="hint">${esc(s.start||"")}–${hm(shiftStart(s)+SHIFT_MS)}</td><td class="mh">${esc(s.type||"—")}</td>
@@ -1765,6 +1817,7 @@ main.addEventListener("click",async e=>{
     if(s.paid){if(!arm("ps:"+id))return;await guard(()=>db.doc("shifts/"+id).update({paid:false,paidAt:null,paySent:false,paySentAt:null,payConfirmedAt:null}),"Отметка о выплате снята");updateTab();return}
     if(s.paySent){await guard(()=>db.doc("shifts/"+id).update({paySent:false,paySentAt:null}),"Отметка «выплатил» отменена");updateTab();return}
     await guard(()=>db.doc("shifts/"+id).update({paySent:true,paySentAt:Date.now()}),"Отмечено «выплатил». Ждём, когда сотрудник подтвердит получение");updateTab();return}
+  if(act==="pj-xlsx"){pjXlsx(id);return}
   if(act==="pay-confirm"){const ids=id==="all"?myShifts().filter(s=>s.paySent&&!s.paid).map(s=>s.id):[id];if(!ids.length)return;b.disabled=true;
     try{const r=await window.psMembers.payConfirm(ids);toast(r&&r.ok&&r.confirmed?`Спасибо! Получение ${fmtRub(r.sum)} подтверждено`:"Эта выплата уже подтверждена или отменена")}catch(err){toast("Не получилось подтвердить, попробуйте ещё раз");b.disabled=false}
     return}

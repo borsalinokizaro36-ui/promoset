@@ -794,6 +794,24 @@ html body main .bc-panel button[data-act=bc-send]:disabled{opacity:.5}
 .pj-coord .bon{margin-top:4px;font-size:13px;white-space:nowrap}
 .pj-coord input.pct{width:58px;margin-right:2px;font-size:13px}
 #pj-coord-h{display:block;margin-top:4px}
+/* рейтинг сотрудников */
+.rt-per{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+.rt-tbl th small{display:block;font-weight:500;color:var(--ink-3);font-size:11px}
+.rt-tbl td{vertical-align:middle}
+.rt-place{font-weight:700;font-size:16px;color:var(--ink-3)}
+.rt-tbl tbody tr:nth-child(-n+3) .rt-place{color:var(--coral,#EF4056)}
+.rt-total b{font-size:22px;font-variant-numeric:tabular-nums;color:var(--coral,#EF4056)}
+.rt-total .bar{margin-top:4px;min-width:90px}
+.rt-mini{display:flex;align-items:center;gap:6px;min-width:96px}
+.rt-mini .bar{flex:1;min-width:44px}
+.rt-mini span{font-size:12.5px;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.rt-good{background:var(--good-soft);color:var(--good)}.rt-info{background:var(--info-soft);color:var(--info)}.rt-warn{background:var(--warn-soft);color:var(--warn)}.rt-bad{background:var(--bad-soft,#FDE3E6);color:var(--bad)}
+.rt-scales{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
+.rt-scale{display:flex;gap:14px;padding:14px;border-radius:14px;background:var(--surface-2);align-items:flex-start}
+.rt-scale p{margin:4px 0 6px;font-size:13.5px;color:var(--ink-2)}
+.rt-w{flex:0 0 auto;width:58px;text-align:center;font-size:24px;font-weight:700;color:var(--coral,#EF4056);font-variant-numeric:tabular-nums;line-height:1}
+.rt-w small{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:3px}
+.rt-levels{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 /* бюджет и маржа */
 .pj-cat{white-space:nowrap}
 .bud-in{display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -877,7 +895,7 @@ const SLOTS={morning:{l:"Утро",t:"09:00"},day1:{l:"День",t:"13:00"},even
 const TYPES=["Раздача листовок","Дегустация","Промо-стойка","Хелпер на мероприятии","Креативная акция"];
 const STL={ontime:"Вовремя",late:"С опозданием",missed:"Срыв",nophoto:"Фото не пришло",waiting:"Идёт, ждём фото",upcoming:"Впереди"};
 const SHIFT_MS=4*3600e3, GRACE_MS=20*60e3;
-const TABS=[["day","План дня"],["shifts","Назначение смен"],["promoters","Сотрудники"],["points","Установка точек"],["projects","Проекты"],["photos","Фотоотчёты"],["money","Финансы"],["summary","Статистика"],["reg","Регистрация"],["access","Доступ"]];
+const TABS=[["day","План дня"],["shifts","Назначение смен"],["promoters","Сотрудники"],["points","Установка точек"],["projects","Проекты"],["photos","Фотоотчёты"],["money","Финансы"],["rating","Рейтинг"],["summary","Статистика"],["reg","Регистрация"],["access","Доступ"]];
 
 /* Границы: OpenStreetMap (Nominatim), упрощены. Москва — 12 административных округов; область — внешний контур с вырезом Москвы. */
 const OKR={CAO:"ЦАО",SAO:"САО",SVAO:"СВАО",VAO:"ВАО",UVAO:"ЮВАО",UAO:"ЮАО",UZAO:"ЮЗАО",ZAO:"ЗАО",SZAO:"СЗАО",ZelAO:"ЗелАО",NAO:"НАО",TAO:"ТАО"};
@@ -1118,6 +1136,12 @@ function buildTab(){
     <div class="mcards" id="mnCards"></div>
     <section class="panel" id="mnBonus"></section>
     <section class="panel" id="mnDet"></section>`,
+  rating:()=>`${b}<div class="head"><div><div class="eyebrow">Люди</div><h2>Рейтинг сотрудников</h2></div><p>Считается автоматически из того, что уже есть в Промосети: смены, отметки на точке, почасовые фотоотчёты, проверка фото, заявки и запись на проекты.</p></div>
+    <div class="rt-per" id="rtPer"></div>
+    <section class="kstrip" id="rtKpi"></section>
+    <section class="panel"><div class="panel-h"><h3>Рейтинг</h3><span id="rtN"></span></div><div class="tbl-wrap" id="rtTbl"></div></section>
+    <section class="panel"><h3>Как считается рейтинг</h3><p class="hint">Шесть шкал, всего 100 баллов. Если по шкале у человека ещё нет данных (например, ни одно фото пока не проверено), её баллы делятся между остальными шкалами — новичок не теряет очки за то, чего ещё не было.</p><div class="rt-scales" id="rtScales"></div>
+      <div class="rt-levels" id="rtLevels"></div></section>`,
   summary:()=>`${b}<div class="head"><div><div class="eyebrow" id="smEb"></div><h2>Статистика</h2></div>
     <div class="seg" id="smSeg">${[["1","День"],["7","7 дней"],["30","30 дней"],["all","Весь проект"]].map(([k,l])=>`<button data-per="${k}">${l}</button>`).join("")}</div></div>
     <div class="kpis" id="smKpi"></div>
@@ -1144,7 +1168,7 @@ function fillOptions(){
 
 function updateTab(){
   const bn=document.getElementById("bn"); if(bn)bn.innerHTML=banner();
-  ({me:upMe,profile:upProfile,signup:upSignup,report:upReport,help:()=>{},write:upWrite,reg:()=>{},money:upMoney,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
+  ({me:upMe,profile:upProfile,signup:upSignup,report:upReport,help:()=>{},write:upWrite,reg:()=>{},money:upMoney,rating:upRating,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
 }
 
 /* ---------- общие куски ---------- */
@@ -1497,6 +1521,50 @@ document.addEventListener("input",e=>{const t=e.target;if(t.id==="bc-note")ui.bc
 document.addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.dataset.bcchat==null)return;
   ui.bcSel={id:ui.bc,set:[...document.querySelectorAll("[data-bcchat]")].filter(x=>x.checked).map(x=>x.dataset.bcchat)};updateTab()});
 
+/* ---------- Рейтинг сотрудников ---------- */
+const RT_SCALES=[
+  {k:"att",w:30,n:"Явка",d:"Вышел ли человек на назначенные смены: отработанные смены из всех наступивших. Срыв или смена без единого фото снижают шкалу.",src:"смены и отметки на точке"},
+  {k:"pun",w:20,n:"Пунктуальность",d:"Отметился на точке в первые 20 минут смены — смена засчитана вовремя.",src:"первое фото смены"},
+  {k:"rep",w:20,n:"Почасовые отчёты",d:"Сдал ли отметку о начале и отчёт за каждый час смены (на смену в 4 часа — 5 отчётов).",src:"фотоотчёты с кодом"},
+  {k:"qlt",w:15,n:"Качество фото",d:"Сколько фото руководитель принял из проверенных. Отклонённые снимки снижают шкалу.",src:"проверка во вкладке «Фотоотчёты»"},
+  {k:"act",w:10,n:"Активность",d:"Сколько смен отработано за период по сравнению с самым активным сотрудником.",src:"отработанные смены"},
+  {k:"ini",w:5,n:"Инициатива",d:"Сам записывается на смены и откликается на наборы в проекты. Полный балл — от 5 заявок и записей.",src:"заявки и «Записаться на проект»"}];
+const RT_LEVELS=[[85,"Надёжный","good"],[70,"Хороший","info"],[50,"Средний","warn"],[0,"Под наблюдением","bad"]];
+const rtLevel=v=>RT_LEVELS.find(l=>v>=l[0]);
+function rtCompute(){
+  const per=ui.rtPer||"30", now=Date.now(), from=per==="all"?"":addDays(today(),-Number(per)+1), I=idx();
+  const inPer=s=>s.date<=today()&&(!from||s.date>=from)&&inProject(s);
+  const rows=S.promoters.filter(p=>p.active!==false).map(p=>{
+    const sh=(I.bp.get(p.id)||[]).filter(inPer), r=stats(sh), ids=new Set(sh.map(s=>s.id));
+    const ended=sh.filter(s=>worked(shiftState(s,now))&&now>=shiftEnd(s));
+    let got=0;for(const s of ended){const by=cpPhotos(s);for(let k=0;k<=CP_N;k++)if(by[k]&&by[k].length)got++}
+    const ph=S.photos.filter(f=>ids.has(f.shiftId)&&f.status!=="pending"), acc=ph.filter(f=>f.status==="accepted").length;
+    const reqs=(S.requests||[]).filter(q=>q.promoterId===p.id&&(!from||String(q.date||"")>=from)).length, pjs=(p.projects||[]).length;
+    const v={att:r.due?r.worked/r.due:null,pun:r.worked?r.ontime/r.worked:null,rep:ended.length?got/(ended.length*(CP_N+1)):null,qlt:ph.length?acc/ph.length:null,act:r.worked,ini:Math.min(1,(reqs+pjs)/5)};
+    return {p,r,v,raw:{due:r.due,worked:r.worked,ontime:r.ontime,missed:r.missed+r.nophoto,ended:ended.length,got,checked:ph.length,acc,reqs,pjs}}});
+  const maxW=Math.max(1,...rows.map(x=>x.r.worked));
+  for(const x of rows){x.v.act=x.r.worked/maxW;let sw=0,sv=0;for(const sc of RT_SCALES){const val=x.v[sc.k];if(val==null)continue;sw+=sc.w;sv+=sc.w*val}
+    x.score=sw?Math.round(sv/sw*100):null;x.few=x.r.due<2}
+  rows.sort((a,b)=>(a.score==null?2:a.few?1:0)-(b.score==null?2:b.few?1:0)||(b.score??-1)-(a.score??-1)||b.r.worked-a.r.worked||a.p.name.localeCompare(b.p.name,"ru"));
+  return rows;
+}
+function upRating(){
+  const per=ui.rtPer||"30";
+  document.getElementById("rtPer").innerHTML=[["30","30 дней"],["90","90 дней"],["all","Всё время"]].map(([k,l])=>`<button type="button" class="suchip ${per===k?"on":""}" data-act="rt-per" data-id="${k}">${l}</button>`).join("");
+  const rows=rtCompute(), rated=rows.filter(x=>x.score!=null&&!x.few);
+  const avg=rated.length?Math.round(rated.reduce((a,x)=>a+x.score,0)/rated.length):null, watch=rated.filter(x=>x.score<50).length;
+  document.getElementById("rtKpi").innerHTML=kpiHtml([{v:avg==null?"—":avg,l:"Средний рейтинг",s:"из 100 баллов",c:avg==null?"":avg>=70?"good":avg>=50?"warn":"bad"},{v:rated[0]?esc(rated[0].p.name.split(" ")[0]):"—",l:"Лидер",s:rated[0]?plural(rated[0].score,["балл","балла","баллов"]):"пока нет данных"},{v:rated.filter(x=>x.score>=85).length,l:"Надёжных",s:"85 баллов и выше",c:"good"},{v:watch,l:"Под наблюдением",s:"меньше 50 баллов",c:watch?"bad":""}]);
+  document.getElementById("rtN").textContent=rows.length?plural(rows.length,["сотрудник","сотрудника","сотрудников"]):"";
+  const cell=(x,k)=>{const v=x.v[k];if(v==null)return `<td class="rt-c"><span class="hint">нет данных</span></td>`;const pc=Math.round(v*100),c=pc>=85?"var(--good)":pc>=60?"var(--warn)":"var(--bad)";return `<td class="rt-c"><div class="rt-mini"><div class="bar"><i style="width:${pc}%;background:${c}"></i></div><span>${pc}%</span></div></td>`};
+  const tip=x=>`Смен наступило ${x.raw.due}, отработано ${x.raw.worked}, вовремя ${x.raw.ontime}, срывов ${x.raw.missed}; отчётов ${x.raw.got} из ${x.raw.ended*(CP_N+1)}; фото принято ${x.raw.acc} из ${x.raw.checked} проверенных; заявок ${x.raw.reqs}, проектов ${x.raw.pjs}`;
+  let place=0;
+  document.getElementById("rtTbl").innerHTML=rows.length?`<table class="rt-tbl"><thead><tr><th class="num">#</th><th>Сотрудник</th><th>Рейтинг</th>${RT_SCALES.map(s=>`<th title="${esc(s.d)}">${s.n}<small>${s.w} б.</small></th>`).join("")}<th class="num">Смен</th></tr></thead><tbody>${rows.map(x=>{const lv=x.score==null?null:rtLevel(x.score);if(x.score!=null&&!x.few)place++;
+    return `<tr title="${esc(tip(x))}"><td class="num rt-place">${x.score!=null&&!x.few?place:"—"}</td><td><b>${esc(x.p.name)}</b>${x.p.example?' <span class="tag ex">пример</span>':""}<div>${x.score==null?'<span class="chip st-upcoming">нет смен</span>':x.few?'<span class="chip st-upcoming">мало данных</span>':`<span class="chip rt-${lv[2]}">${lv[1]}</span>`}</div></td>
+      <td class="rt-total">${x.score==null?"—":`<b>${x.score}</b><div class="bar"><i style="width:${x.score}%;background:${x.few?"var(--line)":"var(--coral,#EF4056)"}"></i></div>`}</td>${RT_SCALES.map(s=>cell(x,s.k)).join("")}<td class="num">${x.r.worked}/${x.r.due}</td></tr>`}).join("")}</tbody></table>`:emptyBox("Сотрудников пока нет.");
+  document.getElementById("rtScales").innerHTML=RT_SCALES.map(s=>`<div class="rt-scale"><div class="rt-w">${s.w}<small>баллов</small></div><div><b>${s.n}</b><p>${s.d}</p><span class="hint">Откуда данные: ${s.src}</span></div></div>`).join("");
+  document.getElementById("rtLevels").innerHTML=`<b>Уровни</b>${RT_LEVELS.map((l,i)=>`<span class="chip rt-${l[2]}">${l[1]} · ${i===0?"от "+l[0]:i===RT_LEVELS.length-1?"меньше "+RT_LEVELS[i-1][0]:l[0]+"–"+(RT_LEVELS[i-1][0]-1)}</span>`).join("")}<span class="hint">«Мало данных» — меньше двух наступивших смен за период: такой сотрудник не занимает место в рейтинге.</span>`;
+}
+
 /* ---------- Деньги ---------- */
 const earned=(now=Date.now())=>S.shifts.filter(s=>worked(shiftState(s,now))&&now>=shiftStart(s)+SHIFT_MS);
 const inPj=(s,id)=>id==="_none"?(!s.projectId||!byId("projects",s.projectId)):s.projectId===id;
@@ -1704,6 +1772,7 @@ main.addEventListener("click",async e=>{
     else if(list.some(s=>s.paySent&&!s.paid))toast("Ждём, когда сотрудник подтвердит получение. Отменить можно по отдельной смене — раскройте строку");
     else{if(!arm("pay:"+pj+":"+prm))return;await guard(async()=>{for(const s of list)await db.doc("shifts/"+s.id).update({paid:false,paidAt:null,paySent:false,paySentAt:null,payConfirmedAt:null})},"Отметка о выплате снята")}
     updateTab();return}
+  if(act==="rt-per"){ui.rtPer=id;updateTab();return}
   if(act==="money-pj"){const cur=ui.moneyPj!==undefined?ui.moneyPj:(ui.project!=="all"?ui.project:null);ui.moneyPj=cur===id?null:id;updateTab();return}
   if(act==="mem-pass"){if(!arm("pw:"+id))return;try{await window.psMembers.tempPassword(id,b.dataset.email||"")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}
   if(act==="mem-del"){if(!arm("mem:"+id))return;const c=S.promoters.find(p=>p.userId===id);try{await deletePerson(c&&c.id,id);toast("Человек удалён")}catch(err){toast("Не удалось: "+(err&&err.message||err))}updateTab();return}

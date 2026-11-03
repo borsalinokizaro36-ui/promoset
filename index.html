@@ -1544,7 +1544,7 @@ function rtCompute(){
     return {p,r,v,raw:{due:r.due,worked:r.worked,ontime:r.ontime,missed:r.missed+r.nophoto,ended:ended.length,got,checked:ph.length,acc,reqs,pjs}}});
   const maxW=Math.max(1,...rows.map(x=>x.r.worked));
   for(const x of rows){x.v.act=x.r.worked/maxW;let sw=0,sv=0;for(const sc of RT_SCALES){const val=x.v[sc.k];if(val==null)continue;sw+=sc.w;sv+=sc.w*val}
-    x.score=sw?Math.round(sv/sw*100):null;x.few=x.r.due<2}
+    x.score=sw&&x.r.due?Math.round(sv/sw*100):null;x.few=x.r.due<2}
   rows.sort((a,b)=>(a.score==null?2:a.few?1:0)-(b.score==null?2:b.few?1:0)||(b.score??-1)-(a.score??-1)||b.r.worked-a.r.worked||a.p.name.localeCompare(b.p.name,"ru"));
   return rows;
 }

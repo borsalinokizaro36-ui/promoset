@@ -921,7 +921,7 @@ const SLOTS={morning:{l:"Утро",t:"09:00"},day1:{l:"День",t:"13:00"},even
 const TYPES=["Раздача листовок","Дегустация","Промо-стойка","Хелпер на мероприятии","Креативная акция"];
 const STL={ontime:"Вовремя",late:"С опозданием",missed:"Срыв",nophoto:"Фото не пришло",waiting:"Идёт, ждём фото",upcoming:"Впереди"};
 const SHIFT_MS=4*3600e3, GRACE_MS=20*60e3;
-const TABS=[["day","План дня"],["shifts","Назначение смен"],["promoters","Сотрудники"],["points","Установка точек"],["projects","Проекты"],["photos","Фотоотчёты"],["money","Финансы"],["rating","Рейтинг"],["summary","Статистика"],["reg","Регистрация"],["access","Доступ"]];
+const TABS=[["day","План дня"],["shifts","Назначение смен"],["promoters","Сотрудники"],["points","Установка точек"],["projects","Проекты"],["photos","Фотоотчёты"],["money","Финансы"],["rating","Рейтинг"],["summary","Статистика"],["reg","Регистрация"],["access","Доступ"],["learn","Обучение"]];
 
 /* Границы: OpenStreetMap (Nominatim), упрощены. Москва — 12 административных округов; область — внешний контур с вырезом Москвы. */
 const OKR={CAO:"ЦАО",SAO:"САО",SVAO:"СВАО",VAO:"ВАО",UVAO:"ЮВАО",UAO:"ЮАО",UZAO:"ЮЗАО",ZAO:"ЗАО",SZAO:"СЗАО",ZelAO:"ЗелАО",NAO:"НАО",TAO:"ТАО"};
@@ -1046,7 +1046,7 @@ function learnHtml(){
     :[...(isMgr()?[["👤","Мой кабинет сотрудника","Посмотреть Промосеть глазами сотрудника. Вернуться — кнопка «← Пульт агентства»."]]:[]),["🤖","Telegram","Подключите бота: он присылает уведомления о сменах, заявках и фото."],["🔑",window.PS_ROLE==="owner"?"Логин и пароль":"Сменить пароль","Свой логин и пароль для входа с любого устройства."],["🔎","Фильтры в шапке","Выбор проекта и даты наверху работает во всех вкладках."]];
   const steps=staff?["Подключите Telegram — кнопка в меню под вашим именем.","Запишитесь на смену во вкладке «Записаться на смену» или дождитесь, пока руководитель вас поставит.","В день смены откройте «Моя смена» и сдавайте фото с кодом вовремя."]
     :["Создайте проект заказчика во вкладке «Проекты».","Добавьте точки в «Установке точек».","Заведите людей в «Регистрации».","Поставьте смены в «Назначении смен» и следите за ними в «Плане дня»."];
-  return `<section class="panel lrn-head"><h3>Для тех, кто здесь впервые</h3><p>Коротко о каждом разделе Промосети: что это и что там можно делать. Возвращайтесь сюда в любой момент — кнопка «📖&nbsp;Обучение» в меню под вашим именем.</p>
+  return `<section class="panel lrn-head"><h3>Для тех, кто здесь впервые</h3><p>Коротко о каждом разделе Промосети: что это и что там можно делать. Возвращайтесь сюда в любой момент — вкладка «Обучение» последняя в списке разделов, а кнопка «💡» рядом с названием любого раздела откроет его описание.</p>
     <b>С чего начать</b><ol class="lrn-steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol></section>
     <section class="panel"><h3>Разделы</h3><div class="lrn-grid">${list.filter(([k])=>L[k]).map(([k,t])=>card(L[k][0],esc(t),L[k][1],k)).join("")}</div></section>
     <section class="panel"><h3>Меню под вашим именем</h3><div class="lrn-grid">${side.map(([i,t,d])=>card(i,t,d)).join("")}</div></section>`;
@@ -1054,9 +1054,6 @@ function learnHtml(){
 // «Забыли, что здесь делать?» — переход в «Обучение» к описанию текущего раздела
 document.getElementById("pgHelp").addEventListener("click",()=>{const from=ui.tab;ui.tab="learn";ui.armed=null;renderAll(true);
   requestAnimationFrame(()=>{const c=document.getElementById("lrn-"+from);if(!c){window.scrollTo(0,0);return}c.scrollIntoView({block:"center",behavior:"smooth"});c.classList.add("hl");setTimeout(()=>c.classList.remove("hl"),2600)})});
-// кнопка «Обучение» под именем: блок с именем появляется после входа, поэтому следим за ним
-function learnBtn(){const sf=document.querySelector(".top .ctrls"),tgb=sf&&sf.querySelector(".ps-tg");let lb=document.getElementById("psLearn");if(tgb&&!lb){lb=document.createElement("button");lb.id="psLearn";lb.type="button";lb.className="ps-act";lb.textContent="📖 Обучение";lb.onclick=()=>{ui.tab="learn";ui.armed=null;renderAll(true);window.scrollTo(0,0)};tgb.before(lb)}if(lb)lb.classList.toggle("on",ui.tab==="learn")}
-{const sf=document.querySelector(".top .ctrls");if(sf&&window.MutationObserver)new MutationObserver(()=>{if(!document.getElementById("psLearn"))learnBtn()}).observe(sf,{childList:true})}
 /* ---------- шапка ---------- */
 const tabsEl=document.getElementById("tabs");
 function renderTabs(){
@@ -1083,7 +1080,6 @@ const main=document.getElementById("main");
 let builtTab=null, lastMode=null;
 function renderAll(force){
   {const sf=document.querySelector(".top .ctrls");let mb=document.getElementById("psMode");if(isMgr()&&sf){if(!mb){mb=document.createElement("button");mb.id="psMode";mb.type="button";mb.className="ps-act ps-mode";mb.onclick=()=>{ui.asStaff=!ui.asStaff;try{history.replaceState(null,"",location.pathname+location.search+(ui.asStaff?"#cabinet":""))}catch(_){}ui.tab=ui.asStaff?"me":"day";renderAll(true)};sf.prepend(mb)}mb.textContent=ui.asStaff?"← Пульт агентства":"Мой кабинет сотрудника"}else if(mb)mb.remove()}
-  learnBtn();
   const mode=isStaff()?"staff":"team"; if(mode!==lastMode){lastMode=mode;force=true;document.body.classList.toggle("staff",mode==="staff");const lg=document.querySelector(".logo small");if(lg)lg.textContent=mode==="staff"?"кабинет сотрудника":"пульт агентства"}
   renderTabs(); renderProjSel();
   if(force||builtTab!==ui.tab){buildTab();builtTab=ui.tab}
@@ -1217,7 +1213,7 @@ function buildTab(){
     <section class="panel"><div class="panel-h"><h3>По проектам</h3><button class="btn sm" data-act="copy-report">Скопировать отчёт</button></div><div class="tbl-wrap" id="smTbl"></div></section>
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
-  {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab)&&ui.tab!=="learn")ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
+  {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab)&&ui.tab!=="learn")ui.tab="me"}else if(SK.includes(ui.tab)&&ui.tab!=="learn")ui.tab="day"}
   if(!T[ui.tab]||(ui.tab==="access"&&!isBoss())||(ui.tab==="reg"&&!isMgr())||(ui.tab==="money"&&!isBoss()))ui.tab="day";
   main.innerHTML=T[ui.tab]();
   const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
@@ -1932,7 +1928,7 @@ document.getElementById("barX").addEventListener("click",e=>{const rg=e.target.c
 main.addEventListener("click",e=>{const rg=e.target.closest("button[data-reg]");if(rg){ui.region=rg.dataset.reg;try{localStorage.setItem("ps-reg",ui.region)}catch(_){}updateTab();return}const z=e.target.closest("[data-zoom]");if(z){ui.mapZoom=z.dataset.zoom;updateTab();return}const b=e.target.closest("[data-pf]");if(b){ui.photoFilter=b.dataset.pf;updateTab()}const p=e.target.closest("[data-per]");if(p){ui.period=p.dataset.per;updateTab()}});
 
 /* ---------- кабинет сотрудника ---------- */
-const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Отчёты"],["help","Как всё устроено"],["write","Написать руководителю"]];
+const STAFF_TABS=[["me","Моя смена"],["profile","Мой профиль"],["signup","Записаться на смену"],["report","Отчёты"],["help","Как всё устроено"],["write","Написать руководителю"],["learn","Обучение"]];
 const isMgr=()=>window.PS_ROLE==="owner"||window.PS_ROLE==="director"||window.PS_ROLE==="admin";
 const isBoss=isMgr; // директор и координатор — одинаковые права
 const isStaff=()=>window.PS_ROLE==="staff"||(!!ui.asStaff&&isMgr());

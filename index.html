@@ -473,6 +473,16 @@ body.staff .ctl{display:none}
 .lrn-card p{margin:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
 .lrn-card .btn{align-self:flex-start;margin-top:auto}
 .nw{white-space:nowrap}
+.bar0 .pghd{display:contents}
+.pg-help{font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center;box-shadow:0 1px 2px rgba(23,24,28,.05)}
+.pg-help:hover{border-color:var(--coral,#EF4056);color:var(--coral,#EF4056)}
+.pg-help:focus-visible{outline:2px solid var(--coral,#EF4056);outline-offset:2px}
+.pg-help[hidden]{display:none}
+.pg-help .pg-s{display:none}
+@media (max-width:900px){.bar0 .pghd{display:flex;flex-basis:100%;align-items:center;justify-content:space-between;gap:10px}.bar0 .pghd h1{flex-basis:auto;margin-right:0}}
+@media (max-width:600px){.pg-help{padding:6px 12px;font-size:13px}.pg-help .pg-l{display:none}.pg-help .pg-s{display:inline}}
+.lrn-card{scroll-margin:90px;transition:border-color .3s,box-shadow .3s}
+.lrn-card.hl{border-color:var(--coral,#EF4056);box-shadow:0 0 0 4px var(--coral-soft,#FDE3E6)}
 .lrn-card.side{background:var(--surface-2)}
 .ps-act.on{opacity:1;background:rgba(255,255,255,.1)}
 .help details{border-top:1px solid var(--line);padding:10px 0}
@@ -887,7 +897,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   <nav class="tabs" aria-label="Разделы"><div class="wrap" role="tablist" id="tabs"></div></nav>
   <div class="ctrls sidefoot"></div>
 </header>
-<div class="bar0"><h1 id="pgTitle">План дня</h1>
+<div class="bar0"><div class="pghd"><h1 id="pgTitle">План дня</h1><button type="button" class="pg-help" id="pgHelp" title="Откроется «Обучение» на описании этого раздела">💡 <span class="pg-l">Забыли, что здесь делать? Нажмите сюда</span><span class="pg-s">Подсказка</span></button></div>
   <div class="ctl"><div class="barx" id="barX"></div>
     <select id="projSel" aria-label="Проект"><option value="all">Все проекты</option></select>
     <div class="daynav"><button id="dPrev" aria-label="Предыдущий день">‹</button><input type="date" id="dateSel" aria-label="Дата"><button id="dNext" aria-label="Следующий день">›</button></div>
@@ -1031,7 +1041,7 @@ const LEARN_STAFF={
   write:["💬","Написать руководителю, если <span class=nw>что-то</span> не получается. Ответ появится в этой же вкладке."]};
 function learnHtml(){
   const staff=isStaff(), list=(staff?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||isBoss())&&(k!=="reg"||isMgr())&&(k!=="money"||isBoss())), L=staff?LEARN_STAFF:LEARN_TEAM;
-  const card=(ic,t,d,tab)=>`<div class="lrn-card${tab?"":" side"}"><h4><span aria-hidden="true">${ic}</span>${t}</h4><p>${d}</p>${tab?`<button class="btn sm" data-act="goto" data-tab="${tab}">Открыть</button>`:""}</div>`;
+  const card=(ic,t,d,tab)=>`<div class="lrn-card${tab?"":" side"}"${tab?` id="lrn-${tab}"`:""}><h4><span aria-hidden="true">${ic}</span>${t}</h4><p>${d}</p>${tab?`<button class="btn sm" data-act="goto" data-tab="${tab}">Открыть</button>`:""}</div>`;
   const side=staff?[["🤖","Telegram","Подключите бота: он напомнит о смене и о каждом отчёте. Фото с кодом можно просто прислать боту — оно само попадёт в Промосеть."],["🔑","Сменить пароль","Задайте свой пароль вместо выданного руководителем."]]
     :[...(isMgr()?[["👤","Мой кабинет сотрудника","Посмотреть Промосеть глазами сотрудника. Вернуться — кнопка «← Пульт агентства»."]]:[]),["🤖","Telegram","Подключите бота: он присылает уведомления о сменах, заявках и фото."],["🔑",window.PS_ROLE==="owner"?"Логин и пароль":"Сменить пароль","Свой логин и пароль для входа с любого устройства."],["🔎","Фильтры в шапке","Выбор проекта и даты наверху работает во всех вкладках."]];
   const steps=staff?["Подключите Telegram — кнопка в меню под вашим именем.","Запишитесь на смену во вкладке «Записаться на смену» или дождитесь, пока руководитель вас поставит.","В день смены откройте «Моя смена» и сдавайте фото с кодом вовремя."]
@@ -1041,6 +1051,9 @@ function learnHtml(){
     <section class="panel"><h3>Разделы</h3><div class="lrn-grid">${list.filter(([k])=>L[k]).map(([k,t])=>card(L[k][0],esc(t),L[k][1],k)).join("")}</div></section>
     <section class="panel"><h3>Меню под вашим именем</h3><div class="lrn-grid">${side.map(([i,t,d])=>card(i,t,d)).join("")}</div></section>`;
 }
+// «Забыли, что здесь делать?» — переход в «Обучение» к описанию текущего раздела
+document.getElementById("pgHelp").addEventListener("click",()=>{const from=ui.tab;ui.tab="learn";ui.armed=null;renderAll(true);
+  requestAnimationFrame(()=>{const c=document.getElementById("lrn-"+from);if(!c){window.scrollTo(0,0);return}c.scrollIntoView({block:"center",behavior:"smooth"});c.classList.add("hl");setTimeout(()=>c.classList.remove("hl"),2600)})});
 // кнопка «Обучение» под именем: блок с именем появляется после входа, поэтому следим за ним
 function learnBtn(){const sf=document.querySelector(".top .ctrls"),tgb=sf&&sf.querySelector(".ps-tg");let lb=document.getElementById("psLearn");if(tgb&&!lb){lb=document.createElement("button");lb.id="psLearn";lb.type="button";lb.className="ps-act";lb.textContent="📖 Обучение";lb.onclick=()=>{ui.tab="learn";ui.armed=null;renderAll(true);window.scrollTo(0,0)};tgb.before(lb)}if(lb)lb.classList.toggle("on",ui.tab==="learn")}
 {const sf=document.querySelector(".top .ctrls");if(sf&&window.MutationObserver)new MutationObserver(()=>{if(!document.getElementById("psLearn"))learnBtn()}).observe(sf,{childList:true})}
@@ -1048,7 +1061,7 @@ function learnBtn(){const sf=document.querySelector(".top .ctrls"),tgb=sf&&sf.qu
 const tabsEl=document.getElementById("tabs");
 function renderTabs(){
   const pend=S.photos.filter(p=>p.status==="pending").length, nReq=isStaff()?0:(S.requests||[]).filter(r=>r.status==="new").length, nMsg=isStaff()?0:(S.messages||[]).filter(m=>!m.reply).length;
-  {const pt=document.getElementById("pgTitle"),tt=ui.tab==="learn"?["learn","Обучение"]:(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
+  {const pt=document.getElementById("pgTitle"),tt=ui.tab==="learn"?["learn","Обучение"]:(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1];const ph=document.getElementById("pgHelp");if(ph)ph.hidden=ui.tab==="learn"}
   tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||isBoss())&&(k!=="reg"||isMgr())&&(k!=="money"||isBoss())).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.armed=null;

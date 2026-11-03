@@ -47,7 +47,8 @@
   const css = `#ps-login{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:#17181C;padding:16px;font:15px/1.45 'Onest',system-ui,'Segoe UI',Arial,sans-serif;overflow:auto}
 #ps-login form,#ps-login .card{background:#fff;color:#17181C;border-radius:18px;padding:28px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
 #ps-login .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;margin-bottom:4px}
-#ps-login .brand i{width:32px;height:32px;border-radius:9px;background:#D4F04C}
+#ps-login .brand i{width:32px;height:32px;border-radius:9px;background:#FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='t' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230AD1C9'/%3E%3Cstop offset='1' stop-color='%230BA8A2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cellipse cx='32' cy='58' rx='13' ry='4' fill='%23EF4056'/%3E%3Cpath d='M32 4C19.8 4 10 13.6 10 25.6C10 41.2 32 58 32 58S54 41.2 54 25.6C54 13.6 44.2 4 32 4Z' fill='url(%23t)'/%3E%3Cpath d='M32 4C19.8 4 10 13.6 10 25.6C10 41.2 32 58 32 58Z' fill='%23fff' fill-opacity='.22'/%3E%3Ccircle cx='32' cy='25' r='8.5' fill='%23fff'/%3E%3Ccircle cx='32' cy='25' r='4.2' fill='%23EF4056'/%3E%3C/svg%3E") center/24px no-repeat;box-shadow:0 0 0 1px rgba(21,48,47,.08),0 4px 12px rgba(11,168,162,.2)}
+#ps-login .brand{font-weight:800;letter-spacing:-.03em}#ps-login .brand span{color:#088A85}
 #ps-login h1{margin:0;font-size:18px}
 #ps-login label{font-size:13px;color:#55575E;margin-bottom:-6px}
 #ps-login input{font:inherit;padding:11px 12px;border:1px solid #E3E1DB;border-radius:10px;background:#F6F5F1;color:#17181C}
@@ -108,7 +109,7 @@
       w.appendChild(t);
     });
   }
-  const brand = `<div class="brand"><i aria-hidden="true"></i>Промосеть</div>`;
+  const brand = `<div class="brand"><i aria-hidden="true"></i>промо<span>сеть</span></div>`;
   const ruErr = m => /invalid login/i.test(m) ? "Неверная почта или пароль." : /email not confirmed/i.test(m) ? "Почта ещё не подтверждена. Откройте письмо от Supabase и нажмите ссылку." : /already registered|already exists/i.test(m) ? "Эта почта уже зарегистрирована. Войдите или восстановите пароль." : /password should be at least|weak/i.test(m) ? "Пароль слишком короткий: нужно не меньше 6 символов." : /rate limit|too many/i.test(m) ? "Слишком много попыток. Подождите несколько минут." : /signups not allowed|signup is disabled/i.test(m) ? "Регистрация сейчас закрыта. Попросите создателя или администратора добавить вас." : m;
 
   const LOGIN_DOMAIN = "@promoset.local";

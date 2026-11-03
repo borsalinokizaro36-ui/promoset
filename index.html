@@ -464,6 +464,17 @@ body.staff .ctl{display:none}
 .pfhead h2{margin:4px 0 2px;font-size:26px}
 .pfhead p{margin:0}
 .tm{color:var(--ink);padding:3px 0}
+.lrn-head{display:flex;flex-direction:column;gap:6px}
+.lrn-head p{margin:0;color:var(--ink-2);max-width:720px}
+.lrn-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.lrn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.lrn-card{border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.lrn-card h4{margin:0;font-size:15px;display:flex;gap:8px;align-items:baseline}
+.lrn-card p{margin:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
+.lrn-card .btn{align-self:flex-start;margin-top:auto}
+.nw{white-space:nowrap}
+.lrn-card.side{background:var(--surface-2)}
+.ps-act.on{opacity:1;background:rgba(255,255,255,.1)}
 .help details{border-top:1px solid var(--line);padding:10px 0}
 .help summary{cursor:pointer;font-weight:600}
 .help ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
@@ -929,6 +940,7 @@ let ui={region:"msk",mapZoom:"core",tab:"day",date:today(),project:"all",photoFi
 try{const r=localStorage.getItem("ps-reg");if(r==="msk"||r==="mo"||r==="spb")ui.region=r;}catch(e){}
 try{const t=localStorage.getItem("ps-tab");if(t&&TABS.some(x=>x[0]===t))ui.tab=t;}catch(e){}
 if(location.hash&&TABS.some(x=>"#"+x[0]===location.hash))ui.tab=location.hash.slice(1);
+try{if(!localStorage.getItem("ps-learn")){localStorage.setItem("ps-learn","1");ui.tab="learn"}}catch(e){}
 
 /* индексы: пересобираются один раз после каждого изменения данных, а не на каждый поиск */
 let IDXV=0,IDX=null;
@@ -996,11 +1008,47 @@ const lb=document.getElementById("lb");
 lb.addEventListener("click",()=>{lb.hidden=true;lb.innerHTML=""});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!lb.hidden){lb.hidden=true;lb.innerHTML=""}});
 
+
+/* ---------- Обучение: коротко о каждой вкладке ---------- */
+const LEARN_TEAM={
+  day:["🗺️","Карта и список смен на выбранный день: кто отметился вовремя, кто опаздывает, где нет фото. Нажмите на точку на карте — откроются фото смены."],
+  shifts:["🗓️","Поставить человека на точку и время. Здесь же заявки сотрудников, которые записались сами, свободные точки и люди без смены."],
+  promoters:["👥","Список сотрудников и надёжность каждого: сколько смен отработано, сколько с опозданием или без фото. Здесь же обращения сотрудников — на них можно ответить."],
+  points:["📍","Места, где работают сотрудники. Добавьте точку с адресом и координатами и привяжите её к проекту."],
+  projects:["📁","Кампании заказчиков: сроки, бюджет, маржа агентства, ставка и координатор. Кнопка «📣 Набор» отправляет пост о наборе в <span class=nw>Telegram-чаты</span>."],
+  photos:["📷","Проверка фотоотчётов: сверьте код на фото, примите или отклоните снимок. Если фото не проверить за 30 минут, оно принимается автоматически — отклонить можно и позже."],
+  money:["💰","Сколько денег осталось на промоутеров, кому и за какие смены положено. Перевели деньги — отметьте «выплатил», сотрудник подтвердит получение. Здесь же премии координаторов и выгрузка выплат проекта в Excel."],
+  rating:["🏆","Оценка каждого сотрудника по явке, пунктуальности, почасовым отчётам и качеству фото плюс бонус за отработанные смены. Считается сама."],
+  summary:["📊","Цифры за период: сколько смен отработано, сколько фото пришло вовремя, срывы, разбивка по дням и проектам."],
+  reg:["✍️","Завести нового человека. Логин и пароль придумаются автоматически — скопируйте их и отправьте человеку."],
+  access:["🔐","Кто имеет доступ к Промосети и с какой ролью. Создатель меняет роли, выдаёт временный пароль, привязывает аккаунт к карточке сотрудника и удаляет людей."]};
+const LEARN_STAFF={
+  me:["⏱️","Ваша смена сегодня: адрес точки, время и отчёт, который нужно сдать сейчас."],
+  profile:["🙋","Ваши данные, сколько вы заработали, что выплачено и что ждёт выплаты. Когда руководитель отметит выплату — подтвердите, что деньги пришли."],
+  signup:["✍️","Записаться на смену самому: выберите день и точку и нажмите на свободный слот два раза. Заявку подтверждает руководитель."],
+  report:["📷","Какие фото за смены приняты, а какие отклонены."],
+  help:["📖","Подробно: что делать до смены, во время и после, как начисляются деньги."],
+  write:["💬","Написать руководителю, если <span class=nw>что-то</span> не получается. Ответ появится в этой же вкладке."]};
+function learnHtml(){
+  const staff=isStaff(), list=(staff?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||isBoss())&&(k!=="reg"||isMgr())&&(k!=="money"||isBoss())), L=staff?LEARN_STAFF:LEARN_TEAM;
+  const card=(ic,t,d,tab)=>`<div class="lrn-card${tab?"":" side"}"><h4><span aria-hidden="true">${ic}</span>${t}</h4><p>${d}</p>${tab?`<button class="btn sm" data-act="goto" data-tab="${tab}">Открыть</button>`:""}</div>`;
+  const side=staff?[["🤖","Telegram","Подключите бота: он напомнит о смене и о каждом отчёте. Фото с кодом можно просто прислать боту — оно само попадёт в Промосеть."],["🔑","Сменить пароль","Задайте свой пароль вместо выданного руководителем."]]
+    :[...(isMgr()?[["👤","Мой кабинет сотрудника","Посмотреть Промосеть глазами сотрудника. Вернуться — кнопка «← Пульт агентства»."]]:[]),["🤖","Telegram","Подключите бота: он присылает уведомления о сменах, заявках и фото."],["🔑",window.PS_ROLE==="owner"?"Логин и пароль":"Сменить пароль","Свой логин и пароль для входа с любого устройства."],["🔎","Фильтры в шапке","Выбор проекта и даты наверху работает во всех вкладках."]];
+  const steps=staff?["Подключите Telegram — кнопка в меню под вашим именем.","Запишитесь на смену во вкладке «Записаться на смену» или дождитесь, пока руководитель вас поставит.","В день смены откройте «Моя смена» и сдавайте фото с кодом вовремя."]
+    :["Создайте проект заказчика во вкладке «Проекты».","Добавьте точки в «Установке точек».","Заведите людей в «Регистрации».","Поставьте смены в «Назначении смен» и следите за ними в «Плане дня»."];
+  return `<section class="panel lrn-head"><h3>Для тех, кто здесь впервые</h3><p>Коротко о каждом разделе Промосети: что это и что там можно делать. Возвращайтесь сюда в любой момент — кнопка «📖&nbsp;Обучение» в меню под вашим именем.</p>
+    <b>С чего начать</b><ol class="lrn-steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol></section>
+    <section class="panel"><h3>Разделы</h3><div class="lrn-grid">${list.filter(([k])=>L[k]).map(([k,t])=>card(L[k][0],esc(t),L[k][1],k)).join("")}</div></section>
+    <section class="panel"><h3>Меню под вашим именем</h3><div class="lrn-grid">${side.map(([i,t,d])=>card(i,t,d)).join("")}</div></section>`;
+}
+// кнопка «Обучение» под именем: блок с именем появляется после входа, поэтому следим за ним
+function learnBtn(){const sf=document.querySelector(".top .ctrls"),tgb=sf&&sf.querySelector(".ps-tg");let lb=document.getElementById("psLearn");if(tgb&&!lb){lb=document.createElement("button");lb.id="psLearn";lb.type="button";lb.className="ps-act";lb.textContent="📖 Обучение";lb.onclick=()=>{ui.tab="learn";ui.armed=null;renderAll(true);window.scrollTo(0,0)};tgb.before(lb)}if(lb)lb.classList.toggle("on",ui.tab==="learn")}
+{const sf=document.querySelector(".top .ctrls");if(sf&&window.MutationObserver)new MutationObserver(()=>{if(!document.getElementById("psLearn"))learnBtn()}).observe(sf,{childList:true})}
 /* ---------- шапка ---------- */
 const tabsEl=document.getElementById("tabs");
 function renderTabs(){
   const pend=S.photos.filter(p=>p.status==="pending").length, nReq=isStaff()?0:(S.requests||[]).filter(r=>r.status==="new").length, nMsg=isStaff()?0:(S.messages||[]).filter(m=>!m.reply).length;
-  {const pt=document.getElementById("pgTitle"),tt=(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
+  {const pt=document.getElementById("pgTitle"),tt=ui.tab==="learn"?["learn","Обучение"]:(isStaff()?STAFF_TABS:TABS).find(t=>t[0]===ui.tab);if(pt&&tt)pt.textContent=tt[1]}
   tabsEl.innerHTML=(isStaff()?STAFF_TABS:TABS).filter(([k])=>(k!=="access"||isBoss())&&(k!=="reg"||isMgr())&&(k!=="money"||isBoss())).map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${ui.tab===k}">${l}${k==="photos"&&pend?`<span class="n">${pend}</span>`:""}${k==="shifts"&&nReq?`<span class="n">${nReq}</span>`:""}${k==="promoters"&&nMsg?`<span class="n">${nMsg}</span>`:""}</button>`).join("");
 }
 tabsEl.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;ui.tab=b.dataset.tab;ui.armed=null;
@@ -1022,6 +1070,7 @@ const main=document.getElementById("main");
 let builtTab=null, lastMode=null;
 function renderAll(force){
   {const sf=document.querySelector(".top .ctrls");let mb=document.getElementById("psMode");if(isMgr()&&sf){if(!mb){mb=document.createElement("button");mb.id="psMode";mb.type="button";mb.className="ps-act ps-mode";mb.onclick=()=>{ui.asStaff=!ui.asStaff;try{history.replaceState(null,"",location.pathname+location.search+(ui.asStaff?"#cabinet":""))}catch(_){}ui.tab=ui.asStaff?"me":"day";renderAll(true)};sf.prepend(mb)}mb.textContent=ui.asStaff?"← Пульт агентства":"Мой кабинет сотрудника"}else if(mb)mb.remove()}
+  learnBtn();
   const mode=isStaff()?"staff":"team"; if(mode!==lastMode){lastMode=mode;force=true;document.body.classList.toggle("staff",mode==="staff");const lg=document.querySelector(".logo small");if(lg)lg.textContent=mode==="staff"?"кабинет сотрудника":"пульт агентства"}
   renderTabs(); renderProjSel();
   if(force||builtTab!==ui.tab){buildTab();builtTab=ui.tab}
@@ -1105,6 +1154,7 @@ function buildTab(){
     </form></section>
     <section class="panel"><div class="panel-h"><h3>Все проекты</h3><span id="pjN"></span></div><div class="tbl-wrap" id="pjTbl"></div></section>
     <section class="panel" id="exPanel"></section>`,
+  learn:()=>learnHtml(),
   me:()=>`<div id="meBox"></div>`,
   profile:()=>`<div id="pfBox"></div>`,
   signup:()=>`<div id="suBox"></div>`,
@@ -1154,7 +1204,7 @@ function buildTab(){
     <section class="panel"><div class="panel-h"><h3>По проектам</h3><button class="btn sm" data-act="copy-report">Скопировать отчёт</button></div><div class="tbl-wrap" id="smTbl"></div></section>
     <section class="panel"><h3>Сигналы</h3><div id="smSig" class="list"></div></section>`
   };
-  {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab))ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
+  {const SK=STAFF_TABS.map(x=>x[0]);if(isStaff()){if(!SK.includes(ui.tab)&&ui.tab!=="learn")ui.tab="me"}else if(SK.includes(ui.tab))ui.tab="day"}
   if(!T[ui.tab]||(ui.tab==="access"&&!isBoss())||(ui.tab==="reg"&&!isMgr())||(ui.tab==="money"&&!isBoss()))ui.tab="day";
   main.innerHTML=T[ui.tab]();
   const bx=document.getElementById("barX");if(bx)bx.innerHTML=ui.tab==="day"?'<div class="regsw" role="tablist" aria-label="Регион" id="regSw"><button data-reg="msk" role="tab">Москва<span id="regN-msk"></span></button><button data-reg="mo" role="tab">Московская обл.<span id="regN-mo"></span></button><button data-reg="spb" role="tab">Санкт-Петербург<span id="regN-spb"></span></button></div>':"";
@@ -1173,7 +1223,7 @@ function fillOptions(){
 
 function updateTab(){
   const bn=document.getElementById("bn"); if(bn)bn.innerHTML=banner();
-  ({me:upMe,profile:upProfile,signup:upSignup,report:upReport,help:()=>{},write:upWrite,reg:()=>{},money:upMoney,rating:upRating,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
+  ({learn:()=>{},me:upMe,profile:upProfile,signup:upSignup,report:upReport,help:()=>{},write:upWrite,reg:()=>{},money:upMoney,rating:upRating,access:upAccess,day:upDay,shifts:upShifts,photos:upPhotos,points:upPoints,promoters:upPromoters,projects:upProjects,summary:upSummary})[ui.tab]();
 }
 
 /* ---------- общие куски ---------- */
